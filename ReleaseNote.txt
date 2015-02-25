@@ -1,0 +1,48 @@
+==============================================================================
+                                                                           
+                                CGD.buffer                                 
+                                                                           
+                                                                           
+                                                                           
+                                                                           
+  This Program is programmed by Cho SangHyun. sangducks@cgcii.co.kr        
+  Best for Game Developement and Optimized for Game Developement.          
+                                                                           
+                          http://www.CGDbuffer.co.kr                           
+                                                                           
+==============================================================================
+
+1.0   CGDK 7.0까지 포함되어 있던 CCGBuffer
+
+2.0pre (2015.1.5) 
+   - CGCII 프로젝트에서 독립 프로젝트로 분리
+   - CGDK 8.0부터 포함되는 CCGBuffer의 기반
+   - 클래스명 변경
+     CGBUF     -> CGD::buffer 
+     CCGMemPtr -> CGD::ptr
+
+   - 함수명이 전부 소문자로 바뀌었습니다.(예, Append -> append, Extract -> extract)
+   - 함수명이 대폭 변경되었습니다.
+       Append<T>      -> append<T>
+       ExtractHead<T> -> extract<T>
+       ExtractTail<T> -> subtract<T>
+       Head<T>        -> front<T>
+       Tail<T>        -> back<T>
+
+   - C++11 기준의 template meta programming이 적용되었습니다.
+   - meta programming이 적용되어 vector/list 등의 복합형을 동일이름으로 동작가능합니다.
+   - meta programming이 적용되어 array, vector<T>와 같은 복합형은 
+     Block copy를 지원해 성능을 향상시켰습니다.
+   - std::string/std::wstring뿐만 아니라 char16_t, char32_t 등 다양한
+     문자열을 지원합니다
+   - literal로 작성된 문자열은 실시간으로 문자열을 길이를 계산하는 것이
+     아니라 컴파일 타임에 계산되어 적용됩니다.(constexpr 일부 지원)
+   - vector/array/string 등의 복합형 객체의 다계층을 지원합니다.
+   - C#은 struct를 통해 Heterogenous형을 지원합니다.
+   - C++버전은 std::tuple을 통해 Heterogenous 복합형을 지원합니다.
+   - std::initializer_list를 지원합니다.
+   - C++버전은 prepend 기능이 추가되었습니다.
+   - C++버전은 배열형 extract 기능도 추가되었습니다.
+   - 웹서버 통신에 필요한 형식 추가('\r\n'을 사용하는 문자열 처리 추가)
+   - r-value 관련 오류 가능성 수정
+   
