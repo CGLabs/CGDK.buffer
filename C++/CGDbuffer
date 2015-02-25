@@ -1,0 +1,28 @@
+//*****************************************************************************
+//*                                                                           *
+//*                                CGD::buffer                                *
+//*                      Ver 2.0pre / Release 2015.01.05                      *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.com           *
+//*  Best for Game Developement and Optimized for Game Developement.          *
+//*                                                                           *
+//*                   (C) 2008 CGLabs All right reserved.                     *
+//*                          http://www.CGCII.co.kr                           *
+//*                                                                           *
+//*****************************************************************************
+
+#pragma once
+//-----------------------------------------------------------------------------
+//
+// CGD::buffer
+//
+//-----------------------------------------------------------------------------
+// 1) 
+#include "Buffers/CGDbufferCommon.h"
+
+// 2) Buffers
+#include "Buffers/CGDbuffer.h"
+#include "Buffers/CGDptr.h"
