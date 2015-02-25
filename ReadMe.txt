@@ -152,6 +152,42 @@
             var temp3 = bufTemp.extract<Dictionary<string,int>> ();
             var temp4 = bufTemp.extract<Dictionary<string,List<int>>> ();
 
+    *) append는 <T>와 같은 형을 쓸필요는 없습니다.
+       append하며 그냥 그 자료의 원래 형대로 추가가 되지만 코드의 명시성을 
+       주기 위해 형을 굳이 써줍니다.
+
+        C++)
+            vector<int>                  listTest = { ...};
+            list<std::string>            listStringTest = { ...};
+            map<std::string, int>        mapTemp = { ...};
+            map<int, list<std::string>>  maplistTemp = { ...};
+	    
+            CGD::buffer bufTemp(malloc(256));
+	    
+            bufTemp.append(listTest);
+            bufTemp.append(listStringTest);
+            bufTemp.append(mapTemp);
+            bufTemp.append(maplistTemp);
+	    
+        C#) 
+            List<int>                      listTest = new ...;
+            List<string>                   listStringTest = new ...;
+            Dictionary<string, int>        dicTest = new ...;
+            Dictionary<int, List<string>>  dicListTest = new ...;
+       
+            CGD.buffer bufTemp = new CGD.buffer(new byte[256]);
+       
+            bufTemp.append(listTest);
+            bufTemp.append(listStringTest);
+            bufTemp.append(dicTest);
+            bufTemp.append(dicListTest);
+       
+	extract<T>에는 <T>형을 써줘야 하며 c++의 경우 decltype을 쓰면
+        좀더 편할 수 있습니다.
+        C#버전의 경우 GetType()이나 typeof()등으로 얻은 Type으로
+        extract가 가능합니다.
+
+
 
     C#의 경우 구조체를 사용해서 복합형 구현도 가능합니다.
     (C++의 경우 tuple을 통해 할수 가능하나 생략...)
