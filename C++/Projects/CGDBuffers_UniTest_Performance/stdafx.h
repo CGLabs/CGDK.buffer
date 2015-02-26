@@ -16,8 +16,11 @@
 #include <list>
 #include <map>
 #include <set>
+
+#if _MSC_VER>=1700
 #include <unordered_map>
 #include <unordered_set>
+#endif
 //#include <CGD/circular_list>
 
 //#include <../Include/CGBufferClasses.h>
