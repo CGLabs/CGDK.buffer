@@ -49,6 +49,7 @@ public:
 			size_t				size() const							{	return (size_t)len;}
 			size_t				length() const							{	return (size_t)len;}
 			char*				clear()									{	char* p=buf; buf=nullptr; len=0; return p;}
+			void				set_buffer(_In_opt_ void* _Ptr, _In_ uint32_t _Len=0)	{	buf=(char*)_Ptr; len=_Len;}
 
 			void				swap(buffer& _Rhs)						{	char* a=buf;uint32_t b=len; buf=_Rhs.buf; len=_Rhs.len; _Rhs.buf=a; _Rhs.len=b;}
 			void				copy(const buffer& _Source)				{	memcpy(buf, _Source.buf, _Source.len); len=_Source.len;}

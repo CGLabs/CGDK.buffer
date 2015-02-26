@@ -660,13 +660,13 @@ template<class T, class FLAG=void> class _RH		{	public:	typedef	T &t;				templat
 
 
 template<class T, size_t X> class _RH<T[X], typename std::enable_if<is_not_string_type<T>::value>::type>
-													{	public:	typedef	_RETURN_ARRAY<T,X> t; template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)				{ S tempBuffer=*s+(size_t)_Offset; auto temp=_Xextract_array<S,T,X>(_CGD_BOUND_INFO_PASS _CGD_COMMA &tempBuffer); _Offset=tempBuffer.get_front_ptr()-s->get_front_ptr(); return temp;}};
+													{	public:	typedef	_RETURN_ARRAY<T,X> t; template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)				{ S tempBuffer=*s+(size_t)_Offset; auto temp=_Xextract_array<S,T,X>(_CGD_BOUND_INFO_PASS _CGD_COMMA &tempBuffer); _Offset=(int)(tempBuffer.get_front_ptr()-s->get_front_ptr()); return temp;}};
 #ifdef _SUPPORT_ZERO_SIZED_ARRAY
 template<class T>			class _RH<T[], typename std::enable_if<is_not_string_type<T>::value>::type>
 													{	public:	typedef	void* t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)				{ static_assert(false, "CGD::buffer don not support 'front' on unsized array(use 'vector or list' instead)"); return nullptr;}};
 #endif
 #ifdef _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
-template<class... T>		class _RH<std::tuple<T...>> {	public:	typedef	std::tuple<T...> t;	template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)			{ S tempBuffer=*s+(size_t)_Offset; std::tuple<T...> temp; tempBuffer._extract_tuple<T...>(_CGD_BOUND_INFO_PASS _CGD_COMMA temp); _Offset=tempBuffer.get_front_ptr()-s->get_front_ptr(); return temp;} };
+template<class... T>		class _RH<std::tuple<T...>> {	public:	typedef	std::tuple<T...> t;	template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)			{ S tempBuffer=*s+(size_t)_Offset; std::tuple<T...> temp; tempBuffer._extract_tuple<T...>(_CGD_BOUND_INFO_PASS _CGD_COMMA temp); _Offset=(int)(tempBuffer.get_front_ptr()-s->get_front_ptr()); return temp;} };
 #endif
 
 //

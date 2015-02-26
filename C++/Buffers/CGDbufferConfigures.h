@@ -67,7 +67,7 @@
 
 // 5) Support constexpr (C++11)
 #ifndef _CONSTEXPR
-	#if _MSC_VER>=1800
+	#if _MSC_VER>=1900
 		#define	_CONSTEXPR	constexpr
 	#else
 		#define	_CONSTEXPR

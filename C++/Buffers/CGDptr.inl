@@ -80,7 +80,7 @@ ptr::_prepend_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_reads_(_Count) const T*
 	CGD_ASSERT(_Data!=nullptr, throw std::invalid_argument("_Data is nullptr [1] (" __FUNCTION__ ")"));
 
 	// 1) [데이터_갯수]만큼 데이터들을 추가한다.
-	for(int i=_Count-1;i>=0;--i)
+	for(int i=(int)(_Count-1);i>=0;--i)
 	{
 		_prepend<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA _Data[i]);
 	}
@@ -831,7 +831,7 @@ inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(_Bu
 	throw	std::out_of_range("string is too short!! [1] (" __FUNCTION__ ")");
 }
 
-inline void * ptr::_extract_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA size_t _Size, void * _Buffer)
+inline void * ptr::_extract_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t _Size, _In_ void* _Buffer)
 {
 	// Check) _Buffer이 nullptr이면 안된다.
 	CGD_ASSERT(_Buffer!=nullptr, throw std::invalid_argument("_Buffer is nullptr [0] (" __FUNCTION__ ")"));

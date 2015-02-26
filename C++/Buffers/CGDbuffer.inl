@@ -82,7 +82,7 @@ buffer::_prepend_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_reads_(_Count) const
 	CGD_ASSERT(_Count>=0, throw std::invalid_argument("_Count is invalid [0] (" __FUNCTION__ ")"));
 
 	// 1) [데이터_갯수]만큼 데이터들을 추가한다.
-	for(int i=_Count-1;i>=0;--i)
+	for(int i=(int)(_Count-1);i>=0;--i)
 	{
 		_prepend<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA _Data[i]);
 	}
@@ -228,7 +228,7 @@ void* buffer::_prepend_string_format(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const
 #endif
 	// 3) [원본_버퍼_시작_크기]에 [형식_문자열]를 써넣는다.
 	size_t	lengthString = _Xvsprintf(pStringStart, _Format, _ArgList)+1;
-	int		sizeString	 = lengthString*sizeof(T);
+	size_t	sizeString	 = lengthString*sizeof(T);
 
 	// 4) [목표_포인터]를 구한다.
 	T*	p	 = buf-sizeString;
@@ -247,7 +247,7 @@ void* buffer::_prepend_string_format(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const
 
 	// 7)[원본_버퍼_포인터]를 업데이트한다.
 	buf	 = p;
-	len	+= sizeString+sizeof(COUNT_T);
+	len	+= (uint32_t)(sizeString+sizeof(COUNT_T));
 
 	// 6) [임시_버퍼]할당 해제
 #ifdef MEM_POOL_ALLOC
@@ -1142,7 +1142,7 @@ T& buffer::_back_general(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Inout_ int& _Offset) 
 	return *p;
 }
 
-inline void buffer::_copy_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA size_t _Offset, size_t _Size, void * _Buffer) const
+inline void buffer::_copy_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Inout_ size_t _Offset, _In_ size_t _Size, _In_ void* _Buffer) const
 {
 	// Check) _Buffer이 nullptr이면 안된다.
 	CGD_ASSERT(_Buffer!=nullptr, throw std::invalid_argument("_Buffer is nullptr [0] (" __FUNCTION__ ")"));
