@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,51 +19,46 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\CGD\Buffers\CGDbuffer.h" />
-    <ClInclude Include="..\..\CGD\Buffers\CGDbufferCommon.h" />
-    <ClInclude Include="..\..\CGD\Buffers\CGDbufferConfigures.h" />
-    <ClInclude Include="..\..\CGD\Buffers\CGDbufferFunctions.h" />
-    <ClInclude Include="..\..\CGD\Buffers\CGDptr.h" />
-    <ClInclude Include="..\..\CGD\CGDDefinitions.h" />
+    <ClInclude Include="..\..\Buffers\CGDbuffer.h" />
+    <ClInclude Include="..\..\Buffers\CGDbufferCommon.h" />
+    <ClInclude Include="..\..\Buffers\CGDbufferConfigures.h" />
+    <ClInclude Include="..\..\Buffers\CGDbufferFunctions.h" />
+    <ClInclude Include="..\..\Buffers\CGDptr.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\CGD\buffer" />
-    <None Include="..\..\CGD\Buffers\CGDbuffer.inl" />
-    <None Include="..\..\CGD\Buffers\CGDptr.inl" />
+    <None Include="..\..\Buffers\CGDbuffer.inl" />
+    <None Include="..\..\Buffers\CGDptr.inl" />
+    <None Include="..\..\CGDbuffer" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\CGD\Buffers\ReadMe.txt" />
+    <Text Include="..\..\Buffers\ReadMe.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3C8C6131-20B7-4B89-AC00-0BADD8D413A6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>CGMemoryClasses</RootNamespace>
-    <ProjectName>CGDBuffers</ProjectName>
+    <RootNamespace>CGBufferClasses</RootNamespace>
+    <ProjectName>CGBufferClasses</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Utility</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Utility</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Utility</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Utility</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
@@ -97,9 +92,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>../../Output/$(ProjectName)/$(Configuration) $(PlatformToolset)/</IntDir>
+    <OutDir>../../Lib/</OutDir>
     <TargetName>$(ProjectName)_$(PlatformToolset)</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <OutDir>../../Lib/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>$(ProjectName)64_$(PlatformToolset)</TargetName>
@@ -119,10 +114,10 @@
       <AdditionalOptions>-Zm256 %(AdditionalOptions)</AdditionalOptions>
       <EnablePREfast>true</EnablePREfast>
       <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <MinimalRebuild>false</MinimalRebuild>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,6 +136,7 @@
       <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);WIN64;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../Include; ../../CGD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <AdditionalOptions>-Zm256 %(AdditionalOptions)</AdditionalOptions>
@@ -202,6 +198,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../Include; ../../CGD;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>Async</ExceptionHandling>

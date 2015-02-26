@@ -1,8 +1,9 @@
 ﻿#include "stdafx.h"
 #include "CppUnitTest.h"
 
+#if _MSC_VER>=1700
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-
+#endif
 const int _TEST_COUNT	= 1000000;
 
 namespace CGDBuffers_UniTest

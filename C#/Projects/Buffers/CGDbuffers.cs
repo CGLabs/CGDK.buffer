@@ -13,7 +13,7 @@
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
-#define	_USE_INLINE_PRIMITIVE_FUNCTION
+#define _USE_INLINE_PRIMITIVE_FUNCTION
 
 using System;
 using System.Collections.Generic;
@@ -53,7 +53,7 @@ public struct buffer
 	}
 	public buffer(int _Size)
 	{
-		m_Buffer = new byte[_Size]; ;
+		m_Buffer = new byte[_Size];
 		m_iOffset = 0;
 		m_iCount = 0;
 	}
@@ -119,7 +119,7 @@ public struct buffer
 		m_iOffset	 = _Offset;
 		m_iCount	 = _Buffer.Length-_Offset;
 	}
-	public byte[]	free()
+	public byte[]	clear()
 	{
 		// 1) 임시로 보관
 		byte[]	temp = m_Buffer;

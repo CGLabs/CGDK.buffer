@@ -215,6 +215,7 @@ std::map<std::string, std::vector<char*>>	map_std_vector_string;
 //	{"eleven",	{"zero", "zero", "zero", "zero"}}
 //};
 
+#if _MSC_VER>=1700
 // Declare ) unordered_map<string, ing>
 std::unordered_map<int, int>	unordered_map_std_int_int;
 //std::unordered_map<int, int>	unordered_map_std_int_int	 = 
@@ -262,7 +263,7 @@ std::unordered_map<std::string, std::vector<char*>>	unordered_map_std_vector_str
 //	{"five",	{"zero", "zero", "zero", "zero"}},
 //	{"eleven",	{"zero", "zero", "zero", "zero"}}
 //};
-
+#endif
 
 
 void InitContainers()
@@ -377,6 +378,7 @@ void InitContainers()
 	{	std::vector<char*> temp;	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	map_std_vector_string.insert(std::make_pair("five", temp));}
 	{	std::vector<char*> temp;	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	map_std_vector_string.insert(std::make_pair("eleven", temp));}
 
+#if _MSC_VER>=1700
 	// Declare ) unordered_map<string, ing>
 	unordered_map_std_int_int.clear();
 	unordered_map_std_int_int.insert(std::make_pair(0,  0));
@@ -413,4 +415,5 @@ void InitContainers()
 	{	std::vector<char*> temp;	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	unordered_map_std_vector_string.insert(std::make_pair("fifteen", temp));}
 	{	std::vector<char*> temp;	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	unordered_map_std_vector_string.insert(std::make_pair("five", temp));}
 	{	std::vector<char*> temp;	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	temp.push_back("zero");	unordered_map_std_vector_string.insert(std::make_pair("eleven", temp));}
+#endif
 }

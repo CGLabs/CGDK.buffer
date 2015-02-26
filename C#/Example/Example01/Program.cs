@@ -8,6 +8,27 @@ namespace Example
 {
 	class Program
 	{
+		static void Main(string[] args)
+		{
+			// Example 1) 다양한 형태의 생성 방법 
+			Sample_simple_creation_copy();
+
+			// Example 2) 가장 기본적인 형의 쓰기와 읽기
+			Sample_simple_append_extract();
+
+			// Example 3) 문자열 쓰기/읽기
+			Sample_simple_append_extract_string();
+
+			// Example 4) Collection 쓰기/읽기
+			Sample_simple_append_extract_collection();
+
+			// Example 5) struct(Heterogenous Type) 쓰기/읽기 (1)
+			Sample_simple_append_extract_struct();
+
+			// Example 6) 다계층(Multiple-Layerd) struct 쓰기/읽기
+			Sample_simple_append_extract_struct2();
+		}
+
 		//----------------------------------------------------------------------------
 		// Example 1) 다양한 형태의 생성 방법 
 		//  
@@ -17,34 +38,37 @@ namespace Example
 			// Case 1) 256 Byte의 메모리를 할당한다.
 			CGD.buffer bufTemp1 = new CGD.buffer(256);
 
-			// Case ) 선언 후 할당하기
+			// Case 2) 선언 후 할당하기
 			CGD.buffer bufTemp2 = new CGD.buffer();
 			
 			bufTemp2.alloc(256);
 
-			// Case 3) 바이트 배열을 직접 할당해 넣기.
+			// Case 3) CGPool이 있을 경우
+			//CGD.buffer buffer 3 = MEM_POOL.Alloc(256);
+
+			// Case 4) 바이트 배열을 직접 할당해 넣기.
 			CGD.buffer bufTemp3 = new CGD.buffer(new byte[256]);
 
-			// Case 4) byte[]과 함께 Offset과 Length도 설정하기
+			// Case 5) byte[]과 함께 Offset과 Length도 설정하기
 			//         (offset:10, Count:100)
 			CGD.buffer bufTemp4 = new CGD.buffer(new byte[256], 10, 100);
 
-			// Case 5) 생성된 CGD.buffer에서 가져온다.(얕은 복사)
+			// Case 6) 생성된 CGD.buffer에서 가져온다.(얕은 복사)
 			CGD.buffer bufTemp5 = bufTemp1;
 
-			// Case 6) 생성된 기본 버퍼에서 Offset을 10만큼 더한 후 가져오기
+			// Case 7) 생성된 기본 버퍼에서 Offset을 10만큼 더한 후 가져오기
 			CGD.buffer bufTemp6 = bufTemp2 + 10;
 
 
-			// Case 7) 복사본을 만든다. (깊은 복사)
+			// Case 8) 복사본을 만든다. (깊은 복사)
 			CGD.buffer bufTemp7	 = bufTemp1.clone();
 
 			// 할당 해제
-			bufTemp1.free();
+			bufTemp1.clear();
 		}
 
 		//----------------------------------------------------------------------------
-		// Example 1) 가장 기본적인 형의 쓰기와 읽기
+		// Example 2) 가장 기본적인 형의 쓰기와 읽기
 		//
 		//  append<T> 함수를 사용하여 버퍼의 끝에 T형 값을 써넣을 수 있다.
 		//  extract<T> 함수를 사용하여 버퍼에 제일 앞에서부터 T형 값을 읽어올 수 있다.
@@ -76,7 +100,7 @@ namespace Example
 			Console.WriteLine("temp1:"+temp1 +"  temp2:"+ temp2 + "  temp3"+temp3 + "  temp4"+temp4);
 		}
 		//----------------------------------------------------------------------------
-		// Example 2) 문자열 쓰기/읽기
+		// Example 3) 문자열 쓰기/읽기
 		//
 		//  역시 append<string> 함수를 사용하여 버퍼의 끝에 string형 값을 쓸수 있다.
 		//  굳이 <string>을 쓸 필요가 없지만 코드의 가독성을 위해 붙여 주는 경우가 많다.
@@ -116,7 +140,7 @@ namespace Example
 		}
 
 		//----------------------------------------------------------------------------
-		// Example 2) Collection 쓰기/읽기
+		// Example 4) Collection 쓰기/읽기
 		//
 		//  Collection 역시 그냥 append함수로 똑같이 읽고 쓸수 있다.
 		// 
@@ -150,7 +174,7 @@ namespace Example
 
 
 		//----------------------------------------------------------------------------
-		// Example 2) struct 쓰기/읽기
+		// Example 5) struct(Heterogenous Type) 쓰기/읽기 (1)
 		//
 		//  구조체의 읽기/쓰기 역시 동일하다. 그냥 값을 써넣은 후 append/extract를 사용해
 		//  읽고 쓸수 있다.
@@ -159,10 +183,10 @@ namespace Example
 		//----------------------------------------------------------------------------
 		struct TEST
 		{
-			public	int			x;
-			public	float		y;
-			public	string		z;
-			public	List<int>	w;
+			public int x;
+			public float y;
+			public string z;
+			public List<int> w;
 		};
 
 		static void Sample_simple_append_extract_struct()
@@ -194,7 +218,7 @@ namespace Example
 		}
 
 		//----------------------------------------------------------------------------
-		// Example 2) 다계층 struct 쓰기/읽기
+		// Example 6) 다계층(Multiple-Layerd) struct 쓰기/읽기
 		//
 		//  구조체가 구조체를 가지고 있을 경우에도 크게 신경쓰지 않고 append/extract로
 		//  읽고 쓸수 있다.
@@ -202,9 +226,9 @@ namespace Example
 		//----------------------------------------------------------------------------
 		struct TEST2
 		{
-			public int			a;
-			public List<int>	b;
-			public TEST			c;
+			public int a;
+			public List<int> b;
+			public TEST c;
 		};
 
 		static void Sample_simple_append_extract_struct2()
@@ -216,7 +240,7 @@ namespace Example
 			temp.c = new TEST();
 			temp.c.x = 10;
 			temp.c.y = 1.0f;
-			temp.c.z = "temp string";
+			//temp.c.z = "temp string";
 			temp.c.w = new List<int> { 10, 20, 30 };
 
 			// 1) byte[256]를 생성해서 설정한다.
@@ -235,28 +259,6 @@ namespace Example
 			Console.WriteLine(tempRead.c.y);
 			Console.WriteLine(tempRead.c.z);
 			foreach (var iter in tempRead.c.w) { Console.WriteLine(iter.ToString()); }
-		}
-
-
-		static void Main(string[] args)
-		{
-			// 1) 생성과 복사
-			Sample_simple_creation_copy();
-
-			// 1) 기본적인 형의 append/extract
-			Sample_simple_append_extract();
-
-			// 2) 문자열의 append/extract
-			Sample_simple_append_extract_string();
-
-			// 3) Collection형의 append/extract
-			Sample_simple_append_extract_collection();
-
-			// 4) 구조체의 append/extract
-			Sample_simple_append_extract_struct();
-
-			// 5) 다계층 구조체의 append/extract
-			Sample_simple_append_extract_struct2();
 		}
 	}
 }

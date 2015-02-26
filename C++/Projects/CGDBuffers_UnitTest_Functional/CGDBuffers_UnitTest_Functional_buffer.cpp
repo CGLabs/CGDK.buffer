@@ -2,8 +2,9 @@
 
 namespace UnitTest_BufferTemplates
 {		
+#if _MSC_VER>=1700
 	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-
+#endif
 	TEST_CLASS(UnitTest_Cpp_BufferTemplates_buffer)
 	{
 	public:

@@ -189,7 +189,7 @@ public:
 			ptr&				operator-=(size_t _Rhs)					{	m_ptr-=_Rhs; return *this;}
 			// [operator] =
 			template <class T>
-			ptr&				operator=(const T& _Rhs)				{	static_assert(std::is_base_of<CGD::buffer, T>::value || std::is_base_of<CGD::ptr, T>::value, "Must be CGD::buffer or CGD::ptr or derived");  m_ptr=_Rhs.get_ptr(); _CGD_BOUND_INFO(m_bound=_Ref._get_check_bound());}
+			ptr&				operator=(const T& _Rhs)				{	static_assert(std::is_base_of<CGD::buffer, T>::value || std::is_base_of<CGD::ptr, T>::value, "Must be CGD::buffer or CGD::ptr or derived");  m_ptr=_Rhs.get_ptr(); _CGD_BOUND_INFO(m_bound=_Rhs._get_check_bound()); return *this;}
 			// [operator] >> - extract
 			template <class T>
 			ptr&				operator>>(T& _Rhs)						{	_Rhs=_extract<T>(_CGD_BOUND_INFO_GET); return *this;}
