@@ -273,7 +273,7 @@ namespace CGDBuffers_CSharp_UnitTest
 				// - Buffer 할당
 				CGD.buffer bufferTemp = new CGD.buffer(2048);
 
-				DateTime	tempTime	 = new DateTime(2016, 12, 11, 03,12,22);
+				DateTime	tempTime	 = new DateTime(2016, 12, 11, 03, 12, 12, 999);
 
 				// - 값 써넣기
 				bufferTemp.append(tempTime);
@@ -281,7 +281,8 @@ namespace CGDBuffers_CSharp_UnitTest
 				var	temp	 = bufferTemp.extract<DateTime>();
 
 				// Check) 
-				Assert.IsTrue(tempTime==temp);
+                Assert.IsTrue(tempTime == temp);
+				Assert.IsTrue(tempTime.Ticks == temp.Ticks);
 				Assert.IsTrue(bufferTemp.len==0);
 			}
 		}

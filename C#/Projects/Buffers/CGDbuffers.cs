@@ -1442,6 +1442,7 @@ public struct buffer
 		// 1) 값을 읽어들인다.
 		uint	tempyearmonth		 = _extract_Primitive<uint>(_Ptr, ref _Offset);
 		uint	tempDayHourMinSec	 = _extract_Primitive<uint>(_Ptr, ref _Offset);
+        int     tempMillisecond      = _extract_Primitive<int>(_Ptr, ref _Offset);
 
 		// 2) 객체를 생성한다.
 		DateTime	tempObject	 = new DateTime(
@@ -1450,7 +1451,9 @@ public struct buffer
 			(int)(tempDayHourMinSec & 0xff),		// day
 			(int)((tempDayHourMinSec >> 8) & 0xff),	// hour
 			(int)((tempDayHourMinSec >> 16) & 0xff),// min
-			(int)((tempDayHourMinSec >> 24) & 0xff)	// sec
+			(int)((tempDayHourMinSec >> 24) & 0xff),	// sec
+            (int)((tempMillisecond))	// tempMillisecond
+
 		);
 
 		// Return) 
