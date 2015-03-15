@@ -691,7 +691,7 @@ COUNT_T ptr::_extract_string_copy(_CGD_BOUND_INFO_PARAM _CGD_COMMA __out_ecount(
 	size_t	sizeString	 = lengthString*sizeof(T);
 
 	// Check) [데이터_크기]가 UPper Bound를 넘어가는지 검사한다.
-	_CGD_BUFFER_BOUND_CHECK((m_ptr+sizeData)<=_bound.bound_upper);
+	_CGD_BUFFER_BOUND_CHECK((m_ptr+sizeString)<=_bound.bound_upper);
 
 	// Check) [문자열]의 마지막이 NULL인가를 확인한다.
 	if(*(T*)(m_ptr+sizeString+sizeof(COUNT_T)-sizeof(T)) != NULL) throw std::length_error("it's invalid string!! [6] (" __FUNCTION__ ")");
@@ -700,7 +700,7 @@ COUNT_T ptr::_extract_string_copy(_CGD_BOUND_INFO_PARAM _CGD_COMMA __out_ecount(
 	memcpy(_String, m_ptr+sizeof(COUNT_T), sizeString);
 
 	// 4) [원본_버퍼_포인터]를 [데이터_크기]만큼 더한다.
-	m_ptr	+= (sizeData+sizeof(COUNT_T));
+	m_ptr	+= (sizeString+sizeof(COUNT_T));
 
 	// Return) String길이를 return한다.
 	return	lengthString;
