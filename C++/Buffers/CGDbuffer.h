@@ -38,9 +38,9 @@ class  buffer
 {
 public:
 	// 1) Costructor
-			buffer() : buf(nullptr), len(0)								{}
-			buffer(_In_opt_ void* _Ptr, _In_ uint32_t _Len=0) : buf((char*)_Ptr), len(_Len)	{}
-			buffer(_In_ const buffer& _Buffer) : buf(_Buffer.buf), len(_Buffer.len)	{}
+			buffer() : len(0), buf(nullptr) {}
+			buffer(_In_opt_ void* _Ptr, _In_ uint32_t _Len=0) : len(_Len), buf((char*)_Ptr) {}
+			buffer(_In_ const buffer& _Buffer) : len(_Buffer.len), buf(_Buffer.buf) {}
 public:
 	// 2) exist/empty
 			char*				get_ptr() const							{	return buf;}
@@ -49,11 +49,12 @@ public:
 			size_t				size() const							{	return (size_t)len;}
 			size_t				length() const							{	return (size_t)len;}
 			char*				clear()									{	char* p=buf; buf=nullptr; len=0; return p;}
-			void				set_buffer(_In_opt_ void* _Ptr, _In_ uint32_t _Len=0)	{	buf=(char*)_Ptr; len=_Len;}
+			void				set_buffer(_In_opt_ void* _Ptr, _In_ uint32_t _Len=0) {	buf=(char*)_Ptr; len=_Len;}
 
 			void				swap(buffer& _Rhs)						{	char* a=buf;uint32_t b=len; buf=_Rhs.buf; len=_Rhs.len; _Rhs.buf=a; _Rhs.len=b;}
 			void				copy(const buffer& _Source)				{	memcpy(buf, _Source.buf, _Source.len); len=_Source.len;}
 			buffer				clone()									{	buffer a((char*)CGMALLOC(len), len); memcpy(a.buf, buf, len); return std::move(a); }
+			buffer				split(uint32_t _Offset)					{	if(len<_Offset) _Offset=len; uint32_t newSize=len-_Offset; len=_Offset; return buffer(buf+_Offset, newSize);}
 
 	// 3) prepend
 			template <size_t ISIZE>
@@ -125,7 +126,7 @@ public:
 								append_string(const T* _String)			{ return _append_string_pointer(_CGD_BOUND_INFO_GET _CGD_COMMA _String);}
 			template <class T, size_t N>
 			typename std::enable_if<is_string_type<T>::value, void*>::type
-								append_string(const const_string<T,N>& _String) { return _append_string_pointer(_CGD_BOUND_INFO_GET _CGD_COMMA _String.p, templist);}
+								append_string(const const_string<T,N>& _String) { return _append_string_pointer(_CGD_BOUND_INFO_GET _CGD_COMMA _String.p);}
 			template <class T, class F>
 			typename std::enable_if<is_string_type<T>::value, void*>::type
 								append_string(const T* _Format, F, ...) { va_list templist; va_start(templist, _Format); auto p=_append_string_format(_CGD_BOUND_INFO_GET _CGD_COMMA _Format, templist); va_end(templist); return p;}
@@ -137,7 +138,7 @@ public:
 								append_text(const T* _Text)				{ return _append_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Text);}
 			template <class T, size_t N>
 			typename std::enable_if<is_string_type<T>::value, size_t>::type
-								append_text(const const_string<T,N>& _Text) { return _append_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Text.p, templist);}
+								append_text(const const_string<T,N>& _Text) { return _append_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Text.p);}
 			template <class T, class F>
 			typename std::enable_if<is_string_type<T>::value, size_t>::type
 								append_text(const T* _Format, F, ...)	{ va_list templist; va_start(templist, _Format); auto p=_append_text_format(_CGD_BOUND_INFO_GET _CGD_COMMA _Format, templist); va_end(templist); return p;}
@@ -153,6 +154,11 @@ public:
 			typename _BF<T>::t	extract()								{	return _extract<T>(_CGD_BOUND_INFO_GET);}
 			template <class T>
 			size_t				extract(__out_ecount(_Length_in_words) T* _String, _In_ size_t _Length_in_words=INT_MAX)	{	return _extract_string_copy(_String, _Length_in_words);}
+			char*				extract_web_modify()					{	return _extract_web_modify(_CGD_BOUND_INFO_GET);}
+			template <class T>
+			std::basic_string<T> extract_text(T _Terminal=NULL)			{	return _extract_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Terminal);}
+			template <class T>
+			T*					extract_text(T _Terminal, T _Modify)	{	return _extract_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Terminal, _Modify);}
 			template <class T>
 			T&					subtract()								{	return _subtract_general<T>(_CGD_BOUND_INFO_GET);}
 			void*				subtract(_In_ size_t _Length)			{	return _subtract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Length);}
@@ -219,7 +225,7 @@ public:
 			template <class T>
 			void*				_prepend_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const T* _String, _In_ size_t _Length);
 			template <class T, size_t N>
-			void*				_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const const_string<T,N>& _constString);
+			void*				_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const CGD::const_string<T,N>& _constString);
 			template <class T>
 			void*				_prepend_string_format(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const T* _Format, va_list	_ArgList);
 			template <class T>
@@ -300,7 +306,12 @@ public:
 			template<class T, class... TREST>
 			void				_extract_tuple(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ std::tuple<T, TREST...>& _Tupple){	std::get<0>(_Tupple)=_extract<T>(_CGD_BOUND_INFO_PASS); _extract_tuple(_CGD_BOUND_INFO_PASS _CGD_COMMA (std::tuple<TREST...>&)_Tupple);}
 		#endif
-			char*				_extract_web(_CGD_BOUND_INFO_PARAM);
+			template <class T>
+			std::basic_string<T> _extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal);
+			template <class T>
+			T*					_extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal,  _In_ T _CharChange);
+			char*				_extract_web_modify(_CGD_BOUND_INFO_PARAM);
+			std::string			_extract_web(_CGD_BOUND_INFO_PARAM);
 			char*				_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(_Buffer_Size) char* p_pstrBuffer, _In_ size_t _Buffer_Size = INT_MAX);
 			void*				_extract_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t _Size, _In_ void* _Buffer);
 

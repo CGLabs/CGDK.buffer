@@ -172,7 +172,7 @@ void* ptr::_prepend_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const std::basi
 }
 
 template <class T, size_t N>
-void* ptr::_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const const_string<T,N>& _constString)
+void* ptr::_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const CGD::const_string<T,N>& _constString)
 {
 	// 1) [문자열_길이]와 복사할 크기를 구한다.
 	const size_t	lengthString = _constString.size();
@@ -218,7 +218,7 @@ void* ptr::_prepend_string_format(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const T*
 #endif
 	// 2) [원본_버퍼_시작_크기]에 [형식_문자열]를 써넣는다.
 	size_t	lengthString = _Xvsprintf(pStringStart, _Format, _ArgList)+1;
-	int		sizeString	 = lengthString*sizof(T);
+	int		sizeString	 = lengthString * sizeof(T);
 
 	// 3) 복사할 위치를 구한다.
 	T*	p	 = m_ptr-sizeString;
@@ -566,7 +566,7 @@ void* ptr::_append_string_format(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const T* 
 	*(COUNT_T*)m_ptr	 = (COUNT_T)lengthString;
 
 	// 4) [버퍼]를 업데이트한다.
-	m_ptr	 = (char*)(lengthString*sizeof(T)+string_length);
+	m_ptr	+= (char*)(lengthString*sizeof(T)+sizeof(COUNT_T));
 
 	// Return) 
 	return	(T*)strDest;
@@ -663,13 +663,13 @@ inline void* ptr::_extract_skip(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t _Le
 }
 
 template <class T>
-COUNT_T ptr::_extract_string_copy(_CGD_BOUND_INFO_PARAM _CGD_COMMA __out_ecount(p_iLengthInWords) T* _String, _In_ size_t p_iLengthInWords)
+COUNT_T ptr::_extract_string_copy(_CGD_BOUND_INFO_PARAM _CGD_COMMA __out_ecount(_LengthInWords) T* _String, _In_ size_t _LengthInWords)
 {
 	// Check) _String이 nullptr이면 안된다.
 	CGD_ASSERT(_String!=nullptr, throw std::invalid_argument("string pointer is nullptr! [0] (" __FUNCTION__ ")"));
 
 	// Check) Buffer의 Size가 0이면 안된다.
-	CGD_ASSERT(p_iLengthInWords>=0, throw std::invalid_argument("length of word is zero or less! [1] (" __FUNCTION__ ")"));
+	CGD_ASSERT(_LengthInWords >=0, throw std::invalid_argument("length of word is zero or less! [1] (" __FUNCTION__ ")"));
 
 	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
 	_CGD_BUFFER_BOUND_CHECK(m_ptr>=_bound.bound_lower);
@@ -731,7 +731,7 @@ T* ptr::_extract_string_pointer(_CGD_BOUND_INFO_PARAM)
 	_CGD_BUFFER_BOUND_CHECK((m_ptr+sizeBuffer)<=_bound.bound_upper);
 
 	// Check) 문자열의 제일 끝이 NULL인지 확인한다.
-	if(*(T*)(m_ptr+sizeBuffer-sizeof(T)) != NULL) throw std::length_error("it's invalid string! [1] (" __FUNCTION__ ")");
+	if(*(T*)(m_ptr+sizeBuffer-sizeof(T)) != (T)NULL) throw std::length_error("it's invalid string! [1] (" __FUNCTION__ ")");
 
 	// 3) 문자열의 제일 앞 포인터를 얻어둔다.
 	T*	strString	 = (T*)(m_ptr+sizeof(COUNT_T));
@@ -750,7 +750,70 @@ std::basic_string<T> ptr::_extract_string(_CGD_BOUND_INFO_PARAM)
 	return	std::basic_string<T>(_extract_string_pointer<T>(_CGD_BOUND_INFO_PASS));
 }
 
-inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM)
+template <class T>
+std::basic_string<T> ptr::_extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal)
+{
+	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
+	_CGD_BUFFER_BOUND_CHECK((m_ptr)>=_bound.bound_lower && (m_ptr)<=_bound.bound_upper);
+
+	// Declare)
+	T*			chNow	 = m_ptr;
+	const T*	pEnd	 = (const T*)UINTPTR_MAX;
+
+	// 1) /r/n을 찾는다.
+	for(; chNow<pEnd; ++chNow)
+	{
+		if(*chNow==_CharTerminal)
+		{
+			// - 잠시 m_ptr를 저장해 놓는다.
+			T*	pHead	 = m_ptr;
+
+			// - m_ptr를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
+			m_ptr		 = (chNow+1);
+
+			// Return) 
+			return	std::basic_string<T>(pHead, pEnd-chNow-1);
+		}
+	}
+
+	// Return) 실패! Web Message를 완성하지 못했다.
+	return	nullptr;
+}
+
+template <class T>
+T* ptr::_extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal,  _In_ T _CharChange)
+{
+	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
+	_CGD_BUFFER_BOUND_CHECK((m_ptr)>=_bound.bound_lower && (m_ptr)<=_bound.bound_upper);
+
+	// Declare)
+	T*			chNow	 = m_ptr;
+	const T*	pEnd	 = (const T*)UINTPTR_MAX;
+
+	// 1) /r/n을 찾는다.
+	for(; chNow<pEnd; ++chNow)
+	{
+		if(*chNow==_CharTerminal)
+		{
+			// - 잠시 m_ptr를 저장해 놓는다.
+			T*	pHead	 = m_ptr;
+
+			// - m_ptr를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
+			m_ptr		 = (chNow+1);
+			*chNow		 = _CharChange;
+
+			// Return) 
+			return	pHead;
+		}
+	}
+
+	// Return) 실패! Web Message를 완성하지 못했다.
+	return	nullptr;
+}
+
+
+
+inline char* ptr::_extract_web_modify(_CGD_BOUND_INFO_PARAM)
 {
 	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
 	_CGD_BUFFER_BOUND_CHECK((m_ptr)>=_bound.bound_lower && (m_ptr)<=_bound.bound_upper);
@@ -760,7 +823,7 @@ inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM)
 
 	// Declare)
 	char*		chNow	 = m_ptr;
-	const char*	pEnd	 = m_ptr+UINT_MAX;
+	const char*	pEnd	 = (const char*)UINTPTR_MAX;
 
 	// 1) /r/n을 찾는다.
 	for(; chNow<pEnd; ++chNow)
@@ -772,7 +835,7 @@ inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM)
 
 			// - m_ptr를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
 			m_ptr		 = (chNow+2);
-			//len		 = (COUNT_T)(pEnd-chNow-1);
+			*chNow		 = (char)NULL;
 
 			// Return) 
 			return	pHead;
@@ -780,7 +843,39 @@ inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM)
 	}
 
 	// Return) 실패! Web Message를 완성하지 못했다.
-	throw	nullptr;
+	return	nullptr;
+}
+
+inline std::string ptr::_extract_web(_CGD_BOUND_INFO_PARAM)
+{
+	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
+	_CGD_BUFFER_BOUND_CHECK((m_ptr)>=_bound.bound_lower && (m_ptr)<=_bound.bound_upper);
+
+	// Definition)
+	const uint16_t	wCompare	 = ('\n'<<8) | '\r';
+
+	// Declare)
+	char*		chNow	 = m_ptr;
+	const char*	pEnd	 = (const char*)UINTPTR_MAX;
+
+	// 1) /r/n을 찾는다.
+	for(; chNow<pEnd; ++chNow)
+	{
+		if(*(uint16_t*)chNow==wCompare)
+		{
+			// - 잠시 m_ptr를 저장해 놓는다.
+			char*	pHead	 = m_ptr;
+
+			// - m_ptr를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
+			m_ptr		 = (chNow+2);
+
+			// Return) 
+			return	std::string(pHead, chNow-pHead);
+		}
+	}
+
+	// Return) 실패! Web Message를 완성하지 못했다.
+	return	nullptr;
 }
 
 inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(_Buffer_Size) char* p_pstrBuffer, _In_ size_t _Buffer_Size)
@@ -816,7 +911,7 @@ inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(_Bu
 			memcpy(p_pstrBuffer, m_ptr, ilength);
 
 			// - 마지막에 NULL을 추가한다.
-			*(p_pstrBuffer+ilength)	 = NULL;
+			*(p_pstrBuffer+ilength)	 = (char)NULL;
 
 			// - m_ptr를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
 			m_ptr	 = (chNow+2);
@@ -828,7 +923,7 @@ inline char* ptr::_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(_Bu
 	}
 
 	// Exception) 
-	throw	std::out_of_range("string is too short!! [1] (" __FUNCTION__ ")");
+	return	nullptr;
 }
 
 inline void * ptr::_extract_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t _Size, _In_ void* _Buffer)

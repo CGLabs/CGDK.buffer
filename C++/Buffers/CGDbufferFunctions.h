@@ -22,16 +22,28 @@
 //-----------------------------------------------------------------------------
 inline size_t _Xvsprintf(_Inout_z_ char* _Dest, _In_z_ const char* _Format, _In_ va_list _Args)
 {
+	#if defined(_MSC_VER)
 	#pragma warning(disable:4996)
-	return	std::vsprintf(_Dest, _Format, _Args);
+	#endif
+
+	return	vsprintf(_Dest, _Format, _Args);
+
+	#if defined(_MSC_VER)
 	#pragma warning(default:4996)
+	#endif
 }
 
 inline size_t _Xvsprintf(_Inout_z_ wchar_t* _Dest, _In_z_ const wchar_t* _Format, _In_ va_list _Args)
 {
+	#if defined(_MSC_VER)
 	#pragma warning(disable:4996)
-	return	std::vswprintf(_Dest, _Format, _Args);
+	#endif
+
+	return	vswprintf(_Dest, _Format, _Args);
+
+	#if defined(_MSC_VER)
 	#pragma warning(default:4996)
+	#endif
 }
 
 template <class T>
@@ -108,17 +120,17 @@ void _Xappend_systemtime(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Inout_ T* _Dest, _In_
 	_CGD_BUFFER_BOUND_CHECK((_Dest)>=_bound.bound_lower && ((char*)_Dest+sizeof(uint32_t)*3)<=_bound.bound_upper);
 
 	// 1) String 복사!!!
-	_Dest->_append_general<uint32_t>((_Datetime.wYear << 16) | (_Datetime.wMonth << 16));
-	_Dest->_append_general<uint32_t>(((uint32_t)_Datetime.wDay << 24) | ((uint32_t)_Datetime.wHour << 16) | ((uint32_t)_Datetime.wMinute << 8) | ((uint32_t)_Datetime.wSecond));
-	_Dest->_append_general<uint32_t>(_Datetime.wMilliseconds);
+	_Dest->TEMPLATE _append_general<uint32_t>((_Datetime.wYear << 16) | (_Datetime.wMonth << 16));
+	_Dest->TEMPLATE _append_general<uint32_t>(((uint32_t)_Datetime.wDay << 24) | ((uint32_t)_Datetime.wHour << 16) | ((uint32_t)_Datetime.wMinute << 8) | ((uint32_t)_Datetime.wSecond));
+	_Dest->TEMPLATE _append_general<uint32_t>(_Datetime.wMilliseconds);
 }
 
 template <class S>
 SYSTEMTIME _Xextract_systemtime(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 {
-	uint32_t	yearmonth		 = _Source->_extract_general<uint32_t>(_CGD_BOUND_INFO_PASS);
-	uint32_t	dayhourminsec	 = _Source->_extract_general<uint32_t>(_CGD_BOUND_INFO_PASS);
-	uint32_t	tickMillisecond	 = _Source->_extract_general<uint32_t>(_CGD_BOUND_INFO_PASS);
+	uint32_t	yearmonth		 = _Source->TEMPLATE _extract_general<uint32_t>(_CGD_BOUND_INFO_PASS);
+	uint32_t	dayhourminsec	 = _Source->TEMPLATE _extract_general<uint32_t>(_CGD_BOUND_INFO_PASS);
+	uint32_t	tickMillisecond	 = _Source->TEMPLATE _extract_general<uint32_t>(_CGD_BOUND_INFO_PASS);
 
 	SYSTEMTIME	tempTime;
 
@@ -141,16 +153,16 @@ void _Xappend_tm(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Inout_ T* _Dest, _In_ const t
 	_CGD_BUFFER_BOUND_CHECK((_Dest->get_back_ptr())>=_bound.bound_lower && ((char*)_Dest->get_back_ptr()+sizeof(uint32_t)*3)<=_bound.bound_upper);
 
 	// 1) String 복사!!!
-	_Dest->_append_general<uint32_t>(_CGD_BOUND_INFO_PASS _CGD_COMMA ((_tm.tm_year+1900) << 16) | (_tm.tm_mon << 16));
-	_Dest->_append_general<uint32_t>(_CGD_BOUND_INFO_PASS _CGD_COMMA ((uint32_t)_tm.tm_mday << 24) | ((uint32_t)_tm.tm_hour << 16) | ((uint32_t)_tm.tm_min << 8) | ((uint32_t)_tm.tm_sec));
+	_Dest->TEMPLATE _append_general<uint32_t>(_CGD_BOUND_INFO_PASS _CGD_COMMA ((_tm.tm_year+1900) << 16) | (_tm.tm_mon << 16));
+	_Dest->TEMPLATE _append_general<uint32_t>(_CGD_BOUND_INFO_PASS _CGD_COMMA ((uint32_t)_tm.tm_mday << 24) | ((uint32_t)_tm.tm_hour << 16) | ((uint32_t)_tm.tm_min << 8) | ((uint32_t)_tm.tm_sec));
 }
 
 template <class S>
 tm _Xextract_tm(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 {
-	uint32_t	yearmonth		 = _Source->_extract<uint32_t>(_CGD_BOUND_INFO_PASS);
-	uint32_t	dayhourminsec	 = _Source->_extract<uint32_t>(_CGD_BOUND_INFO_PASS);
-	uint32_t	tickMillisecond	 = _Source->_extract<uint32_t>(_CGD_BOUND_INFO_PASS);
+	uint32_t	yearmonth		 = _Source->TEMPLATE _extract<uint32_t>(_CGD_BOUND_INFO_PASS);
+	uint32_t	dayhourminsec	 = _Source->TEMPLATE _extract<uint32_t>(_CGD_BOUND_INFO_PASS);
+	uint32_t	tickMillisecond	 = _Source->TEMPLATE _extract<uint32_t>(_CGD_BOUND_INFO_PASS);
 
 	tm	tempTime;
 
@@ -179,11 +191,11 @@ typename T::value_type* _Xprepend_container_list(_CGD_BOUND_INFO_PARAM _CGD_COMM
 	// 2) [데이터]들을 써넣는다.
 	for(; riter!=riterEnd; ++riter)
 	{
-		_Source->_prepend<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *riter);
+		_Source->TEMPLATE _prepend<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *riter);
 	}
 
 	// 3) [데이터_갯수]를 써넣는다.
-	_Source->_prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA(COUNT_T)_container.size());
+	_Source->TEMPLATE _prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA(COUNT_T)_container.size());
 
 	// Return) 
 	return	(typename T::value_type*)_Source->get_ptr();
@@ -194,10 +206,10 @@ typename std::enable_if<is_memcopy_able<typename T::value_type>::value, typename
  _Xprepend_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source, _In_ const T& _container)
 {
 	// 1) [데이터]들을 바로 memcopy한다.
-	_Source->_prepend_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA _container.size()*sizeof(T::value_type), &_container.front());
+	_Source->TEMPLATE _prepend_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA _container.size()*sizeof(T::value_type), &_container.front());
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_Source->_prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA(COUNT_T)_container.size());
+	_Source->TEMPLATE _prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA(COUNT_T)_container.size());
 
 	// Return) 
 	return	(typename T::value_type*)_Source->get_ptr();
@@ -214,11 +226,11 @@ typename std::enable_if<!is_memcopy_able<typename T::value_type>::value, typenam
 	// 2) [데이터]들을 써넣는다.
 	for(; riter!=riterEnd; ++riter)
 	{
-		_Source->_prepend<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *riter);
+		_Source->TEMPLATE _prepend<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *riter);
 	}
 
 	// 3) [데이터_갯수]를 써넣는다.
-	_Source->_prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA(COUNT_T)_container.size());
+	_Source->TEMPLATE _prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA(COUNT_T)_container.size());
 
 	// Return) 
 	return	(typename T::value_type*)_Source->get_ptr();
@@ -233,11 +245,11 @@ typename std::enable_if<is_iterator<RI>::value, int>::type _Xprepend_iterator(_C
 	// 1) 데이터들을 저장한다.
 	for(; _Reverse_first!=_Reverse_last; ++_Reverse_first, ++iCount)
 	{
-		_Source->_prepend<typename RI::value_type>(_CGD_BOUND_INFO_PASS *_Reverse_first);
+		_Source->TEMPLATE _prepend<typename RI::value_type>(_CGD_BOUND_INFO_PASS *_Reverse_first);
 	}
 
 	// 2) 크기를 써넣을 위치 예약
-	_Source->_prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA iCount);
+	_Source->TEMPLATE _prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA iCount);
 
 	// Return) 
 	return	iCount;
@@ -247,11 +259,10 @@ template <class S, class T>
 typename T::value_type* _Xappend_container_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source, _In_ const T& _container)
 {
 	// 1) [데이터_갯수]를 써넣는다.
-	_Source->_append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_container.size());
+	_Source->TEMPLATE _append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_container.size());
 
 	// 2) [원본_버퍼_끝_포인터]을 얻어놓는다.
-	//typename T::value_type*	pret = (typename T::value_type*)(buf+len);
-	typename T::value_type*	pret = nullptr;	// 임시
+	typename T::value_type*	pret = (typename T::value_type*)_Source->get_front_ptr();
 
 	// 3) [데이터]들을 써넣는다.
 	auto iter=_container.begin();
@@ -259,7 +270,7 @@ typename T::value_type* _Xappend_container_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA
 
 	for(; iter!=iterEnd; ++iter)
 	{
-		_Source->_append<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *iter);
+		_Source->TEMPLATE _append<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *iter);
 	}
 
 	// Return) [데이터]들의 처음 포인터를 리턴한다.
@@ -270,15 +281,20 @@ template <class S, class T>
 typename std::enable_if<is_memcopy_able<typename T::value_type>::value, void*>::type
  _Xappend_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source, _In_ const T& _container)
 {
+	// Declare)
+	auto	count = _container.size();
+
 	// 1) [데이터_갯수]를 써넣는다.
-	_Source->_append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_container.size());
+	_Source->TEMPLATE _append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)count);
 
 	// 2) [원본_버퍼_끝_포인터]을 얻어놓는다.
-	//typename T::value_type*	pret = (typename T::value_type*)(buf+len);
-	typename T::value_type*	pret = nullptr;	// 임시
+	typename T::value_type*	pret = (typename T::value_type*)_Source->get_front_ptr();
 
 	// 3) [데이터]들을 써넣는다.
-	_Source->_append_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA _container.size()*sizeof(T::value_type), &_container.front());
+	if (count != 0)
+	{
+		_Source->TEMPLATE _append_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA count*sizeof(T::value_type), &_container.front());
+	}
 
 	// Return) [데이터]들의 처음 포인터를 리턴한다.
 	return	pret;
@@ -292,7 +308,7 @@ _Xappend_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source, _In_ 
 	void*	pret = (void*)_Source->get_back_ptr();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_Source->_append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_container.size());
+	_Source->TEMPLATE _append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_container.size());
 
 	// 3) [데이터]들을 써넣는다.
 	auto iter=_container.begin();
@@ -300,7 +316,7 @@ _Xappend_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source, _In_ 
 
 	for(; iter!=iterEnd; ++iter)
 	{
-		_Source->_append<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *iter);
+		_Source->TEMPLATE _append<typename T::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *iter);
 	}
 
 	// Return) [데이터]들의 처음 포인터를 리턴한다.
@@ -311,7 +327,7 @@ template<class S, class I>
 typename std::enable_if<is_iterator<I>::value, int>::type _Xappend_iterator(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source, _In_ I _First, _In_ I _Last)
 {
 	// 1) [데이터_갯수]를 써넣는다.
-	COUNT_T*	pCount = (COUNT_T*)_Source->_append_skip(_CGD_BOUND_INFO_PASS _CGD_COMMA sizeof(COUNT_T));
+	COUNT_T*	pCount = (COUNT_T*)_Source->TEMPLATE _append_skip(_CGD_BOUND_INFO_PASS _CGD_COMMA sizeof(COUNT_T));
 
 	// Declare)
 	COUNT_T iCount	 = 0;
@@ -319,7 +335,7 @@ typename std::enable_if<is_iterator<I>::value, int>::type _Xappend_iterator(_CGD
 	// 3) [데이터]들을 써넣는다.
 	for(; _First!=_Last; ++_First, ++iCount)
 	{
-		_Source->_append<typename I::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *_First);
+		_Source->TEMPLATE _append<typename I::value_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA *_First);
 	}
 
 	// 3) 예약해 놓은 위치에 갯수를 써넣는다.
@@ -337,10 +353,10 @@ _Xextract_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
-	if(countData<0)
+	if(countData<=0)
 	{
 		return	std::move(container);
 	}
@@ -349,7 +365,7 @@ _Xextract_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	container.resize(countData);
 
 	// 3) [데이터_갯수]만큼 통째로 복사
-	_Source->_extract_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA countData*sizeof(T::value_type), &container.front());
+	_Source->TEMPLATE _extract_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA countData*sizeof(T::value_type), &container.front());
 
 	// Return) 
 	return	std::move(container);
@@ -363,10 +379,10 @@ _Xextract_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
-	if(countData<0)
+	if(countData<=0)
 	{
 		return	std::move(container);
 	}
@@ -377,7 +393,7 @@ _Xextract_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	// 3) [데이터_갯수]만큼 읽어 들여 저장한다.
 	for(; countData>0; countData--)
 	{
-		container.push_back(_Source->_extract<T::value_type>(_CGD_BOUND_INFO_PASS));
+		container.push_back(_Source->TEMPLATE _extract<typename T::value_type>(_CGD_BOUND_INFO_PASS));
 	}
 
 	// Return) 
@@ -391,10 +407,10 @@ T _Xextract_container_CGPTR_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Sour
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
-	if(countData<0)
+	if(countData<=0)
 	{
 		return	std::move(container);
 	}
@@ -409,7 +425,7 @@ T _Xextract_container_CGPTR_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Sour
 		CGPTR<typename T::value_type::_pointer_type>	pObject	 = NEW<typename T::value_type::_pointer_type>();
 		
 		// - 읽기
-		pObject	 = _Source->_extract<T::value_type>(_CGD_BOUND_INFO_PASS);
+		pObject	 = _Source->TEMPLATE _extract<typename T::value_type>(_CGD_BOUND_INFO_PASS);
 
 		// - 추가
 		container.push_back(pObject);
@@ -426,7 +442,7 @@ T _Xextract_container_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData=_Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData=_Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
 	if(countData==(COUNT_T)-1)
@@ -437,7 +453,7 @@ T _Xextract_container_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	// 2) [데이터_갯수]만큼 읽어 들여 저장한다.
 	for(; countData>0; countData--)
 	{
-		container.push_back(_Source->_extract<typename T::value_type>(_CGD_BOUND_INFO_PASS));
+		container.push_back(_Source->TEMPLATE _extract<typename T::value_type>(_CGD_BOUND_INFO_PASS));
 	}
 
 	// Return) 
@@ -451,7 +467,7 @@ T _Xextract_container_CGPTR_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Sourc
 	T	container;
 	
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
 	if(countData==(COUNT_T)-1)
@@ -466,7 +482,7 @@ T _Xextract_container_CGPTR_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Sourc
 		CGPTR<typename T::value_type::_pointer_type>	pObject	 = NEW<typename T::value_type::_pointer_type>();
 		
 		// - 읽기
-		pObject	 = _RH<T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
+		pObject = _Source->TEMPLATE _extract<typename T::value_type>(_CGD_BOUND_INFO_PASS);
 
 		// - 추가
 		container.push_back(pObject);
@@ -483,7 +499,7 @@ T _Xextract_set(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
 	if(countData==(COUNT_T)-1)
@@ -494,7 +510,7 @@ T _Xextract_set(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	// 2) [데이터_갯수]만큼 읽어 들여 저장한다.
 	for(; countData>0; countData--)
 	{
-		container.insert(_Source->_extract<T::value_type>(_CGD_BOUND_INFO_PASS));
+		container.insert(_Source->TEMPLATE _extract<typename T::value_type>(_CGD_BOUND_INFO_PASS));
 	}
 
 	// Return) 
@@ -508,7 +524,7 @@ T _Xextract_CGPTR_set(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T		countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T		countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
 	if(countData==(COUNT_T)-1)
@@ -523,7 +539,7 @@ T _Xextract_CGPTR_set(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 		CGPTR<typename T::value_type::_pointer_type>	pObject	 = NEW<typename T::value_type::_pointer_type>();
 		
 		// - 읽기
-		pObject	 = _Source->_extract<T::value_type>(_CGD_BOUND_INFO_PASS);
+		pObject	 = _Source->TEMPLATE _extract<typename T::value_type>(_CGD_BOUND_INFO_PASS);
 
 		// - 추가
 		container.insert(pObject);
@@ -560,7 +576,7 @@ _Xfront_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const S* _Source, 
 	_Source->_copy_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA tempOffset, countData*sizeof(T::value_type), &container.front());
 
 	// 5) Offset을 업데이트한다.
-	_Offset	 = tempOffset+countData*sizeof(T::value_type);
+	_Offset	 = tempOffset+countData*sizeof(typename T::value_type);
 
 	// Return) 
 	return	std::move(container);
@@ -592,7 +608,7 @@ _Xfront_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const S* _Source, 
 	// 4) [데이터_갯수]만큼 읽어 들여 저장한다.
 	for(; countData>0; countData--)
 	{
-		container.push_back(_RH<T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset));
+		container.push_back(_RH<typename T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset));
 	}
 
 	// 5) Offset을 업데이트한다.
@@ -631,7 +647,7 @@ T _Xfront_CGPTR_vector(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const S* _Source, _
 		CGPTR<typename T::value_type::_pointer_type>	pObject	 = NEW<typename T::value_type::_pointer_type>();
 		
 		// - 읽기
-		pObject	 = _RH<T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
+		pObject	 = _RH<typename T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
 
 		// - 추가
 		container.push_back(pObject);
@@ -666,7 +682,7 @@ T _Xfront_container_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const S* _Source,
 	// 3) [데이터_갯수]만큼 읽어 들여 저장한다.
 	for(; countData>0; countData--)
 	{
-		container.push_back(_RH<T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset));
+		container.push_back(_RH<typename T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset));
 	}
 
 	// 4) Offset을 업데이트한다.
@@ -702,7 +718,7 @@ T _Xfront_container_CGPTR_list(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* _Source
 		CGPTR<typename T::value_type::_pointer_type>	pObject	 = NEW<typename T::value_type::_pointer_type>();
 		
 		// - 읽기
-		pObject	 = _RH<T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
+		pObject	 = _RH<typename T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
 
 		// - 추가
 		container.push_back(pObject);
@@ -737,7 +753,7 @@ T _Xfront_set(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const S* _Source, _Inout_ in
 	// 3) [데이터_갯수]만큼 읽어 들여 저장한다.
 	for(; countData>0; countData--)
 	{
-		container.insert(_RH<T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset));
+		container.insert(_RH<typename T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset));
 	}
 
 	// 4) Offset을 업데이트한다.
@@ -773,7 +789,7 @@ T _Xfront_CGPTR_set(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const S* _Source, _Ino
 		CGPTR<typename T::value_type::_pointer_type>	pObject	 = NEW<typename T::value_type::_pointer_type>();
 		
 		// - 읽기
-		pObject	 = _RH<T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
+		pObject	 = _RH<typename T::value_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
 
 		// - 추가
 		container.insert(pObject);
@@ -797,13 +813,13 @@ void* _Xprepend_container_associative(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _
 	for(; iter!=iterEnd; ++iter)
 	{
 		// - Value를 써넣는다.
-		_Source->_prepend<typename T::mapped_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->second);
+		_Source->TEMPLATE _prepend<typename T::mapped_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->second);
 		// _ Key를 써넣는다.
-		_Source->_prepend<typename T::key_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->first);
+		_Source->TEMPLATE _prepend<typename T::key_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->first);
 	}
 
 	// 3) [데이터_갯수]를 써넣는다.
-	_Source->_prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_Container.size());
+	_Source->TEMPLATE _prepend_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_Container.size());
 
 	// Return) 
 	return	(typename T::mapped_type*)_Source->get_ptr();
@@ -816,15 +832,15 @@ void* _Xappend_container_associative(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _S
 	void*	pret = _Source->get_back_ptr();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_Source->_append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_Container.size());
+	_Source->TEMPLATE _append_general<COUNT_T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (COUNT_T)_Container.size());
 
 	// 3) [데이터]들을 써넣는다.
 	for(auto iter=_Container.begin(); iter!=_Container.end(); ++iter)
 	{
 		// _ Key를 써넣는다.
-		_Source->_append<typename T::key_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->first);
+		_Source->TEMPLATE _append<typename T::key_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->first);
 		// - Value를 써넣는다.
-		_Source->_append<typename T::mapped_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->second);
+		_Source->TEMPLATE _append<typename T::mapped_type>(_CGD_BOUND_INFO_PASS _CGD_COMMA iter->second);
 	}
 
 	// Return) 
@@ -838,7 +854,7 @@ CGD::_RETURN_ARRAY<T,X> _Xextract_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S*
 	_RETURN_ARRAY<T,X>	arrayTemp;
 
 	// 1) [데이터_갯수를 먼저 읽어들인다.]
-	size_t	count	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	size_t	count	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) [데이터_갯수]가 X보다 크면 Exception을 던진다. (Overflow 난다!)
 	if(count>X) throw std::length_error("Array is too small [0] (" __FUNCTION__ ")");
@@ -846,7 +862,7 @@ CGD::_RETURN_ARRAY<T,X> _Xextract_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S*
 	// 2) [데이터_갯수]만큼 읽어들인다.
 	for(size_t i=0; i<count; ++i)
 	{
-		arrayTemp.value[i]	 = _Source->_extract<T>(_CGD_BOUND_INFO_PASS);
+		arrayTemp.value[i]	 = _Source->TEMPLATE _extract<T>(_CGD_BOUND_INFO_PASS);
 	}
 
 	// Return) 
@@ -860,7 +876,7 @@ T _Xextract_container_associative(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Sour
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
 	if(countData==(COUNT_T)-1)
@@ -872,8 +888,8 @@ T _Xextract_container_associative(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Sour
 	for(; countData>0; countData--)
 	{
 		// - Key와 Value값을 읽어들인다.
-		typename T::key_type	tempKey		 = _Source->_extract<typename T::key_type>(_CGD_BOUND_INFO_PASS);
-		typename T::mapped_type	tempMapped	 = _Source->_extract<typename T::mapped_type>(_CGD_BOUND_INFO_PASS);
+		typename T::key_type	tempKey		 = _Source->TEMPLATE _extract<typename T::key_type>(_CGD_BOUND_INFO_PASS);
+		typename T::mapped_type	tempMapped	 = _Source->TEMPLATE _extract<typename T::mapped_type>(_CGD_BOUND_INFO_PASS);
 
 		// _ Key와 값을 써넣는다.
 		container.insert(std::make_pair(std::move(tempKey), std::move(tempMapped)));
@@ -890,7 +906,7 @@ T _Xextract_CGPTR_container_associative(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S*
 	T	container;
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	COUNT_T	countData	 = _Source->_extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
+	COUNT_T	countData	 = _Source->TEMPLATE _extract<COUNT_T>(_CGD_BOUND_INFO_PASS);
 
 	// Check) countData가 0보다 작으면 그냥 리턴한다.
 	if(countData==(COUNT_T)-1)
@@ -902,13 +918,13 @@ T _Xextract_CGPTR_container_associative(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S*
 	for(; countData>0; countData--)
 	{
 		// - Key와 Value값을 읽어들인다.
-		typename T::key_type	tempKey		 = _Source->_extract<typename T::key_type>(_CGD_BOUND_INFO_PASS);
+		typename T::key_type	tempKey		 = _Source->TEMPLATE _extract<typename T::key_type>(_CGD_BOUND_INFO_PASS);
 
 		// - Create
-		CGPTR<(typename T::mapped_type)::_pointer_type>	pObject	 = NEW<(typename T::mapped_type)::_pointer_type>();
+		CGPTR<typename T::mapped_type::_pointer_type>	pObject	 = NEW<typename T::mapped_type::_pointer_type>();
 		
 		// - pop...
-		pObject	 = _Source->_extract<typename T::mapped_type>(_CGD_BOUND_INFO_PASS);
+		pObject	 = _Source->TEMPLATE _extract<typename T::mapped_type>(_CGD_BOUND_INFO_PASS);
 
 		// _ Key와 값을 써넣는다.
 		container.insert(std::make_pair(std::move(tempKey), std::move(pObject)));
@@ -981,7 +997,7 @@ T _Xfront_CGPTR_container_associative(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ cons
 		typename T::key_type	tempKey		 = _RH<typename T::key_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);
 
 		// - Create
-		CGPTR<(typename T::mapped_type)::_pointer_type>	pObject	 = NEW<(typename T::mapped_type)::_pointer_type>();
+		CGPTR<typename T::mapped_type::_pointer_type>	pObject	 = NEW<typename T::mapped_type::_pointer_type>();
 
 		// - pop...
 		pObject	 = _RH<typename T::mapped_type>::_do(_CGD_BOUND_INFO_PASS _CGD_COMMA _Source, tempOffset);

@@ -113,8 +113,6 @@ public:
 			typename _AB<T>::t	append(const T& _Data)					{	return _append(_CGD_BOUND_INFO_GET _CGD_COMMA _Data); }
 			template <class T, size_t N>
 			typename _AB<T[N]>::t append(const T(&_Data)[N])			{	return _append(_CGD_BOUND_INFO_GET _CGD_COMMA _Data); }
-			template <class T>
-			void*				append(_In_reads_(_Count) const T* _Data, _In_ size_t _Count) {	return _append_array(_CGD_BOUND_INFO_GET _CGD_COMMA _Data, _Count);}
 		#ifdef _SUPPORT_INITIALIZER_LIST
 			template <class T>
 			void*				append(const std::initializer_list<T>& _List){	void* p=get_back_ptr(); _append_initializer_list<T>(_CGD_BOUND_INFO_GET _CGD_COMMA _List); return p;}
@@ -122,14 +120,12 @@ public:
 			template<class I> 
 			typename std::enable_if<is_iterator<I>::value, size_t>::type 
 								append(I _First, I _Last)				{	return _Xappend_iterator(_CGD_BOUND_INFO_GET _CGD_COMMA this, _First, _Last);}
-			void*				append(_In_ size_t _Size, _In_reads_bytes_(_Size) const void* _Buffer)	{	return _append_buffer(_CGD_BOUND_INFO_GET _CGD_COMMA _Size, _Buffer);}
-
 			template <class T>
 			typename std::enable_if<is_string_type<T>::value, void*>::type
 								append_string(const T* _String)			{ return _append_string_pointer(_CGD_BOUND_INFO_GET _CGD_COMMA _String);}
 			template <class T, size_t N>
 			typename std::enable_if<is_string_type<T>::value, void*>::type
-								append_string(const const_string<T,N>& _String) { return _append_string_pointer(_CGD_BOUND_INFO_GET _CGD_COMMA _String.p, templist);}
+								append_string(const const_string<T,N>& _String) { return _append_string_pointer(_CGD_BOUND_INFO_GET _CGD_COMMA _String.p);}
 			template <class T, class F>
 			typename std::enable_if<is_string_type<T>::value, void*>::type
 								append_string(const T* _Format, F, ...) { va_list templist; va_start(templist, _Format); auto p=_append_string_format(_CGD_BOUND_INFO_GET _CGD_COMMA _Format, templist); va_end(templist); return p;}
@@ -141,7 +137,7 @@ public:
 								append_text(const T* _Text)				{ return _append_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Text);}
 			template <class T, size_t N>
 			typename std::enable_if<is_string_type<T>::value, size_t>::type
-								append_text(const const_string<T,N>& _Text) { return _append_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Text.p, templist);}
+								append_text(const const_string<T,N>& _Text) { return _append_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Text.p);}
 			template <class T, class F>
 			typename std::enable_if<is_string_type<T>::value, size_t>::type
 								append_text(const T* _Format, F, ...)	{ va_list templist; va_start(templist, _Format); auto p=_append_text_format(_CGD_BOUND_INFO_GET _CGD_COMMA _Format, templist); va_end(templist); return p;}
@@ -157,8 +153,13 @@ public:
 			typename _BF<T>::t	extract()								{	return _extract<T>(_CGD_BOUND_INFO_GET);}
 			template <class T>
 			size_t				extract(__out_ecount(_Length_in_words) T* _String, _In_ size_t _Length_in_words=INT_MAX) {	return _extract_string_copy(_CGD_BOUND_INFO_GET _CGD_COMMA _String, _Length_in_words);}
+			char*				extract_web_modify()					{	return _extract_web_modify(_CGD_BOUND_INFO_GET);}
 			template <class T>
-			T&					subtract()								{	return _subtract_general<T>(_CGD_BOUND_INFO_GET)}
+			std::basic_string<T> extract_text(T _Terminal=NULL)			{	return _extract_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Terminal);}
+			template <class T>
+			T*					extract_text(T _Terminal, T _Modify)	{	return _extract_text(_CGD_BOUND_INFO_GET _CGD_COMMA _Terminal, _Modify);}
+			template <class T>
+			T&					subtract()								{	return _subtract_general<T>(_CGD_BOUND_INFO_GET);}
 			void*				subtract(_In_ size_t _Length)			{	return _subtract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Length);}
 
 	// 6) front
@@ -211,17 +212,17 @@ public:
 			template <class T>
 			T&					_prepend_general(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const T& _Data);
 			template <class T> 
-			typename std::enable_if<is_memcopy_able<typename T>::value, void*>::type
+			typename std::enable_if<is_memcopy_able<T>::value, void*>::type
 								_prepend_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_reads_(_Count) const T* _Data, _In_ size_t _Count);
 			template <class T> 
-			typename std::enable_if<!is_memcopy_able<typename T>::value, void*>::type
+			typename std::enable_if<!is_memcopy_able<T>::value, void*>::type
 								_prepend_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_reads_(_Count) const T* _Data, _In_ size_t _Count);
 			template <class T>
 			void*				_prepend_string_pointer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_reads_z_(_Buffer_Size) const T* _String, _In_ size_t _Buffer_Size=INT32_MAX);
 			template <class T>
 			void*				_prepend_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const std::basic_string<T>& p_str);
 			template <class T, size_t N>
-			void*				_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const const_string<T,N>& _constString);
+			void*				_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const CGD::const_string<T,N>& _constString);
 			template <class T>
 			void*				_prepend_string_format(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const T* _Format, va_list _ArgList);
 			template <class T>
@@ -298,7 +299,12 @@ public:
 			template <class T, class... TREST>
 			void				_extract_tuple(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ std::tuple<T, TREST...>& _Tupple){	std::get<0>(_Tupple)=_extract<T>(_CGD_BOUND_INFO_PASS); _extract_tuple(_CGD_BOUND_INFO_PASS _CGD_COMMA (std::tuple<TREST...>&)_Tupple);}
 		#endif
-			char*				_extract_web(_CGD_BOUND_INFO_PARAM);
+			template <class T>
+			std::basic_string<T> _extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal);
+			template <class T>
+			T*					_extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal,  _In_ T _CharChange);
+			char*				_extract_web_modify(_CGD_BOUND_INFO_PARAM);
+			std::string			_extract_web(_CGD_BOUND_INFO_PARAM);
 			char*				_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(_Buffer_Size) char* p_pstrBuffer, _In_ size_t _Buffer_Size = INT_MAX);
 			void*				_extract_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t _Size, _In_ void* _Buffer);
 			// subtract) 

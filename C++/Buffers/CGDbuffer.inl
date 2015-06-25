@@ -177,7 +177,7 @@ void* buffer::_prepend_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const std::b
 }
 
 template <class T, size_t N>
-void* buffer::_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const const_string<T,N>& _constString)
+void* buffer::_prepend_const_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const CGD::const_string<T,N>& _constString)
 {
 	// 1) [문자열_길이]와 복사할 크기를 구한다.
 	const size_t	lengthString = _constString.size();
@@ -416,7 +416,9 @@ buffer::_append_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_reads_(_Count) const 
 	CGD_ASSERT(_Count>=0, throw std::invalid_argument("_Count is invalid [0] (" __FUNCTION__ ")"));
 
 	// Check) _Data이 nullptr이면 안된다.
-	CGD_ASSERT(_Data!=nullptr, throw std::invalid_argument("_Data is nullptr [1] (" __FUNCTION__ ")"));
+	CGD_ASSERT(_Data!=nullptr || (_Data==nullptr && _Count==0), throw std::invalid_argument("_Data is nullptr [1] (" __FUNCTION__ ")"));
+
+
 
 	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
 	_CGD_BUFFER_BOUND_CHECK((buf+len)>=_bound.bound_lower && (buf+len+sizeof(T)*_Count)<=_bound.bound_upper);
@@ -469,7 +471,7 @@ inline void* buffer::_append_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t
 	CGD_ASSERT(_Size>=0, throw std::invalid_argument("_Size is invalid [0] (" __FUNCTION__ ")"));
 
 	// Check) _Buffer이 nullptr이면 안된다.
-	CGD_ASSERT(_Buffer!=nullptr, throw std::invalid_argument("_Buffer is nullptr [1] (" __FUNCTION__ ")"));
+	CGD_ASSERT(_Buffer!=nullptr || (_Buffer==nullptr && _Size==0), throw std::invalid_argument("_Buffer is nullptr [1] (" __FUNCTION__ ")"));
 
 	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
 	_CGD_BUFFER_BOUND_CHECK((buf+len)>=_bound.bound_lower && (buf+len+_Size)<=_bound.bound_upper);
@@ -671,7 +673,7 @@ inline void* buffer::_extract_skip(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t 
 }
 
 template <class T>
-COUNT_T buffer::_extract_string_copy(_CGD_BOUND_INFO_PARAM _CGD_COMMA __out_ecount(p_iLengthInWords) T* _String, _In_ size_t p_iLengthInWords)
+COUNT_T buffer::_extract_string_copy(_CGD_BOUND_INFO_PARAM _CGD_COMMA __out_ecount(_LengthInWords) T* _String, _In_ size_t _LengthInWords)
 {
 	// Check) _String이 nullptr이면 안된다.
 	CGD_ASSERT(_String!=nullptr, throw std::invalid_argument("_String is nullptr [1] (" __FUNCTION__ ")"));
@@ -690,22 +692,22 @@ COUNT_T buffer::_extract_string_copy(_CGD_BOUND_INFO_PARAM _CGD_COMMA __out_ecou
 		return	(COUNT_T)-1;
 	}
 
-	// Check) [문자열_길이]가 [목표_버퍼_길이]보다 작은 지를 확인한다.
-	if(sizeString>=p_iLengthInWords) throw std::length_error("buffer size is too small!! [5] (" __FUNCTION__ ")");
-
 	// 2) [데이터_크기]를 계산한다.(COUNT_T[문자열_길이]+size(String))
-	size_t	sizeString	 = lengthString*sizeof(T);
+	size_t	sizeString = lengthString*sizeof(T);
 
-	// 2) [복사할 위치]를 얻는다.
+	// Check) [문자열_길이]가 [목표_버퍼_길이]보다 작은 지를 확인한다.
+	if(sizeString>= _LengthInWords) throw std::length_error("buffer size is too small!! [5] (" __FUNCTION__ ")");
+
+	// 3) [복사할 위치]를 얻는다.
 	const T*	p	 = buf+sizeof(COUNT_T);
 
-	// 3) [원본_버퍼_포인터]에 [문자열을]을 복사한다.
+	// 4) [원본_버퍼_포인터]에 [문자열을]을 복사한다.
 	if(_String!=p)
 	{
 		memcpy(_String, p, sizeString);
 	}
 
-	// 4) 문자열 길이를 sizeof(COUNT_T)만큼 늘린다.
+	// 5) 문자열 길이를 sizeof(COUNT_T)만큼 늘린다.
 	sizeString	+=sizeof(COUNT_T);
 
 	// 5) [원본_버퍼_포인터]를 [데이터_크기]만큼 더한다.
@@ -752,39 +754,6 @@ std::basic_string<T> buffer::_extract_string(_CGD_BOUND_INFO_PARAM)
 	return	std::basic_string<T>(_extract_string_pointer<T>(_CGD_BOUND_INFO_PASS));
 }
 
-inline char* buffer::_extract_web(_CGD_BOUND_INFO_PARAM)
-{
-	// Check) Lower Bound 확인
-	_CGD_BUFFER_BOUND_CHECK((buf)>=_bound.bound_lower);
-
-	// Definition)
-	const uint16_t	wCompare	 = ('\n'<<8) | '\r';
-
-	// Declare)
-	char*		chNow	 = (char*)(buf);
-	const char*	pEnd	 = (char*)(buf+len-1);
-
-	// 1) /r/n을 찾는다.
-	for(; chNow<pEnd; ++chNow)
-	{
-		if(*(uint16_t*)chNow==wCompare)
-		{
-			// - 잠시 buf를 저장해 놓는다.
-			char*	pHead	 = buf;
-
-			// - buf를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
-			buf		 = (chNow+2);
-			len		 = (uint32_t)(pEnd-chNow-1);
-
-			// Return) 
-			return	pHead;
-		}
-	}
-
-	// Return) 실패! Web Message를 완성하지 못했다.
-	throw	nullptr;
-}
-
 inline void* buffer::_extract_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_t _Size, _In_ void* _Buffer)
 {
 	// Check) _Buffer이 nullptr이면 안된다.
@@ -814,6 +783,141 @@ inline void* buffer::_extract_buffer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ size_
 
 	// Return) 
 	return	p;
+}
+
+template <class T>
+std::basic_string<T> buffer::_extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal)
+{
+	// Check) Lower Bound 확인
+	_CGD_BUFFER_BOUND_CHECK((buf)>=_bound.bound_lower);
+
+	// Declare)
+	T*			chNow	 = (T*)(buf);
+	const T*	pEnd	 = (T*)(buf+len)-1;
+
+	// 1) /r/n을 찾는다.
+	for(; chNow<pEnd; ++chNow)
+	{
+		if(*chNow==_CharTerminal)
+		{
+			// - 잠시 buf를 저장해 놓는다.
+			T*	pHead	 = buf;
+
+			// - buf를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
+			buf		 = (chNow+1);
+			len		 = (uint32_t)((uintptr_t)pEnd-(uintptr_t)chNow);
+
+			// Return) 
+			return	std::basic_string<T>(pHead, pEnd-chNow-1);
+		}
+	}
+
+	// Return) 실패! Web Message를 완성하지 못했다.
+	return	nullptr;
+}
+
+template <class T>
+T* buffer::_extract_text(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ T _CharTerminal,  _In_ T _CharChange)
+{
+	// Check) Lower Bound 확인
+	_CGD_BUFFER_BOUND_CHECK((buf)>=_bound.bound_lower);
+
+	// Declare)
+	T*			chNow	 = (T*)(buf);
+	const T*	pEnd	 = (T*)(buf+len)-1;
+
+	// 1) /r/n을 찾는다.
+	for(; chNow<pEnd; ++chNow)
+	{
+		if(*chNow==_CharTerminal)
+		{
+			// - 잠시 buf를 저장해 놓는다.
+			T*	pHead	 = buf;
+
+			// - buf를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
+			buf		 = (chNow+1);
+			len		 = (uint32_t)((uintptr_t)pEnd-(uintptr_t)chNow);
+
+			// - NULL을 넣는다.
+			*chNow	 = _CharChange;
+
+			// Return) 
+			return	pHead;
+		}
+	}
+
+	// Return) 실패! Web Message를 완성하지 못했다.
+	return	nullptr;
+}
+
+
+inline char* buffer::_extract_web_modify(_CGD_BOUND_INFO_PARAM)
+{
+	// Check) Lower Bound 확인
+	_CGD_BUFFER_BOUND_CHECK((buf)>=_bound.bound_lower);
+
+	// Definition)
+	const uint16_t	wCompare	 = ('\n'<<8) | '\r';
+
+	// Declare)
+	char*		chNow	 = (char*)(buf);
+	const char*	pEnd	 = (char*)(buf+len-1);
+
+	// 1) /r/n을 찾는다.
+	for(; chNow<pEnd; ++chNow)
+	{
+		if(*(uint16_t*)chNow==wCompare)
+		{
+			// - 잠시 buf를 저장해 놓는다.
+			char*	pHead	 = buf;
+
+			// - buf를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
+			buf		 = (chNow+1);
+			len		 = (uint32_t)(pEnd-chNow-1);
+
+			// - NULL을 넣는다.
+			*chNow	 = (char)NULL;
+
+			// Return) 
+			return	pHead;
+		}
+	}
+
+	// Return) 실패! Web Message를 완성하지 못했다.
+	return	nullptr;
+}
+
+inline std::string buffer::_extract_web(_CGD_BOUND_INFO_PARAM)
+{
+	// Check) Lower Bound 확인
+	_CGD_BUFFER_BOUND_CHECK((buf)>=_bound.bound_lower);
+
+	// Definition)
+	const uint16_t	wCompare	 = ('\n'<<8) | '\r';
+
+	// Declare)
+	char*		chNow	 = (char*)(buf);
+	const char*	pEnd	 = (char*)(buf+len-1);
+
+	// 1) /r/n을 찾는다.
+	for(; chNow<pEnd; ++chNow)
+	{
+		if(*(uint16_t*)chNow==wCompare)
+		{
+			// - 잠시 buf를 저장해 놓는다.
+			char*	pHead	 = buf;
+
+			// - buf를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
+			buf		 = (chNow+2);
+			len		 = (uint32_t)(pEnd-chNow-1);
+
+			// Return) 
+			return	std::string(pHead, chNow-pHead);
+		}
+	}
+
+	// Return) 실패! Web Message를 완성하지 못했다.
+	return	nullptr;
 }
 
 inline char* buffer::_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(_Buffer_Size) char* _Buffer, _In_ size_t _Buffer_Size)
@@ -849,7 +953,7 @@ inline char* buffer::_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(
 			memcpy(_Buffer, buf, ilength);
 
 			// - 마지막에 NULL을 추가한다.
-			*(_Buffer+ilength)	 = NULL;
+			*(_Buffer+ilength)	 = (char)NULL;
 
 			// - buf를 chNow+2로 설정한다. (/r/n부분을 빼기위해+2를 함.)
 			buf		 = (chNow+2);
@@ -861,7 +965,7 @@ inline char* buffer::_extract_web(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Out_writes_(
 	}
 
 	// Exception) 
-	throw	std::out_of_range("string is too short!! [1] (" __FUNCTION__ ")");
+	return	nullptr;
 }
 
 template <class T>
@@ -898,7 +1002,7 @@ COUNT_T buffer::_get_front_string_length(_CGD_BOUND_INFO_PARAM )
 	if(sizeData>(size_t)len) throw std::length_error("string is too short!! [2] (" __FUNCTION__ ")");
 
 	// Check) 문자열의 제일 끝이 NULL인지 확인한다.
-	if(*(T*)(buf+sizeData-sizeof(T)) != NULL) throw std::length_error("it's invalid string! [3] (" __FUNCTION__ ")");
+	if(*(T*)(buf+sizeData-sizeof(T)) != (T)NULL) throw std::length_error("it's invalid string! [3] (" __FUNCTION__ ")");
 
 	// Return) [문자열_시작_포인터]을 리턴한다.
 	return	lengthString;
@@ -1015,7 +1119,7 @@ T* buffer::_front_string_pointer(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Inout_ int& _
 	if(posTail>(size_t)len) throw std::out_of_range("string is to long!! [2] (" __FUNCTION__ ")");
 
 	// Check) 문자열의 제일 끝이 NULL인지 확인한다.
-	if(*(T*)(buf+posTail-sizeof(T))!=NULL) throw std::out_of_range("Invalid string! [3] (" __FUNCTION__ ")");
+	if(*(T*)(buf+posTail-sizeof(T))!=(T)NULL) throw std::out_of_range("Invalid string! [3] (" __FUNCTION__ ")");
 	
 	// 4) 최종적으로 계산된 Offset값을 업데이트한다.
 	_Offset		 = (int)posTail;
@@ -1058,7 +1162,7 @@ std::basic_string<T> buffer::_front_string(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Ino
 	if(posTail>(size_t)len) throw std::out_of_range("string is to long!! [2] (" __FUNCTION__ ")");
 
 	// Check) 문자열의 제일 끝이 NULL인지 확인한다.
-	if(*(T*)(buf+posTail-sizeof(T))!=NULL) throw std::out_of_range("string is too short!! [3] (" __FUNCTION__ ")");
+	if(*(T*)(buf+posTail-sizeof(T))!=(T)NULL) throw std::out_of_range("string is too short!! [3] (" __FUNCTION__ ")");
 	
 	// 4) 최종적으로 계산된 Offset값을 업데이트한다.
 	_Offset		 = (int)posTail;

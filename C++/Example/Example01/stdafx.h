@@ -5,6 +5,9 @@
 
 #pragma once
 
+#undef __STRICT_ANSI__
+
+
 #include "targetver.h"
 
 #include <stdio.h>
