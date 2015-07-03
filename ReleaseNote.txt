@@ -12,6 +12,36 @@
                                                                            
 ==============================================================================
 
+2.0.3pre (2015.7.3)
+   (C++)
+   - CGD::buffer::extract(SKIP) 함수 추가.
+   - CGD::buffer::operator>>(SKIP) 추가.
+   - CGD::buffer::_prepend_tuple 함수 오타 수정
+   - gcc용 C++11버전 지원
+     gcc에서도 C++11지원을 위해 config 수정
+     gcc warning disable 추가.
+     gcc일 경우 _aligned_malloc(msc용) 대신 malloc(stadard c++)으로 사용
+     is_memcopy_able gcc 지원용으로 수정
+   - CGD::TIME 관련 오류 수정
+   - std::tuple<T...> 지원 오류 수정
+   - _Xappend_string_format()함수 리펙토링
+
+2.0.2pre (2015.6.26)
+   (C++)
+   - Linux 지원. (Linux GCC, cygwin, MinGW, Solaris,  C++11이상 지원 필요)
+
+   - 버그 수정
+     CGD::buffer::_append_array 함수: _Count가 0개일 경우 _Data가 nullptr라도 허용하도록 수정.
+     CGD::buffer::_append_array 함수: _Count가 0개일 경우 _Data가 nullptr라도 허용하도록 수정.
+     CGD::buffer::_extract_string_copy: _LengthInWords 변수명 오류 수정
+     string 처리 과정 중 NULL이 char형으로 캐티팅되지 않아 뜨는 warning 수정.
+     struct CGD::text<T>: operator 정의 오류 수정
+     CGD::_Xextract_container_CGPTR_list 함수 오류 수정
+     CGD::append_string(const const_string<T,N>& _String): 컴파일 오류 수정
+     CGD::ptr::_prepend_string_format() 함수 오타로 인한 컴파일 오류 수정.
+     CGD::ptr::_append_string_format 스트링 길이 계산 오류 수정
+     CGD::ptr::_extract_string_copy()함수 파라미터 이름 오류 수정.
+
 2.0.1pre (2015.2.26)
    - visual studio 2010용 Project 추가
    - C++용 CGD::buffer Example01 내용 보강
