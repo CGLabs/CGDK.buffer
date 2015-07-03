@@ -149,6 +149,7 @@ public:
 			template <size_t ISIZE>
 			void*				extract()								{	return _extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA ISIZE);}
 			void*				extract(_In_ size_t _Length)			{	return _extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Length);}
+			void*				extract(_In_ const SKIP& _Skip)			{	return _extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Skip.m_skip); }
 			template <class T>
 			typename _BF<T>::t	extract()								{	return _extract<T>(_CGD_BOUND_INFO_GET);}
 			template <class T>
@@ -176,13 +177,13 @@ public:
 			// [operator] Overloading ++/--
 			ptr&				operator++()							{	++m_ptr; return *this;}
 			ptr					operator++(int)							{	return ptr(m_ptr++);}
-			ptr&				operator--()							{	--m_ptr; return *this;}
+			ptr&				operator--()								{	--m_ptr; return *this;}
 			ptr					operator--(int)							{	return ptr(m_ptr--);}
 			// [operator] +/-
 			ptr					operator+(size_t _Rhs) const			{	return ptr(m_ptr+_Rhs);}
 			ptr					operator+(const SKIP& _Rhs) const		{	return ptr(m_ptr+_Rhs.m_skip);}
-			ptr					operator-(size_t _Rhs) const			{	return ptr(m_ptr-_Rhs);}
-			size_t				operator-(const ptr& _Rhs) const		{	return m_ptr-_Rhs.m_ptr;}
+			ptr					operator-(size_t _Rhs) const				{	return ptr(m_ptr-_Rhs);}
+			size_t				operator-(const ptr& _Rhs) const			{	return m_ptr-_Rhs.m_ptr;}
 			// [operator] +=/-=
 			ptr&				operator+=(const buffer& _Rhs)			{	_append_buffer(_CGD_BOUND_INFO_GET _CGD_COMMA _Rhs); return *this;}
 			ptr&				operator+=(size_t _Rhs)					{	m_ptr+=_Rhs; return *this;}
@@ -194,6 +195,7 @@ public:
 			// [operator] >> - extract
 			template <class T>
 			ptr&				operator>>(T& _Rhs)						{	_Rhs=_extract<T>(_CGD_BOUND_INFO_GET); return *this;}
+			ptr&				operator>>(const SKIP& _Rhs)			{	_extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Rhs.m_skip); return *this; }
 			// - Operator << - append
 			template <class T>
 			ptr&				operator<<(const T& _Rhs)				{	_append(_CGD_BOUND_INFO_GET _CGD_COMMA _Rhs); return *this;}
@@ -338,6 +340,7 @@ public:
 public:
 			char*				m_ptr;
 };
+
 
 }
 

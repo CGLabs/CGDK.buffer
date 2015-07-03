@@ -30,6 +30,7 @@
 #if defined(_MSC_VER)
 	#include <xmemory>
 
+	// Template) Visual C++과 gcc의 template 처리 방법의 차이로 인한 것
 	#define	TEMPLATE	
 
 #else
@@ -43,6 +44,7 @@
 #include <stdexcept>
 #include <malloc.h>
 #include <stdarg.h>
+#include <type_traits>
 
 // 3) C++ Standard Template Libraries
 namespace std
@@ -79,8 +81,28 @@ template<class _A, class _B>	class circular_list;
 
 // Defined in CGBufferClasses
 template<class T> class CGPTR;
-template<class T> CGPTR<T> NEW();
+template <class TOBJECT> class NCGPoolable;
 
+
+#ifdef _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
+	template <class TOBJECT, class... TARGS>
+	typename std::enable_if<std::is_base_of<NCGPoolable<TOBJECT>, TOBJECT>::value, CGPTR<TOBJECT>>::type
+	NEW(TARGS... _Args);
+
+	template <class TOBJECT, class... TARGS>
+	typename std::enable_if<!std::is_base_of<NCGPoolable<TOBJECT>, TOBJECT>::value, CGPTR<TOBJECT>>::type
+	NEW(TARGS... _Args);
+
+#else
+	template <class TOBJECT>
+	typename std::enable_if<std::is_base_of<NCGPoolable<TOBJECT>, TOBJECT>::value, CGPTR<TOBJECT>>::type
+	NEW();
+
+	template <class TOBJECT>
+	typename std::enable_if<!std::is_base_of<NCGPoolable<TOBJECT>, TOBJECT>::value, CGPTR<TOBJECT>>::type
+	NEW();
+
+#endif
 
 // 3) 
 #include "CGDbufferConfigures.h"
@@ -92,10 +114,6 @@ template<class T> CGPTR<T> NEW();
 //
 //-----------------------------------------------------------------------------
 #if defined(_MSC_VER)
-	// 1) warning C4344: behavior change: use of explicit template arguments results in call to ...
-	//    - Causes in front function
-	#pragma warning(disable:4344)
-
 	#include <sal.h>
 	#if _MSC_VER<1700
 		#define _In_reads_z_(a)
@@ -121,10 +139,7 @@ template<class T> CGPTR<T> NEW();
 	#define _ASSERT(a)
 
 	#define	__FUNCTION__ ""
-
-
 #endif
-
 
 //-----------------------------------------------------------------------------
 // 
@@ -133,8 +148,14 @@ template<class T> CGPTR<T> NEW();
 //-----------------------------------------------------------------------------
 // 1) Definitions
 #define	CGMEMPTR		CGD::ptr
-#define	CGMALLOC(size)	_aligned_malloc(size, 16)
-#define	CGFREE(ptr)		_aligned_free(ptr)
+
+#if defined(_MSC_VER)
+	#define	CGMALLOC(size)	_aligned_malloc(size, 16)
+	#define	CGFREE(ptr)		_aligned_free(ptr)
+#else
+	#define	CGMALLOC(size)	malloc(size)
+	#define	CGFREE(ptr)		free(ptr)
+#endif
 
 namespace CGD
 {
@@ -159,7 +180,11 @@ template<class _Ty>				struct is_iterator<_Ty, typename enable_if_exist<
 };
 
 #ifdef _SUPPORT_CPP11_TRAITS
-template <typename T> struct is_memcopy_able	{ static const bool value = std::is_trivially_copyable<T>::value && !std::is_pointer<T>::value;};
+	#if defined(_MSC_VER)
+		template <typename T> struct is_memcopy_able	{ static const bool value = std::is_trivially_copyable<T>::value && !std::is_pointer<T>::value;};
+	#else
+		template <typename T> struct is_memcopy_able	{ static const bool value = __has_trivial_copy(T) && !std::is_pointer<T>::value;};
+	#endif
 #else
 template <typename T> struct is_memcopy_able	{ static const bool value = std::is_arithmetic<T>::value && !std::is_pointer<T>::value;};
 #endif
@@ -475,8 +500,8 @@ public:
 	DATETIME(const CGD::TIME::LOCAL::time_point& _Value)		{	set_time((const CGD::TIME::_POINT&)_Value);}
 	DATETIME(const CGD::TIME::SYSTEM::time_point& _Value)		{	set_time((const CGD::TIME::_POINT&)_Value);}
 				operator	CGD::TIME::_POINT() const			{	return get_CGDTIME();}
-				operator	CGD::TIME::LOCAL::time_point() const{	return (CGD::TIME::LOCAL::time_point&)get_CGDTIME();}
-				operator	CGD::TIME::SYSTEM::time_point() const{	return (CGD::TIME::SYSTEM::time_point&)get_CGDTIME();}
+				operator CGD::TIME::LOCAL::time_point() const	{	CGD::TIME::_POINT t = get_CGDTIME(); return (CGD::TIME::LOCAL::time_point&)t; }
+				operator	CGD::TIME::SYSTEM::time_point() const{	CGD::TIME::_POINT t = get_CGDTIME(); return (CGD::TIME::SYSTEM::time_point&)t;}
 	DATETIME&	operator =(const CGD::TIME::_POINT& _Rhs)		{	set_time(_Rhs); return *this;}
 	DATETIME&	operator =(const CGD::TIME::LOCAL::time_point& _Rhs){	set_time((const CGD::TIME::_POINT&)_Rhs); return *this;}
 	DATETIME&	operator =(const CGD::TIME::SYSTEM::time_point& _Rhs){	set_time((const CGD::TIME::_POINT&)_Rhs); return *this;}
@@ -643,7 +668,7 @@ template<class T, class FLAG = void> class _BF { public:	typedef	T &t;	template<
 
 
 
-	// Functions for 
+// Functions for 
 #include "CGDbufferFunctions.h"
 
 // Class for prepend)
@@ -651,7 +676,7 @@ template<class T, size_t X>	class _AF<T[X], typename std::enable_if<is_not_strin
 													{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const T (&data)[X])				{ return s->TEMPLATE _prepend_array<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (T*)data, X);}};
 #ifdef _SUPPORT_ZERO_SIZED_ARRAY
 template<class T>			class _AF<T[], typename std::enable_if<is_not_string_type<T>::value>::type>		
-													{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const T (&data)[])				{ static_assert(false, "CGD::buffer don not support 'prepend' on unsized array (array size must be specified)"); return nullptr;}};
+													{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const T (&)[])					{ static_assert(false, "CGD::buffer don not support 'prepend' on unsized array (array size must be specified)"); return nullptr;}};
 #endif
 template<>					class _AF<CGD::buffer>	{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const buffer& data)				{ return s->_prepend_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA data);}};
 template<>					class _AF<CGD::SKIP>	{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const SKIP& data)					{ return s->_prepend_skip(_CGD_BOUND_INFO_PASS _CGD_COMMA data.m_skip);}};
@@ -669,7 +694,7 @@ template<class T, size_t X>	class _AB<T[X], typename std::enable_if<is_not_strin
 													{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const T (&data)[X])				{ return s->TEMPLATE _append_array<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA (T*)data, X);}};
 #ifdef _SUPPORT_ZERO_SIZED_ARRAY
 template<class T>			class _AB<T[], typename std::enable_if<is_not_string_type<T>::value>::type>		
-													{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const T (&data)[])				{ static_assert(false, "CGD::buffer don not support 'append' on unsized array (array size must be specified)"); return nullptr;}};
+													{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const T (&)[])					{ static_assert(false, "CGD::buffer don not support 'append' on unsized array (array size must be specified)"); return nullptr;}};
 #endif
 template<class T>			class _AB<T, typename std::enable_if<std::is_base_of<CGD::buffer, T>::value>::type>
 													{	public:	typedef	void *t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s, const CGD::buffer& data)			{ return s->_append_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA data);}};
@@ -698,7 +723,7 @@ template<class T>			class _BF<T[], typename std::enable_if<is_not_string_type<T>
 template<>					class _BF<CGD::WEB>		{	public:	typedef	std::string t;		template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s)									{ return s->_extract_web(_CGD_BOUND_INFO_PASS);} };
 template<>					class _BF<CGD::WEB_MODIFY>{	public:	typedef	char* t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s)									{ return s->_extract_web_modify(_CGD_BOUND_INFO_PASS);} };
 #ifdef _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
-template<class... T>		class _BF<std::tuple<T...>> {	public:	typedef	std::tuple<T...> t;	template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s)								{ std::tuple<T...> temp; s->TEMPLATE _extract_tuple<T...>(_CGD_BOUND_INFO_PASS _CGD_COMMA temp); return temp;} };
+template<class... T>		class _BF<std::tuple<T...>> {	public:	typedef	std::tuple<T...> t;	template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s)								{ std::tuple<T...> temp; s->TEMPLATE _extract_tuple(_CGD_BOUND_INFO_PASS _CGD_COMMA temp); return temp;} };
 #endif
 template<class T>			class _BF<T, typename std::enable_if<std::is_base_of<CGD::IBufferSerializable, T>::value>::type>
 													{	public:	typedef	CGD::_PASS t;		template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA S* s)									{ return CGD::_PASS(_CGD_BOUND_INFO_PASS _CGD_COMMA s);}};
@@ -715,7 +740,7 @@ template<class T>			class _RH<T[], typename std::enable_if<is_not_string_type<T>
 													{	public:	typedef	void* t;			template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)				{ static_assert(false, "CGD::buffer don not support 'front' on unsized array(use 'vector or list' instead)"); return nullptr;}};
 #endif
 #ifdef _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
-template<class... T>		class _RH<std::tuple<T...>> {	public:	typedef	std::tuple<T...> t;	template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)			{ S tempBuffer=*s+(size_t)_Offset; std::tuple<T...> temp; tempBuffer._extract_tuple<T...>(_CGD_BOUND_INFO_PASS _CGD_COMMA temp); _Offset=(int)(tempBuffer.get_front_ptr()-s->get_front_ptr()); return temp;} };
+template<class... T>		class _RH<std::tuple<T...>> {	public:	typedef	std::tuple<T...> t;	template<class S> static t _do(_CGD_BOUND_INFO_PARAM _CGD_COMMA const S* s, int& _Offset)			{ S tempBuffer=*s+(size_t)_Offset; std::tuple<T...> temp; tempBuffer._extract_tuple(_CGD_BOUND_INFO_PASS _CGD_COMMA temp); _Offset=(int)(tempBuffer.get_front_ptr()-s->get_front_ptr()); return temp;} };
 #endif
 
 //

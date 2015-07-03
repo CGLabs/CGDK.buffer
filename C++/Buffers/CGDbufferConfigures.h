@@ -53,37 +53,69 @@
 
 // 3) Support =delete (C++11)
 #ifndef _SUPPORT_DELETE_FUNCTION
-	#if _MSC_VER>=1800
-		#define _SUPPORT_DELETE_FUNCTION
+	#if defined(_MSC_VER)
+		#if _MSC_VER>=1800
+			#define _SUPPORT_DELETE_FUNCTION
+		#endif
+	#else
+		#if __cplusplus>=201103L
+			#define _SUPPORT_DELETE_FUNCTION
+		#endif
 	#endif
 #endif
 
 // 4) Support variodic template paramter (C++11)
 #ifndef _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
-	#if _MSC_VER>=1800
-		#define _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
+	#if defined(_MSC_VER)
+		#if _MSC_VER>=1800
+			#define _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
+		#endif
+	#else
+		#if __cplusplus>=201103L
+			#define _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
+		#endif
 	#endif
 #endif
 
 // 5) Support constexpr (C++11)
 #ifndef _CONSTEXPR
-	#if _MSC_VER>=1900
-		#define	_CONSTEXPR	constexpr
+	#if defined(_MSC_VER)
+		#if _MSC_VER>=1900
+			#define	_CONSTEXPR	constexpr
+		#else
+			#define	_CONSTEXPR
+		#endif
 	#else
-		#define	_CONSTEXPR
+		#if __cplusplus>=201103L
+			#define	_CONSTEXPR	constexpr
+		#else
+			#define	_CONSTEXPR
+		#endif
 	#endif
 #endif // !_CONSTEXPR
 
 // 6) Zero-sized Array (C++11)
 #ifndef _SUPPORT_ZERO_SIZED_ARRAY
-	#if _MSC_VER>=1700
-		#define _SUPPORT_ZERO_SIZED_ARRAY
+	#if defined(_MSC_VER)
+		#if _MSC_VER>=1700
+			#define _SUPPORT_ZERO_SIZED_ARRAY
+		#endif
+	#else
+		#if __cplusplus>=201103L
+		#endif
 	#endif
 #endif
 
 // 7) Suport C++11 Traits 
 #ifndef _SUPPORT_CPP11_TRAITS
-	#if _MSC_VER>=1700
-		#define _SUPPORT_CPP11_TRAITS
+	#if defined(_MSC_VER)
+		#if _MSC_VER>=1700
+			#define _SUPPORT_CPP11_TRAITS
+		#endif
+	#else
+		#if __cplusplus>=201103L
+			#define _SUPPORT_CPP11_TRAITS
+		#endif
 	#endif
+
 #endif

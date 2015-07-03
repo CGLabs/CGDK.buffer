@@ -150,6 +150,7 @@ public:
 			template <size_t ISIZE>
 			void*				extract()								{	return _extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA ISIZE);}
 			void*				extract(_In_ size_t _Length)			{	return _extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Length);}
+			void*				extract(_In_ const SKIP& _Skip)			{	return _extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Skip.m_skip); }
 			template <class T>
 			typename _BF<T>::t	extract()								{	return _extract<T>(_CGD_BOUND_INFO_GET);}
 			template <class T>
@@ -183,12 +184,12 @@ public:
 			// [operator] Overloading ++/--
 			buffer&				operator++()							{	++buf; --len; return *this;}
 			buffer				operator++(int)							{	return buffer(buf++, len--);}
-			buffer&				operator--()							{	--buf; ++len; return *this;}
+			buffer&				operator--()								{	--buf; ++len; return *this;}
 			buffer				operator--(int)							{	return buffer(buf--, len++);}
 			// [operator] +/-
 			buffer				operator+(size_t _Rhs) const			{	return buffer(buf+_Rhs, (len>(uint32_t)_Rhs) ? (len-(uint32_t)_Rhs) : 0);}
 			buffer				operator+(const SKIP& _Rhs) const		{	return buffer(buf+_Rhs.m_skip, (len>(uint32_t)_Rhs.m_skip) ? (len-(uint32_t)_Rhs.m_skip) : 0);}
-			buffer				operator-(size_t _Rhs) const			{	return buffer(buf-_Rhs, len+(uint32_t)_Rhs);}
+			buffer				operator-(size_t _Rhs) const				{	return buffer(buf-_Rhs, len+(uint32_t)_Rhs);}
 			// [operator] +=/-=
 			buffer&				operator+=(size_t _Rhs)					{	buf+=_Rhs; len-=(uint32_t)_Rhs; return *this;}
 			buffer&				operator+=(const SKIP& _Rhs)			{	buf+=_Rhs.m_skip; len-=(uint32_t)_Rhs.m_skip; return *this;}
@@ -199,6 +200,7 @@ public:
 			// [operator] >> - extract
 			template <class T>
 			buffer&				operator>>(T& _Rhs)						{	_Rhs=_extract<T>(_CGD_BOUND_INFO_GET); return *this;}
+			buffer&				operator>>(const SKIP& _Rhs)			{	_extract_skip(_CGD_BOUND_INFO_GET _CGD_COMMA _Rhs.m_skip); return *this; }
 			// - Operator << - append
 			template <class T>
 			buffer&				operator<<(const T& _Rhs)				{	_append(_CGD_BOUND_INFO_GET _CGD_COMMA _Rhs); return *this;}
@@ -242,9 +244,9 @@ public:
 		#endif
 		#ifdef _SUPPORT_VARIODIC_TEMPLATE_PARAMETER
 			template <class T>
-			void*				_prepend_tuple(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const std::tuple<T>& _Data) { _prepend<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA std::get<0>(_Data)); return m_buf; }
+			void*				_prepend_tuple(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const std::tuple<T>& _Data) { _prepend<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA std::get<0>(_Data)); return buf; }
 			template <class T, class... TREST>
-			void*				_prepend_tuple(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const std::tuple<T, TREST...>& _Tupple) {	_prepend_tuple(_CGD_BOUND_INFO_PASS _CGD_COMMA (const std::tuple<TREST...>&)_Tupple); _prepend<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA std::get<0>(_Tupple));; return m_buf;}
+			void*				_prepend_tuple(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ const std::tuple<T, TREST...>& _Tupple) {	_prepend_tuple(_CGD_BOUND_INFO_PASS _CGD_COMMA (const std::tuple<TREST...>&)_Tupple); _prepend<T>(_CGD_BOUND_INFO_PASS _CGD_COMMA std::get<0>(_Tupple));; return buf;}
 		#endif
 	// Push Back) 
 			template <class T>

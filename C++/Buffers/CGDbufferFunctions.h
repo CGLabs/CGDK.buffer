@@ -103,10 +103,9 @@ size_t _Xappend_string_format(_CGD_BOUND_INFO_PARAM _CGD_COMMA _Inout_ T* _Dest,
 
 	// 1) String 복사!!!
 	size_t	lengthString = _Xvsprintf(_Dest, _Format, _Va_list)+1;
-	size_t	sizeString	 = lengthString*sizeof(T);
 
 	// Check) 새로 추가되는 크기는 Upper Bound를 넘어서는 안됀다.
-	_CGD_BUFFER_BOUND_CHECK(((char*)_Dest+sizeString)<=_bound.bound_upper);
+	_CGD_BUFFER_BOUND_CHECK(((char*)_Dest+ lengthString*sizeof(T))<=_bound.bound_upper);
 
 	// Return) 
 	return	lengthString;
@@ -293,7 +292,7 @@ typename std::enable_if<is_memcopy_able<typename T::value_type>::value, void*>::
 	// 3) [데이터]들을 써넣는다.
 	if (count != 0)
 	{
-		_Source->TEMPLATE _append_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA count*sizeof(T::value_type), &_container.front());
+		_Source->TEMPLATE _append_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA count*sizeof(typename T::value_type), &_container.front());
 	}
 
 	// Return) [데이터]들의 처음 포인터를 리턴한다.
@@ -365,7 +364,7 @@ _Xextract_container_array(_CGD_BOUND_INFO_PARAM _CGD_COMMA _In_ S* _Source)
 	container.resize(countData);
 
 	// 3) [데이터_갯수]만큼 통째로 복사
-	_Source->TEMPLATE _extract_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA countData*sizeof(T::value_type), &container.front());
+	_Source->TEMPLATE _extract_buffer(_CGD_BOUND_INFO_PASS _CGD_COMMA countData*sizeof(typename T::value_type), &container.front());
 
 	// Return) 
 	return	std::move(container);
