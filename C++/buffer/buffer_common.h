@@ -2197,7 +2197,7 @@ template<typename T>		class serializer_size_of<T, std::enable_if_t<is_associativ
 
 
 //-----------------------------------------------------------------------------
-// aggrigate structure (Reflection)
+// aggregate structure (reflection)
 //-----------------------------------------------------------------------------
 template <std::size_t ISIZE>	constexpr std::size_t alliened_offset_pre     (std::size_t _source, std::size_t _add);
 template <>						constexpr std::size_t alliened_offset_pre< 1> (std::size_t _source, std::size_t)	  { return _source; }
@@ -2264,7 +2264,7 @@ std::size_t _Xsprintf(char* _dest, std::size_t /*_max_length_in_word*/, const ch
 	#pragma warning(disable:4996)
 	#endif
 
-	return	sprintf(_dest, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
+	return sprintf(_dest, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
 
 	#if defined(_MSC_VER)
 	#pragma warning(default:4996)
@@ -2278,7 +2278,7 @@ std::size_t _Xsprintf(wchar_t* _dest, std::size_t _max_length_in_word, const wch
 	#pragma warning(disable:4996)
 	#endif
 
-	return	swprintf(_dest, _max_length_in_word, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
+	return swprintf(_dest, _max_length_in_word, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
 
 	#if defined(_MSC_VER)
 	#pragma warning(default:4996)
