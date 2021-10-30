@@ -1,15 +1,17 @@
 //*****************************************************************************
 //*                                                                           *
-//*                              CGDK::buffer_view                            *
-//*                        Ver 5.0 / Release 2020.12.11                       *
+//*                      Cho sanghyun's Game Classes II                       *
+//*                       Ver 10.0 / Release 2019.12.11                       *
+//*                                                                           *
+//*                            CGBuffer Templates                             *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
-//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.com           *
+//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
 //*  Best for Game Developement and Optimized for Game Developement.          *
 //*                                                                           *
-//*                   (C) 2008 CGLabs All right reserved.                     *
+//*                (c) 2003. Cho Sanghyun. All right reserved.                *
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
@@ -23,38 +25,39 @@ namespace CGDK
 // CGDK::basic_buffer
 //
 //-----------------------------------------------------------------------------
-class basic_buffer : public _buffer_view<char>
+template <class ELEM_T>
+class _basic_buffer : public _buffer_view<char>
 {
 // traits) 
 public:
 			using base_t	  = _buffer_view<char>;
-			using self_t	  = basic_buffer;
+			using self_t	  = _basic_buffer<ELEM_T>;
 			using traits	  = typename base_t::traits;
 			using element_t	  = typename base_t::element_t;
 			using size_type	  = typename base_t::size_type;
 
-			template<class T> using peek_tr = PEEK_tr<basic_buffer, T>;
-			template<class T> using extr_tr = EXTR_tr<basic_buffer, T>;
-			template<class T> using appd_tr = APPD_tr<basic_buffer, T>;
-			template<class T> using prpd_tr = PRPD_tr<basic_buffer, T>;
+			template<class T> using peek_tr = PEEK_tr<self_t, T>;
+			template<class T> using extr_tr = EXTR_tr<self_t, T>;
+			template<class T> using appd_tr = APPD_tr<self_t, T>;
+			template<class T> using prpd_tr = PRPD_tr<self_t, T>;
 
 // constructor/destructor) 
 public:
-	constexpr basic_buffer() noexcept {}
-	constexpr basic_buffer(const basic_buffer& _buffer) noexcept : base_t(_buffer), bound(_buffer.get_bound()) {}
-	constexpr basic_buffer(basic_buffer&& _buffer) noexcept : base_t(_buffer), bound(_buffer.get_bound()) {}
+	constexpr _basic_buffer() noexcept {}
+	constexpr _basic_buffer(const _basic_buffer& _buffer) noexcept : base_t(_buffer), bound(_buffer.get_bound()) {}
+	constexpr _basic_buffer(_basic_buffer&& _buffer) noexcept : base_t(_buffer), bound(_buffer.get_bound()) {}
 	template <class T>
-	constexpr basic_buffer(_buffer_view<T> _buffer) noexcept : base_t(_buffer), bound{ _buffer.get_front_ptr(), _buffer.get_back_ptr() } {}
+	constexpr _basic_buffer(_buffer_view<T> _buffer) noexcept : base_t(_buffer), bound{ _buffer.get_front_ptr(), _buffer.get_back_ptr() } {}
 	template <class T>
-	constexpr basic_buffer(_buffer_view<T> _buffer, const buffer_bound& _bound) noexcept : base_t(_buffer), bound(_bound) {}
+	constexpr _basic_buffer(_buffer_view<T> _buffer, const buffer_bound& _bound) noexcept : base_t(_buffer), bound(_bound) {}
 	template <class T>
-	constexpr basic_buffer(_buffer_view<T> _buffer, buffer_bound&& _bound) noexcept : base_t(_buffer), bound(_bound) {}
+	constexpr _basic_buffer(_buffer_view<T> _buffer, buffer_bound&& _bound) noexcept : base_t(_buffer), bound(_bound) {}
 	template <class T>
-	constexpr basic_buffer(std::basic_string_view<T> _string) noexcept : base_t{ _string }, bound{ _string.data(), _string.data() + _string.size() } {}
+	constexpr _basic_buffer(std::basic_string_view<T> _string) noexcept : base_t{ _string }, bound{ _string.data(), _string.data() + _string.size() } {}
 
 protected:
-			basic_buffer(Imemory* _pbuffer) noexcept : base_t((_pbuffer != nullptr) ? *_pbuffer : base_t()), bound((_pbuffer != nullptr) ? _pbuffer->get_bound() : buffer_bound()) {}
-			basic_buffer(object_ptr<Imemory>&& _pbuffer) noexcept : base_t((_pbuffer.exist()) ? *_pbuffer : base_t()), bound((_pbuffer.exist()) ? _pbuffer->get_bound() : buffer_bound()) {}
+			_basic_buffer(Imemory* _pbuffer) noexcept : base_t((_pbuffer != nullptr) ? *_pbuffer : base_t()), bound((_pbuffer != nullptr) ? _pbuffer->get_bound() : buffer_bound()) {}
+			_basic_buffer(object_ptr<Imemory>&& _pbuffer) noexcept : base_t((_pbuffer.exist()) ? *_pbuffer : base_t()), bound((_pbuffer.exist()) ? _pbuffer->get_bound() : buffer_bound()) {}
 
 public:
 	// 1) capacity/clear/copy/clone
@@ -62,7 +65,7 @@ public:
 			std::size_t			capacity() const noexcept														{ return (bound.upper != nullptr) ? (reinterpret_cast<const char*>(bound.upper) - data_) : 0;}
 	constexpr void				clear() noexcept																{ base_t::clear(); bound.reset();}
 			void				copy(const base_t& _source)														{ if (data_ + _source.size() > get_upper_bound()) throw std::length_error("error! data_ overflow 'copy()'"); memcpy(data(), _source.data(), _source.size()); size_ = _source.size();}
-	constexpr void				swap(basic_buffer& _rhs) noexcept												{ base_t::swap(_rhs); auto p = _rhs.get_bound(); _rhs._set_bound(bound); bound = p; }
+	constexpr void				swap(_basic_buffer& _rhs) noexcept												{ base_t::swap(_rhs); auto p = _rhs.get_bound(); _rhs._set_bound(bound); bound = p; }
 	constexpr void				swap(base_t& _rhs)																{ if (_rhs.data() < get_lower_bound() || (_rhs.data() + _rhs.size()) > get_upper_bound()) { assert(false); throw std::out_of_range("_rhs data_ is must in bound of this shared_buffer"); } base_t::swap(_rhs); }
 
 #if defined(FMT_FORMAT_H_)
@@ -70,21 +73,21 @@ public:
 	constexpr fmt_buffer<T>		to_fmt_remained_buffer() noexcept												{ return fmt_buffer(data<T>() + size(), 0, this->get_remained_size()); }
 #endif
 			//shared_buffer		clone(CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const;
-			basic_buffer		split_head(const base_t& _source)
+			self_t				split_head(const base_t& _source)
 			{
 				_CGD_BUFFER_BOUND_CHECK(size_ >= _source.size());
 				char* p = data();
 				memcpy(data(), _source.data(), _source.size());
 				data_+= _source.size();
 				size_-=_source.size();
-				return basic_buffer { buffer_view{p, _source.size()}, bound };
+				return self_t{ buffer_view{p, _source.size()}, bound };
 			}
-			basic_buffer		split_tail(const base_t& _source)
+			self_t				split_tail(const base_t& _source)
 			{
 				_CGD_BUFFER_BOUND_CHECK(size_ >= _source.size());
 				memcpy(data() + size_ - _source.size(), _source.data(), _source.size());
 				size_ -= _source.size();
-				return basic_buffer{ buffer_view{data() + size(), _source.size()}, bound };
+				return self_t{ buffer_view{data() + size(), _source.size()}, bound };
 			}
 
 	// 2) prepend																								  
@@ -93,9 +96,9 @@ public:
 			template <class T>																					  
 	constexpr T&				prepend()																		{ return *reinterpret_cast<T*>(_prepend_skip(sizeof(T)));}
 			template <class T>																					  
-	constexpr prpd_tr<T>		prepend(const T& _data)															{ return PRPD_t<basic_buffer, T>::_do_prepend(*this, _data);;}
+	constexpr prpd_tr<T>		prepend(const T& _data)															{ return PRPD_t<self_t, T>::_do_prepend(*this, _data);;}
 			template <class T>																					  
-	constexpr prpd_tr<T>		prepend(T&& _data)																{ return PRPD_t<basic_buffer, T>::_do_prepend(*this, _data);;}
+	constexpr prpd_tr<T>		prepend(T&& _data)																{ return PRPD_t<self_t, T>::_do_prepend(*this, _data);;}
 	//		template <class T, std::size_t N>
 	//constexpr typename serializer_prepend<T[N]>::type prepend(const T (&_data)[N])								{ return _prepend(_data);}
 			template <class T> 																					  
@@ -137,9 +140,9 @@ public:
 			template <class T>																					  
 	constexpr auto&				append()																		{ return _append_emplace<std::remove_reference_t<std::remove_const_t<T>>>();}
 			template <class T>																					  
-	constexpr appd_tr<T>		append(const T& _data)															{ return APPD_t<basic_buffer,T>::_do_append(*this, _data); }
+	constexpr appd_tr<T>		append(const T& _data)															{ return APPD_t<self_t,T>::_do_append(*this, _data); }
 			template <class T>																					  
-	constexpr appd_tr<T>		append(T&& _data)																{ return APPD_t<basic_buffer,T>::_do_append(*this, std::forward<T>(_data)); }
+	constexpr appd_tr<T>		append(T&& _data)																{ return APPD_t<self_t,T>::_do_append(*this, std::forward<T>(_data)); }
 			template <class T>																					  
 	constexpr auto				append(const T* _data, std::size_t _count)										{ return _append_array(_data, _count);}
 			template <class T> 																					  
@@ -190,9 +193,9 @@ public:
 	constexpr std::enable_if_t<std::is_reference_v<T>, void>
 								extract_to(T& _dest)															{ base_t::template extract_to<T>(_dest);}
 			template <std::size_t ISIZE>
-	constexpr auto				extract()																		{ return basic_buffer(base_t::extract(CGDK::size(ISIZE)), bound);}
-	constexpr auto				extract(CGDK::size _length)														{ return basic_buffer(base_t::extract(_length), bound);}
-	constexpr auto				extract(CGDK::skip _length)														{ return basic_buffer(base_t::extract(_length), bound);}
+	constexpr auto				extract()																		{ return self_t(base_t::extract(CGDK::size(ISIZE)), bound);}
+	constexpr auto				extract(CGDK::size _length)														{ return self_t(base_t::extract(_length), bound);}
+	constexpr auto				extract(CGDK::skip _length)														{ return self_t(base_t::extract(_length), bound);}
 
 	// 5) reference
 			template <class T = char>
@@ -204,28 +207,28 @@ public:
 
 	// 6) operator overloading																					  
 			// [operator] +/-		
-	constexpr basic_buffer		operator ~ () const																{ auto data_value = data_ + size_; return basic_buffer { base_t { data_value, static_cast<size_type>(static_cast<const element_t*>(bound.upper) - data_value) }, bound }; }
-	constexpr basic_buffer		operator+(offset _rhs) const													{ return basic_buffer{ base_t::operator+(_rhs), bound };}
-	constexpr basic_buffer		operator-(offset _rhs) const
+	constexpr self_t			operator ~ () const																{ auto data_value = data_ + size_; return self_t{ base_t { data_value, static_cast<size_type>(static_cast<const element_t*>(bound.upper) - data_value) }, bound }; }
+	constexpr self_t			operator+(offset _rhs) const													{ return self_t{ base_t::operator+(_rhs), bound };}
+	constexpr self_t			operator-(offset _rhs) const
 			{
 				// check) upper bound
 				_CGD_BUFFER_BOUND_CHECK(this->data_ - _rhs.amount >= get_lower_bound());
 
 				// return) 
-				return basic_buffer(base_t{ this->data_ - _rhs.amount, this->size_ + _rhs.amount }, bound);
+				return self_t(base_t{ this->data_ - _rhs.amount, this->size_ + _rhs.amount }, bound);
 			}
-	constexpr basic_buffer		operator+(CGDK::size _rhs) const
+	constexpr self_t			operator+(CGDK::size _rhs) const
 			{
 				// check) upper bound
 				_CGD_BUFFER_BOUND_CHECK(this->data_ + this->size_ + _rhs.amount <= get_upper_bound());
 
 				// return) 
-				return basic_buffer(base_t{ this->data_, this->size_ + _rhs.amount }, bound);
+				return self_t(base_t{ this->data_, this->size_ + _rhs.amount }, bound);
 			}
-	constexpr basic_buffer		operator-(CGDK::size _rhs) const												{ return basic_buffer{ base_t::operator-(_rhs), bound }; }
+	constexpr self_t			operator-(CGDK::size _rhs) const												{ return self_t{ base_t::operator-(_rhs), bound }; }
 			// [operator] +=/-=
-	constexpr basic_buffer&		operator+=(offset _rhs)															{ base_t::operator+=(_rhs); return *this; }
-	constexpr basic_buffer&		operator-=(offset _rhs)
+	constexpr self_t&			operator+=(offset _rhs)															{ base_t::operator+=(_rhs); return *this; }
+	constexpr self_t&			operator-=(offset _rhs)
 			{
 				// check) upper bound
 				_CGD_BUFFER_BOUND_CHECK(this->data_ - _rhs.amount >= get_lower_bound());
@@ -235,7 +238,7 @@ public:
 				
 				return *this;
 			}
-	constexpr basic_buffer		operator+=(CGDK::size _rhs)
+	constexpr self_t			operator+=(CGDK::size _rhs)
 			{
 				// check) upper bound
 				_CGD_BUFFER_BOUND_CHECK(this->data_ + this->size_ + _rhs.amount <= get_upper_bound());
@@ -246,57 +249,57 @@ public:
 				// return) 
 				return *this;
 			}
-	constexpr basic_buffer		operator-=(CGDK::size _rhs)														{ base_t::operator-=(_rhs); return *this; }
-	constexpr basic_buffer&		operator+=(const base_t& _rhs)													{ _append_bytes(_rhs.size(), _rhs.data()); return *this;}
-	constexpr basic_buffer&		operator+=(base_t&& _rhs)														{ _append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t			operator-=(CGDK::size _rhs)														{ base_t::operator-=(_rhs); return *this; }
+	constexpr self_t&			operator+=(const base_t& _rhs)													{ _append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t&			operator+=(base_t&& _rhs)														{ _append_bytes(_rhs.size(), _rhs.data()); return *this;}
 			template <class T>
-	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, basic_buffer&>
+	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
 								operator+=(const T& _rhs)														{ for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
 			template <class T>
-	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, basic_buffer&>
+	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
 								operator+=(T&& _rhs)															{ for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
 			template <class T, std::size_t N>
-	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, basic_buffer&>
+	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
 								operator+=(const std::array<T, N>& _rhs)										{ for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
 			template <class T, std::size_t N>
-	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, basic_buffer&>
+	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
 								operator+=(std::array<T, N>&& _rhs)												{ for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
 			template <class T, std::size_t N>
-	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, basic_buffer&>
+	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
 								operator+=(const base_t(&_rhs)[N] )												{ const T* iter = _rhs; const T* iter_end = _rhs + N; for(;iter != iter_end; ++iter) { if (iter->empty()) continue; _append_bytes(iter->size_, iter->data_); } return *this;	}
-	constexpr basic_buffer&		operator+=(const basic_buffer& _rhs)											{ _append_bytes(_rhs.size_, _rhs.data()); return *this;}
-	constexpr basic_buffer&		operator+=(basic_buffer&& _rhs)													{ _append_bytes(_rhs.size_, _rhs.data()); return *this;}
+	constexpr self_t&			operator+=(const self_t& _rhs)													{ _append_bytes(_rhs.size_, _rhs.data()); return *this;}
+	constexpr self_t&			operator+=(self_t&& _rhs)														{ _append_bytes(_rhs.size_, _rhs.data()); return *this;}
 			// [operator] =
-	constexpr basic_buffer&		operator= (const base_t& _rhs) noexcept											{ _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
-	constexpr basic_buffer&		operator= (base_t&& _rhs) noexcept												{ _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
-	constexpr basic_buffer&		operator= (const basic_buffer& _rhs) noexcept									{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
-	constexpr basic_buffer&		operator= (basic_buffer&& _rhs) noexcept										{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
-			basic_buffer&		operator= (Imemory* _rhs) noexcept												{ if(_rhs != nullptr) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
-			basic_buffer&		operator= (const object_ptr<Imemory>& _rhs) noexcept							{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
-			basic_buffer&		operator= (object_ptr<Imemory>&& _rhs) noexcept									{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
+	constexpr self_t&			operator= (const base_t& _rhs) noexcept											{ _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
+	constexpr self_t&			operator= (base_t&& _rhs) noexcept												{ _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
+	constexpr self_t&			operator= (const self_t& _rhs) noexcept											{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
+	constexpr self_t&			operator= (self_t&& _rhs) noexcept												{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
+			self_t&				operator= (Imemory* _rhs) noexcept												{ if(_rhs != nullptr) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
+			self_t&				operator= (const object_ptr<Imemory>& _rhs) noexcept							{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
+			self_t&				operator= (object_ptr<Imemory>&& _rhs) noexcept									{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
 			// [operator] ^=
 			template<class T>
-	constexpr basic_buffer&		operator^=(const _buffer_view<T>& _rhs)											{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs)											{ base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr basic_buffer&		operator^=(_buffer_view<T>&& _rhs)												{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs)												{ base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr basic_buffer&		operator^=(const buffer_base<T>& _rhs)											{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(const buffer_base<T>& _rhs)											{ base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr basic_buffer&		operator^=(buffer_base<T>&& _rhs)												{ base_t::operator=(_rhs); return *this;}
-	constexpr basic_buffer&		operator^=(std::size_t _rhs)													{ base_t::set_size(_rhs); return *this;}
+	constexpr self_t&			operator^=(buffer_base<T>&& _rhs)												{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(std::size_t _rhs)													{ base_t::set_size(_rhs); return *this;}
 			// [operator >> - extract
 			template <class T>
-			basic_buffer&		operator>>(T& _rhs)																{ _rhs = _extract<T>(); return *this;}
+			self_t&				operator>>(T& _rhs)																{ _rhs = _extract<T>(); return *this;}
 			// [operator] << - append																			  
 			template <class T>																					  
-			basic_buffer&		operator<<(const T& _rhs)														{ APPD_t<basic_buffer, T>::_do_append(*this, _rhs); return *this;}
+			self_t&				operator<<(const T& _rhs)														{ APPD_t<self_t, T>::_do_append(*this, _rhs); return *this;}
 
 public:
 	// prepend) 
 	template <class T>
-	constexpr prpd_tr<T>		_prepend(const T& _data) { return PRPD_t<basic_buffer,T>::_do_prepend(*this, _data);}
+	constexpr prpd_tr<T>		_prepend(const T& _data) { return PRPD_t<self_t,T>::_do_prepend(*this, _data);}
 	template <class T>
-	constexpr prpd_tr<T>		_prepend(T&& _data) { return PRPD_t<basic_buffer,T>::_do_prepend(*this, _data); }
+	constexpr prpd_tr<T>		_prepend(T&& _data) { return PRPD_t<self_t,T>::_do_prepend(*this, _data); }
 			//template <class T, std::size_t N>
 			//typename serializer_prepend< std::remove_const_t<T>>::type _prepend(const T(&_data)[N]) { return serializer_prepend<typename std::remove_const_t<T>[N]>::_do_prepend(*this, _data);}
 	constexpr base_t			_prepend_skip(std::size_t _size)
@@ -615,7 +618,7 @@ public:
 		// return) 
 		return base_t(data_, buf_old - data_);
 	}
-	constexpr basic_buffer		_prepend_buffer(const base_t& _buffer)
+	constexpr self_t			_prepend_buffer(const base_t& _buffer)
 	{
 		// 1) store data_
 		auto buf_old = data_;
@@ -627,7 +630,7 @@ public:
 		_prepend_general<COUNT_T>(static_cast<COUNT_T>(_buffer.size()));
 
 		// return) 
-		return	basic_buffer{ base_t{ data_, static_cast<size_type>(buf_old - data_) } };
+		return self_t{ base_t{ data_, static_cast<size_type>(buf_old - data_) } };
 	}
 	template <class T>
 	constexpr base_t			_prepend_initializer_list(const std::initializer_list<T>& _list)
@@ -863,12 +866,12 @@ public:
 	template <class T>
 	constexpr appd_tr<T>		_append(const T& _data)
 	{
-		return APPD_t<basic_buffer,T>::_do_append(*this, _data);
+		return APPD_t<self_t,T>::_do_append(*this, _data);
 	}
 	template <class T>
 	constexpr appd_tr<T>		_append(const object_ptr<std::remove_const_t<T>>& _data)
 	{
-		return APPD_t<basic_buffer,T>::_do_append(*this, *_data);
+		return APPD_t<self_t,T>::_do_append(*this, *_data);
 	}
 	template <class T>
 	constexpr base_t			_append_initializer_list(const std::initializer_list<T>& _list)
@@ -1383,7 +1386,7 @@ public:
 		// return) 
 		return base_t(buf_dest, _size);
 	}
-	constexpr basic_buffer		_append_buffer(const base_t& _buffer)
+	constexpr self_t			_append_buffer(const base_t& _buffer)
 	{
 		// check) upper bound
 		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + sizeof(base_t::size_type) + _buffer.size()) <= get_upper_bound());
@@ -1410,7 +1413,7 @@ public:
 		}
 
 		// return) 
-		return basic_buffer{ base_t{data_ + len_old, size_ - len_old} };
+		return self_t{ base_t{data_ + len_old, size_ - len_old} };
 	}
 	template<class T>
 	constexpr base_t			_append_tuple(const std::tuple<T>& _tupple)
@@ -1808,11 +1811,11 @@ public:
 
 public:
 	// 10) begin/end)
-	constexpr basic_buffer		_begin(int _offset) const noexcept { return basic_buffer(base_t::_begin(_offset), bound);}
-	constexpr basic_buffer		_end(int _offset) const noexcept { return basic_buffer(base_t::_end(_offset), bound);}
+	constexpr self_t			_begin(int _offset) const noexcept { return self_t(base_t::_begin(_offset), bound);}
+	constexpr self_t			_end(int _offset) const noexcept { return self_t(base_t::_end(_offset), bound);}
 
 	// 11) append/extarct
-	constexpr basic_buffer		_extract_buffer();
+	constexpr self_t			_extract_buffer();
 
 	constexpr bool				_is_buffer_overflow() const
 								{
@@ -1854,15 +1857,16 @@ protected:
 			buffer_bound		bound;
 };
 
-constexpr CGDK::basic_buffer operator ^ (const CGDK::basic_buffer& _lhs, std::size_t _size)
+template <class U>
+constexpr CGDK::_basic_buffer<U> operator ^ (const CGDK::_basic_buffer<U>& _lhs, std::size_t _size)
 {
-	return CGDK::basic_buffer{ ((const CGDK::buffer_view&)_lhs) ^ _size, _lhs.get_bound() };
+	return CGDK::_basic_buffer<U>{ ((const CGDK::_buffer_view<U>&)_lhs) ^ _size, _lhs.get_bound() };
 }
 
 template <class U>
-constexpr CGDK::basic_buffer operator ^ (const CGDK::basic_buffer& _lhs, CGDK::_buffer_view<U> _buffer)
+constexpr CGDK::_basic_buffer<U> operator ^ (const CGDK::_basic_buffer<U>& _lhs, CGDK::_buffer_view<U> _buffer)
 {
-	return CGDK::basic_buffer{ _buffer, _lhs.get_bound() };
+	return CGDK::_basic_buffer<U>{ _buffer, _lhs.get_bound() };
 }
 
 

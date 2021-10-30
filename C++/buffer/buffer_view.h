@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
-//*                              CGDK::buffer_view                            *
-//*                        Ver 5.0 / Release 2020.12.11                       *
+//*                             CGDK::_buffer_view                            *
+//*                      Ver 2.0pre / Release 2015.01.05                      *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -1534,7 +1534,8 @@ public:
 			}
 	constexpr _buffer_view		_extract_buffer_view();
 	constexpr void				_extract_buffer_view(_buffer_view<ELEM_T>& _dest);
-	constexpr basic_buffer		_extract_basic_buffer();
+			template<class BUFFER_T>
+	constexpr _basic_buffer<BUFFER_T> _extract_basic_buffer();
 			template<class BUFFER_T>
 	constexpr _shared_buffer<BUFFER_T> _extract_shared_buffer();
 
@@ -2023,7 +2024,7 @@ public:
 			}
 
 public:
-		friend class basic_buffer;
+		template <class> friend class _basic_buffer;
 		template <class> friend class _shared_buffer;
 		friend class static_buffer;
 };

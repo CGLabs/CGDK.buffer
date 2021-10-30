@@ -1,15 +1,17 @@
 //*****************************************************************************
 //*                                                                           *
-//*                              CGDK::buffer_view                            *
-//*                        Ver 5.0 / Release 2020.12.11                       *
+//*                      Cho sanghyun's Game Classes II                       *
+//*                       Ver 10.0 / Release 2019.12.11                       *
+//*                                                                           *
+//*                            CGBuffer Templates                             *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
-//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.com           *
+//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
 //*  Best for Game Developement and Optimized for Game Developement.          *
 //*                                                                           *
-//*                   (C) 2008 CGLabs All right reserved.                     *
+//*                (c) 2003. Cho Sanghyun. All right reserved.                *
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
@@ -17,20 +19,20 @@ namespace CGDK
 {
 
 // extract) 
-template<class B>	
-class serializer_extract<B, basic_buffer>
+template<class B, class T>
+class serializer_extract<B, _basic_buffer<T>>
 {	
 public:
-	using type = basic_buffer;
+	using type = _basic_buffer<T>;
 	template<class S>
 	constexpr static type _do_extract(S& _s)
 	{
-		return S::_extract_basic_buffer(_s);
+		return S::template _extract_basic_buffer<T>(_s);
 	}
 	template<class D, class S>
 	constexpr static void _do_extract(D& _dest, S& _s)
 	{
-		S::_extract_basic_buffer(_dest, _s);
+		S::template _extract_basic_buffer<T>(_dest, _s);
 	}
 };
 
@@ -52,11 +54,11 @@ public:
 };
 
 // front)
-template<class B>	
-class serializer_peek<B, basic_buffer>
+template<class B, class T>
+class serializer_peek<B, _basic_buffer<T>>
 {	
 public:
-	using type = basic_buffer;
+	using type = _basic_buffer<T>;
 	template<class S> 
 	constexpr static type _do_peek(const S& _s, int64_t& _offset)
 	{
@@ -86,11 +88,11 @@ public:
 	}
 };
 
-template<class B>	
-class serializer_size_of<B, basic_buffer>
+template<class B, class T>
+class serializer_size_of<B, _basic_buffer<T>>
 {	
 public:	
-	constexpr static std::size_t  _get_append_size(const basic_buffer& _object)
+	constexpr static std::size_t  _get_append_size(const _basic_buffer<T>& _object)
 	{ 
 		return sizeof(std::size_t) + _object.size();
 	}
@@ -102,11 +104,11 @@ public:
 	}
 };
 
-template<class B>
-class serializer_peek<B, _buffer_view<B>>
+template<class B, class T>
+class serializer_peek<B, _buffer_view<T>>
 {
 public:
-	using type = basic_buffer;
+	using type = _buffer_view<T>;
 	template<class S> 
 	constexpr static type _do_peek(const S& _s, int64_t& _offset)
 	{
@@ -136,8 +138,8 @@ public:
 	}
 };
 
-template<class B>
-class serializer_size_of<B, _buffer_view<B>>
+template<class B, class T>
+class serializer_size_of<B, _buffer_view<T>>
 {	
 public:
 	constexpr static std::size_t  _get_append_size(const _buffer_view<B>& _object)
@@ -170,14 +172,14 @@ bool validate_message(const T* _buffers, std::size_t _count)
 
 	while (iTotalLength != 0)
 	{
-		// check) 
+		// check) Message의 크기가 실제 버퍼의 크기보다 작으면 안됀다.
 		CGASSERT_ERROR(idx_buffer <= _count);
 		if (idx_buffer > _count) return false;
 
-		// - get messag length
+		// - Message의 길이를 구한다.
 		int32_t	message_size = *temp_buf.data<int32_t>();
 
-		// check) 
+		// check) Message의 크기가 0Byte면 안됀다.
 		CGASSERT_ERROR(message_size != 0);
 		if (message_size == 0) return false;
 
@@ -218,7 +220,7 @@ struct any_constructor_append
 {
 	const char* source;
 	std::size_t& offset;
-	basic_buffer& buf_dest;
+	buffer& buf_dest;
 
 	template <class Type>
 	constexpr operator Type () const
@@ -238,14 +240,14 @@ struct any_constructor_append
 };
 
 template <class T, std::size_t... I>
-constexpr void append_member_impl(const char* _source, basic_buffer& _buf_dest, std::index_sequence<I...>)
+constexpr void append_member_impl(const char* _source, buffer& _buf_dest, std::index_sequence<I...>)
 {
 	std::size_t offset = 0;
 	T{ any_constructor_append<I, alignof(T)>{_source, offset, _buf_dest}... };
 }
 
 template <class D, class T, std::size_t... I>
-constexpr void append_member_impl(D& _dest, const char* _source, basic_buffer& _buf_dest, std::index_sequence<I...>)
+constexpr void append_member_impl(D& _dest, const char* _source, buffer& _buf_dest, std::index_sequence<I...>)
 {
 	std::size_t offset = 0;
 	_dest.~D();

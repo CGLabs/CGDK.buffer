@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
-//*                             CGDK::buffer_view                             *
-//*                      Ver 2.0pre / Release 2015.01.05                      *
+//*                              CGDK::buffer_view                            *
+//*                        Ver 5.0 / Release 2020.12.11                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -15,51 +15,51 @@
 //*****************************************************************************
 
 #pragma once
+//-----------------------------------------------------------------------------
+//
+// CGD::_buffer_view<T>
+//
+//-----------------------------------------------------------------------------
+#ifndef _CGD_BUFFER
+#define	_CGD_BUFFER
 
-namespace CGDK
-{
+//-----------------------------------------------------------------------------
+// Pragma...
+//-----------------------------------------------------------------------------
+#if defined(_MSC_VER)
+	// warning C4344: behavior change: use of explicit template arguments results in call to ...
+	//    - Causes in front function
+	#pragma warning(disable:4344)
+#else
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wvarargs"
+#endif
 
 
 //-----------------------------------------------------------------------------
-// CGDK::buffer_traits
+// Main
 //-----------------------------------------------------------------------------
-class  _buffer_traits_const
-{
-};
+// 1) shared_buffer traits
+#include "buffer/buffer_traits.h"
 
-class  _buffer_traits_mutable
-{
-};
+// 2) shared_buffer
+#include "buffer/buffer_common.h"
 
+// 3) shared_buffer base
+#include "buffer/buffer_base.h"
 
-//-----------------------------------------------------------------------------
-// CGDK::buffer_traits
-//-----------------------------------------------------------------------------
-template <class T, class F=void>	class _buffer_traits {};
-template <class T>					class _buffer_traits <T, std::enable_if_t<std::is_const_v<T>>>	{ public: using type = _buffer_traits_const; };
-template <class T>					class _buffer_traits <T, std::enable_if_t<!std::is_const_v<T>>>	{ public: using type = _buffer_traits_mutable; };
-
-template <class T> using _buffer_traits_t = typename _buffer_traits<T>::type;
+// 4) basic_buffer
+#include "buffer/basic_buffer.h"
 
 
 //-----------------------------------------------------------------------------
-// CGDK::const...
+// Pragma...
 //-----------------------------------------------------------------------------
-template <class T, class F=void>	class _element_void {};
-template <class T>					class _element_void <T, std::enable_if_t<std::is_const_v<T>>>	{ public: using type = const void; };
-template <class T>					class _element_void <T, std::enable_if_t<!std::is_const_v<T>>>	{ public: using type = void; };
-
-template <class T> using _element_void_t = typename _element_void<T>::type;
-
-
-//-----------------------------------------------------------------------------
-// CGDK::buffer_traits
-//-----------------------------------------------------------------------------
-template <class TRAITS_T, class T>	class _buffer_return {};
-template <class T>					class _buffer_return< _buffer_traits_const, T>		{ public: using type = const T; };
-template <class T>					class _buffer_return< _buffer_traits_mutable, T>	{ public: using type = T; };
-																								
-template <class TRAITS_T, class T> using _buffer_return_t = typename _buffer_return<TRAITS_T, T>::type;
+#if defined(_MSC_VER)
+	#pragma warning(default:4344)
+#else
+	#pragma GCC diagnostic pop
+#endif
 
 
-}
+#endif

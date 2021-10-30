@@ -6,7 +6,8 @@
 
 #include "gtest/gtest.h"
 
-#include <CGDbuffer>
+#include <buffer/buffer_view>
+#include <buffer/basic_buffer>
 #include <vector>
 #include <deque>
 #include <list>

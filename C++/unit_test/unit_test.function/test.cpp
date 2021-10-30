@@ -4762,7 +4762,7 @@ namespace CGDK
 				m_strZ	 = _Buffer.extract<std::string>();
 			}
 
-			virtual	void	process_serialize_out(basic_buffer& _Buffer) override
+			virtual	void	process_serialize_out(buffer& _Buffer) override
 			{
 				_Buffer.append(m_ix);
 				_Buffer.append(m_fy);
@@ -4855,7 +4855,7 @@ namespace CGDK
 				m_strZ	 = _Buffer.extract<std::string>();
 			}
 
-			virtual	void	process_serialize_out(basic_buffer& _Buffer) override
+			virtual	void	process_serialize_out(buffer& _Buffer) override
 			{
 				_Buffer.append(m_ix);
 				_Buffer.append(m_fy);

@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
-//*                              CGDK::buffer_view                            *
-//*                        Ver 5.0 / Release 2020.12.11                       *
+//*                             CGDK::buffer_view                             *
+//*                      Ver 2.0pre / Release 2015.01.05                      *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -39,9 +39,9 @@ public:
 			template <class T>																					  
 	constexpr T&				prepend()																		{ return *reinterpret_cast<T*>(_prepend_skip(sizeof(T)));}
 			template <class T>																					  
-	constexpr prpd_tr<T>		prepend(const T& _data)															{ return PRPD_t<basic_buffer, T>::_do_prepend(*this, _data);;}
+	constexpr prpd_tr<T>		prepend(const T& _data)															{ return PRPD_t<_basic_buffer<ELEMENT_T>, T>::_do_prepend(*this, _data);;}
 			template <class T>																					  
-	constexpr prpd_tr<T>		prepend(T&& _data)																{ return PRPD_t<basic_buffer, T>::_do_prepend(*this, _data);;}
+	constexpr prpd_tr<T>		prepend(T&& _data)																{ return PRPD_t<_basic_buffer<ELEMENT_T>, T>::_do_prepend(*this, _data);;}
 	//		template <class T, std::size_t N>
 	//constexpr typename serializer_prepend<T[N]>::type prepend(const T (&_data)[N])								{ return _prepend(_data);}
 			template <class T> 																					  
@@ -83,9 +83,9 @@ public:
 			template <class T>																					  
 	constexpr auto&				append()																		{ return _append_emplace<std::remove_reference_t<std::remove_const_t<T>>>();}
 			template <class T>																					  
-	constexpr appd_tr<T>		append(const T& _data)															{ return APPD_t<basic_buffer,T>::_do_append(*this, _data); }
+	constexpr appd_tr<T>		append(const T& _data)															{ return APPD_t<_basic_buffer<ELEMENT_T>,T>::_do_append(*this, _data); }
 			template <class T>																					  
-	constexpr appd_tr<T>		append(T&& _data)																{ return APPD_t<basic_buffer,T>::_do_append(*this, std::forward<T>(_data)); }
+	constexpr appd_tr<T>		append(T&& _data)																{ return APPD_t<_basic_buffer<ELEMENT_T>,T>::_do_append(*this, std::forward<T>(_data)); }
 			template <class T>																					  
 	constexpr auto				append(const T* _data, std::size_t _count)										{ return _append_array(_data, _count);}
 			template <class T> 																					  

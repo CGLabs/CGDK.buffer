@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
 //*                              CGDK::buffer_view                            *
-//*                        Ver 5.0 / Release 2020.12.11                       *
+//*                      Ver 2.0pre / Release 2015.01.05                      *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -82,12 +82,12 @@ namespace CGDK
 	template<class=char> class _buffer_view;
 	using buffer_view = _buffer_view<char>;
 	using const_buffer_view = _buffer_view<const char>;
-	class basic_buffer;
+	template<class = char> class _basic_buffer;
+	using buffer = _basic_buffer<char>;
 
 	template<class> class _shared_buffer;
 	class static_buffer;
-
-	using shared_buffer = _shared_buffer<basic_buffer>;
+	using shared_buffer = _shared_buffer<buffer>;
 	using const_shared_buffer = _shared_buffer<const_buffer_view>;
 }
 
@@ -373,7 +373,7 @@ inline text<char32_t>	operator "" _text(const char32_t* _text, std::size_t _size
 //-----------------------------------------------------------------------------
 #define	DEFINE_BUFFER_SERIALIZE(...) \
 				virtual	void	process_serialize_in(CGDK::buffer_view& _buffer) override	{ _buffer._extract_multi(__VA_ARGS__); }\
-				virtual	void	process_serialize_out(CGDK::basic_buffer& _buffer) override	{ _buffer._append_multi(__VA_ARGS__); }\
+				virtual	void	process_serialize_out(CGDK::buffer& _buffer) override	{ _buffer._append_multi(__VA_ARGS__); }\
 				virtual std::size_t	process_size_of() const override						{ return CGDK::get_size_of(__VA_ARGS__);}
 
 // 1) serializable 
@@ -381,14 +381,14 @@ class Ibuffer_serializable
 {
 public:
 			void		serialize_in(buffer_view& _buffer) { process_serialize_in(_buffer);}
-			void		serialize_out(basic_buffer& _buffer) { process_serialize_out(_buffer); }
+			void		serialize_out(buffer& _buffer) { process_serialize_out(_buffer); }
 			std::size_t	get_size_of() const { return process_size_of(); }
 	template <class T>
 	static	std::size_t	get_size_of(const T& _source);
 
 protected:
 	virtual	void		process_serialize_in(buffer_view& _buffer) = 0;
-	virtual	void		process_serialize_out(basic_buffer& _buffer) = 0;
+	virtual	void		process_serialize_out(buffer& _buffer) = 0;
 	virtual std::size_t	process_size_of() const = 0;
 };
 
@@ -521,15 +521,15 @@ template<class A, class B>	struct is_linear_own_ptr_container<circular_list<own_
 // linear container<shared_buffer>)
 template<class T>					struct is_linear_container_with_buffer : public std::false_type {};
 template<class B, class... A>		struct is_linear_container_with_buffer<std::vector<_buffer_view<B>, A...>> : public std::true_type {};
-template<class... A>				struct is_linear_container_with_buffer<std::vector<basic_buffer,	A...>> : public std::true_type {};
+template<class B, class... A>		struct is_linear_container_with_buffer<std::vector<_basic_buffer<B>,A...>> : public std::true_type {};
 template<class B, class... A>		struct is_linear_container_with_buffer<std::list<_buffer_view<B>,	A...>> : public std::true_type {};
-template<class... A>				struct is_linear_container_with_buffer<std::list<basic_buffer,		A...>> : public std::true_type {};
+template<class B, class... A>		struct is_linear_container_with_buffer<std::list<_basic_buffer<B>,	A...>> : public std::true_type {};
 template<class B, class... A>		struct is_linear_container_with_buffer<std::deque<_buffer_view<B>,	A...>> : public std::true_type {};
-template<class... A>				struct is_linear_container_with_buffer<std::deque<basic_buffer,		A...>> : public std::true_type {};
+template<class B, class... A>		struct is_linear_container_with_buffer<std::deque<_basic_buffer<B>,	A...>> : public std::true_type {};
 template<class B, class... A>		struct is_linear_container_with_buffer<circular_list<_buffer_view<B>,A...>> : public std::true_type {};
-template<class... A>				struct is_linear_container_with_buffer<circular_list<basic_buffer,	A...>> : public std::true_type {};
+template<class B, class... A>		struct is_linear_container_with_buffer<circular_list<_basic_buffer<B>,A...>> : public std::true_type {};
 template<class B, std::size_t N>	struct is_linear_container_with_buffer<static_vector<_buffer_view<B>, N>> : public std::true_type {};
-template<std::size_t N>				struct is_linear_container_with_buffer<static_vector<basic_buffer, N>> : public std::true_type {};
+template<class B, std::size_t N>	struct is_linear_container_with_buffer<static_vector<_basic_buffer<B>, N>> : public std::true_type {};
 
 // linear container<T>
 template<class T>					struct is_linear_container_with_reserve : public std::false_type {};
@@ -651,7 +651,7 @@ template<class A, class B, class C, class D, class E>	struct is_associative_own_
 
 template<class T> struct is_buffer_type : public std::false_type {};
 template<class X> struct is_buffer_type<_buffer_view<X>> : public std::true_type {};
-template<>		  struct is_buffer_type<basic_buffer> : public std::true_type {};
+template<class X> struct is_buffer_type<_basic_buffer<X>> : public std::true_type {};
 template<class X> struct is_buffer_type<_shared_buffer<X>> : public std::true_type {};
 template <class T> constexpr bool is_buffer_type_v = is_buffer_type<T>::value;
 
@@ -989,9 +989,9 @@ template<class B>			class serializer_prepend<B, _buffer_view<typename B::element
 							{	public:	using type = _buffer_view<typename B::element_t>;
 								template<class S> constexpr static type _do_prepend(S& _s, const _buffer_view<typename B::element_t>& _data) { return _s._prepend_buffer(_data);}
 							};
-template<class B>			class serializer_prepend<B, basic_buffer>
+template<class B>			class serializer_prepend<B, _basic_buffer<typename B::element_t>>
 							{	public:	using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const basic_buffer& _data)			{ return _s._prepend_buffer(_data);}
+								template<class S> constexpr static type _do_prepend(S& _s, const _basic_buffer<typename B::element_t>& _data) { return _s._prepend_buffer(_data);}
 							};
 template<class B, class T>	class serializer_prepend<B, _shared_buffer<T>>
 							{	public:	using type = _buffer_view<typename B::element_t>;
@@ -1002,9 +1002,9 @@ template<class B>			class serializer_append<B, _buffer_view<typename B::element_
 							{	public:	using type = _buffer_view<typename B::element_t>;
 								template<class S> constexpr static type _do_append(S& _s, const _buffer_view<typename B::element_t>& _data) { return _s._append_buffer(_data);}
 							};
-template<class B>			class serializer_append<B, basic_buffer>
+template<class B>			class serializer_append<B, _basic_buffer<typename B::element_t>>
 							{	public:	using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const basic_buffer& _data)		{ return _s._append_buffer(_data);}
+								template<class S> constexpr static type _do_append(S& _s, const _basic_buffer<typename B::element_t>& _data) { return _s._append_buffer(_data);}
 							};
 template<class B, class T>	class serializer_append<B, _shared_buffer<T>>
 							{	public:	using type = _buffer_view<typename B::element_t>;
@@ -2197,7 +2197,7 @@ template<typename T>		class serializer_size_of<T, std::enable_if_t<is_associativ
 
 
 //-----------------------------------------------------------------------------
-// aggregate structure (reflection)
+// aggrigate structure (Reflection)
 //-----------------------------------------------------------------------------
 template <std::size_t ISIZE>	constexpr std::size_t alliened_offset_pre     (std::size_t _source, std::size_t _add);
 template <>						constexpr std::size_t alliened_offset_pre< 1> (std::size_t _source, std::size_t)	  { return _source; }
@@ -2264,7 +2264,7 @@ std::size_t _Xsprintf(char* _dest, std::size_t /*_max_length_in_word*/, const ch
 	#pragma warning(disable:4996)
 	#endif
 
-	return sprintf(_dest, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
+	return	sprintf(_dest, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
 
 	#if defined(_MSC_VER)
 	#pragma warning(default:4996)
@@ -2278,7 +2278,7 @@ std::size_t _Xsprintf(wchar_t* _dest, std::size_t _max_length_in_word, const wch
 	#pragma warning(disable:4996)
 	#endif
 
-	return swprintf(_dest, _max_length_in_word, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
+	return	swprintf(_dest, _max_length_in_word, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
 
 	#if defined(_MSC_VER)
 	#pragma warning(default:4996)
