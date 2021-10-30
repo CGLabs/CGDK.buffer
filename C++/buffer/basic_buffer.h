@@ -1660,7 +1660,7 @@ public:
 		}
 
 		// 4) 예약해 놓은 위치에 갯수를 써넣는다.
-		buf_count.front<COUNT_T>() = iter_count;
+		buf_count.template front<COUNT_T>() = iter_count;
 
 		// return) 
 		return base_t(data_ + l, size_ - l);

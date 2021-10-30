@@ -40,16 +40,16 @@
 // Main
 //-----------------------------------------------------------------------------
 // 1) shared_buffer traits
-#include "CGDK10/buffer/buffer_traits.h"
+#include "buffer/buffer_traits.h"
 
 // 2) shared_buffer
-#include "CGDK10/buffer/buffer_common.h"
+#include "buffer/buffer_common.h"
 
 // 3) shared_buffer base
-#include "CGDK10/buffer/buffer_base.h"
+#include "buffer/buffer_base.h"
 
 // 4) _buffer_view<T>
-#include "CGDK10/buffer/buffer_view.h"
+#include "buffer/buffer_view.h"
 
 
 //-----------------------------------------------------------------------------
