@@ -453,7 +453,7 @@ void test_front_string(const T& _source)
 #define VALUE_15		1.0f
 #define VALUE_16		2.0
 
-size_t pos_GENERAL[] {
+size_t pos_general[] {
 /*00*/	sizeof(char),
 /*01*/	sizeof(char) + sizeof(unsigned char),
 /*02*/	sizeof(char) + sizeof(unsigned char) + sizeof(wchar_t),
@@ -473,7 +473,7 @@ size_t pos_GENERAL[] {
 /*16*/	sizeof(char) + sizeof(unsigned char) + sizeof(wchar_t) + sizeof(char16_t) + sizeof(char32_t) + sizeof(int16_t) + sizeof(uint16_t) + sizeof(int32_t) + sizeof(uint32_t) + sizeof(int64_t) + sizeof(uint64_t) + sizeof(long) + sizeof(unsigned long) + sizeof(long long) + sizeof(unsigned long long) + sizeof(float) + sizeof(double)
 };
 
-void function_append_GENERAL(CGDK::shared_buffer& _buffer)
+void function_append_general(CGDK::shared_buffer& _buffer)
 {
 	_buffer.append<char>				(VALUE_00);
 	_buffer.append<unsigned char>		(VALUE_01);
@@ -496,7 +496,7 @@ void function_append_GENERAL(CGDK::shared_buffer& _buffer)
 
 void function_extract_GENERAL(CGDK::buffer_view _buffer)
 {
-	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_GENERAL[16]);
+	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_general[16]);
 
 	auto size = _buffer.size();
 
@@ -588,145 +588,145 @@ void function_extract_GENERAL(CGDK::buffer_view _buffer)
 
 void function_front_GENERAL(CGDK::buffer_view _buffer)
 {
-	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_GENERAL[16]);
+	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_general[16]);
 
 	size_t pos_now = 0;
 
-	auto& value00  = _buffer.front<char&>(pos_now);			pos_now+=sizeof(char);
-	EXPECT_TRUE(pos_now == pos_GENERAL[0]);
+	auto& value00  = _buffer.front<char&>(pos_now);			pos_now += sizeof(char);
+	EXPECT_TRUE(pos_now == pos_general[0]);
 	EXPECT_TRUE(value00 == VALUE_00);
 
-	auto& value01  = _buffer.front<unsigned char&>(pos_now);pos_now+=sizeof(unsigned char);
-	EXPECT_TRUE(pos_now == pos_GENERAL[1]);
+	auto& value01  = _buffer.front<unsigned char&>(pos_now);pos_now += sizeof(unsigned char);
+	EXPECT_TRUE(pos_now == pos_general[1]);
 	EXPECT_TRUE(value01 == VALUE_01);
 
-	auto& value02  = _buffer.front<wchar_t&>(pos_now);		pos_now+=sizeof(wchar_t);
-	EXPECT_TRUE(pos_now == pos_GENERAL[2]);
+	auto& value02  = _buffer.front<wchar_t&>(pos_now);		pos_now += sizeof(wchar_t);
+	EXPECT_TRUE(pos_now == pos_general[2]);
 	EXPECT_TRUE(value02 == VALUE_02);
 
-	auto& value03  = _buffer.front<char16_t&>(pos_now);		pos_now+=sizeof(char16_t);
-	EXPECT_TRUE(pos_now == pos_GENERAL[3]);
+	auto& value03  = _buffer.front<char16_t&>(pos_now);		pos_now += sizeof(char16_t);
+	EXPECT_TRUE(pos_now == pos_general[3]);
 	EXPECT_TRUE(value03 == VALUE_03);
 
-	auto& value04  = _buffer.front<char32_t&>(pos_now);		pos_now+=sizeof(char32_t);
-	EXPECT_TRUE(pos_now == pos_GENERAL[4]);
+	auto& value04  = _buffer.front<char32_t&>(pos_now);		pos_now += sizeof(char32_t);
+	EXPECT_TRUE(pos_now == pos_general[4]);
 	EXPECT_TRUE(value04 == VALUE_04);
 
-	auto& value05  = _buffer.front<int16_t&>(pos_now);		pos_now+=sizeof(int16_t);
-	EXPECT_TRUE(pos_now == pos_GENERAL[5]);
+	auto& value05  = _buffer.front<int16_t&>(pos_now);		pos_now += sizeof(int16_t);
+	EXPECT_TRUE(pos_now == pos_general[5]);
 	EXPECT_TRUE(value05 == VALUE_05);
 
-	auto& value06  = _buffer.front<uint16_t&>(pos_now);		pos_now+=sizeof(uint16_t);
+	auto& value06  = _buffer.front<uint16_t&>(pos_now);		pos_now += sizeof(uint16_t);
 	EXPECT_TRUE(value06 == VALUE_06);
 
-	auto& value07  = _buffer.front<int32_t&>(pos_now);		pos_now+=sizeof(int32_t);
+	auto& value07  = _buffer.front<int32_t&>(pos_now);		pos_now += sizeof(int32_t);
 	EXPECT_TRUE(value07 == VALUE_07);
 
-	auto& value08  = _buffer.front<uint32_t&>(pos_now);		pos_now+=sizeof(uint32_t);
+	auto& value08  = _buffer.front<uint32_t&>(pos_now);		pos_now += sizeof(uint32_t);
 	EXPECT_TRUE(value08 == VALUE_08);
 
-	auto& value09 = _buffer.front<int64_t&>(pos_now);		pos_now+=sizeof(int64_t);
+	auto& value09 = _buffer.front<int64_t&>(pos_now);		pos_now += sizeof(int64_t);
 	EXPECT_TRUE(value09 == VALUE_09);
 
-	auto& value10 = _buffer.front<uint64_t&>(pos_now);		pos_now+=sizeof(uint64_t);
+	auto& value10 = _buffer.front<uint64_t&>(pos_now);		pos_now += sizeof(uint64_t);
 	EXPECT_TRUE(value10 == VALUE_10);
 
-	auto& value11  = _buffer.front<int32_t&>(pos_now);		pos_now+=sizeof(long);
+	auto& value11  = _buffer.front<int32_t&>(pos_now);		pos_now += sizeof(long);
 	EXPECT_TRUE(value11 == VALUE_11);
 
-	auto& value12  = _buffer.front<uint32_t&>(pos_now);		pos_now+=sizeof(unsigned long);
+	auto& value12  = _buffer.front<uint32_t&>(pos_now);		pos_now += sizeof(unsigned long);
 	EXPECT_TRUE(value12 == VALUE_12);
 
-	auto& value13 = _buffer.front<int64_t&>(pos_now);		pos_now+=sizeof(long long);
+	auto& value13 = _buffer.front<int64_t&>(pos_now);		pos_now += sizeof(long long);
 	EXPECT_TRUE(value13 == VALUE_13);
 
-	auto& value14 = _buffer.front<uint64_t&>(pos_now);		pos_now+=sizeof(unsigned long long);
+	auto& value14 = _buffer.front<uint64_t&>(pos_now);		pos_now += sizeof(unsigned long long);
 	EXPECT_TRUE(value14 == VALUE_14);
 
-	auto& value15 = _buffer.front<float&>(pos_now);			pos_now+=sizeof(float);
+	auto& value15 = _buffer.front<float&>(pos_now);			pos_now += sizeof(float);
 	EXPECT_TRUE(value15 == VALUE_15);
 
-	auto& value16 = _buffer.front<double&>(pos_now);		pos_now+=sizeof(double);
+	auto& value16 = _buffer.front<double&>(pos_now);		pos_now += sizeof(double);
 	EXPECT_TRUE(value16 == VALUE_16);
 
-	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_GENERAL[16]);
+	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_general[16]);
 }
 
-void function_front_with_pos_GENERAL(CGDK::buffer_view _buffer)
+void function_front_with_pos_general(CGDK::buffer_view _buffer)
 {
-	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_GENERAL[16]);
+	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_general[16]);
 
 	CGDK::POS pos_now;
 
 	auto& value00  = _buffer.front<char&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[0]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[0]));
 	EXPECT_TRUE(value00 == VALUE_00);
 
 	auto& value01  = _buffer.front<unsigned char&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[1]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[1]));
 	EXPECT_TRUE(value01 == VALUE_01);
 
 	auto& value02  = _buffer.front<wchar_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[2]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[2]));
 	EXPECT_TRUE(value02 == VALUE_02);
 
 	auto& value03  = _buffer.front<char16_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[3]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[3]));
 	EXPECT_TRUE(value03 == VALUE_03);
 
 	auto& value04  = _buffer.front<char32_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[4]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[4]));
 	EXPECT_TRUE(value04 == VALUE_04);
 
 	auto& value05  = _buffer.front<int16_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[5]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[5]));
 	EXPECT_TRUE(value05 == VALUE_05);
 
 	auto& value06  = _buffer.front<uint16_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[6]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[6]));
 	EXPECT_TRUE(value06 == VALUE_06);
 
 	auto& value07  = _buffer.front<int32_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[7]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[7]));
 	EXPECT_TRUE(value07 == VALUE_07);
 
 	auto& value08  = _buffer.front<uint32_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[8]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[8]));
 	EXPECT_TRUE(value08 == VALUE_08);
 
 	auto& value09 = _buffer.front<int64_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[9]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[9]));
 	EXPECT_TRUE(value09 == VALUE_09);
 
 	auto& value10 = _buffer.front<uint64_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[10]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[10]));
 	EXPECT_TRUE(value10 == VALUE_10);
 
 	auto& value11 = _buffer.front<long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[11]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[11]));
 	EXPECT_TRUE(value11 == VALUE_11);
 
 	auto& value12 = _buffer.front<unsigned long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[12]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[12]));
 	EXPECT_TRUE(value12 == VALUE_12);
 
 	auto& value13 = _buffer.front<long long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[13]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[13]));
 	EXPECT_TRUE(value13 == VALUE_13);
 
 	auto& value14 = _buffer.front<unsigned long long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[14]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[14]));
 	EXPECT_TRUE(value14 == VALUE_14);
 
 	auto& value15 = _buffer.front<float&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[15]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[15]));
 	EXPECT_TRUE(value15 == VALUE_15);
 
 	auto& value16 = _buffer.front<double&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_GENERAL[16]));
+	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[16]));
 	EXPECT_TRUE(value16 == VALUE_16);
 
-	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_GENERAL[16]);
+	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_general[16]);
 }
 
 template<class T, std::size_t N1, std::size_t N2>
@@ -734,13 +734,13 @@ bool compare_array_string(const std::array<std::basic_string_view<T>, N1>& _lhs,
 {
 	// check)
 	if constexpr (N1 != N2)
-		return	false;
+		return false;
 
 	for(std::size_t i=0; i<N1; ++i)
 	{
 		if(_lhs[i] != _rhs[i])
 		{
-			return	false;
+			return false;
 		}
 	}
 
@@ -842,7 +842,7 @@ namespace CGDK
 		{
 			shared_buffer buf_temp_inner(buf_temp);
 
-			function_append_GENERAL(buf_temp_inner);
+			function_append_general(buf_temp_inner);
 		}
 	}
 
@@ -853,7 +853,7 @@ namespace CGDK
 		//static_buffer buf_temp<2048>();
 
 		// - 값 써넣기
-		function_append_GENERAL(buf_temp);
+		function_append_general(buf_temp);
 
 		for(int i=0; i<_TEST_COUNT;++i)
 		{
@@ -868,7 +868,7 @@ namespace CGDK
 		//static_buffer buf_temp<2048>();
 
 		// - 값 써넣기
-		function_append_GENERAL(buf_temp);
+		function_append_general(buf_temp);
 
 		for(int i=0; i<_TEST_COUNT;++i)
 		{
@@ -883,11 +883,11 @@ namespace CGDK
 		//static_buffer buf_temp<2048>();
 
 		// - 값 써넣기
-		function_append_GENERAL(buf_temp);
+		function_append_general(buf_temp);
 
 		for(int i=0; i<_TEST_COUNT;++i)
 		{
-			function_front_with_pos_GENERAL(buf_temp);
+			function_front_with_pos_general(buf_temp);
 		}
 	}
 
@@ -5121,7 +5121,7 @@ namespace CGDK
 		auto buf_temp = buf_alloc;
 
 		// 2) 객체
-		sTEST_MESSAGE	a;
+		sTEST_MESSAGE a;
 		a.size		 = 10;
 		a.message	 = 10;
 		a.name		 = L"TTEESS";

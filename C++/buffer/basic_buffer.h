@@ -1,17 +1,15 @@
 //*****************************************************************************
 //*                                                                           *
-//*                      Cho sanghyun's Game Classes II                       *
-//*                       Ver 10.0 / Release 2019.12.11                       *
-//*                                                                           *
-//*                            CGBuffer Templates                             *
+//*                              CGDK::buffer_view                            *
+//*                        Ver 5.0 / Release 2020.12.11                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
-//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
+//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.com           *
 //*  Best for Game Developement and Optimized for Game Developement.          *
 //*                                                                           *
-//*                (c) 2003. Cho Sanghyun. All right reserved.                *
+//*                   (C) 2008 CGLabs All right reserved.                     *
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************

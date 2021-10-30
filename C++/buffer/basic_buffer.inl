@@ -1,17 +1,15 @@
 //*****************************************************************************
 //*                                                                           *
-//*                      Cho sanghyun's Game Classes II                       *
-//*                       Ver 10.0 / Release 2019.12.11                       *
-//*                                                                           *
-//*                            CGBuffer Templates                             *
+//*                              CGDK::buffer_view                            *
+//*                        Ver 5.0 / Release 2020.12.11                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
-//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
+//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.com           *
 //*  Best for Game Developement and Optimized for Game Developement.          *
 //*                                                                           *
-//*                (c) 2003. Cho Sanghyun. All right reserved.                *
+//*                   (C) 2008 CGLabs All right reserved.                     *
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
@@ -172,14 +170,14 @@ bool validate_message(const T* _buffers, std::size_t _count)
 
 	while (iTotalLength != 0)
 	{
-		// check) Message의 크기가 실제 버퍼의 크기보다 작으면 안됀다.
+		// check) 
 		CGASSERT_ERROR(idx_buffer <= _count);
 		if (idx_buffer > _count) return false;
 
-		// - Message의 길이를 구한다.
+		// - get messag length
 		int32_t	message_size = *temp_buf.data<int32_t>();
 
-		// check) Message의 크기가 0Byte면 안됀다.
+		// check) 
 		CGASSERT_ERROR(message_size != 0);
 		if (message_size == 0) return false;
 
