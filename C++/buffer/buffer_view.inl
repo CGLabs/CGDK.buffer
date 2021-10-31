@@ -221,4 +221,24 @@ public:
 };
 
 
+#if !defined(CGDK_SYSTEM_OBJECT)
+template <class ELEM_T>
+constexpr _buffer_view<ELEM_T>& _buffer_view<ELEM_T>::operator = (const std::shared_ptr<char>& _rhs) noexcept
+{
+	if (_rhs != nullptr)
+	{
+		base_t::data_ = *_rhs;
+		base_t::size_ = 0;
+	}
+	else
+	{
+		clear();
+	}
+
+	// return) 
+	return *this;
+}
+#endif
+
+
 }

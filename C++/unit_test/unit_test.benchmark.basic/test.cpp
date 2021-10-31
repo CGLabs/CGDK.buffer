@@ -1,9 +1,54 @@
-#include "pch.h"
+Ôªø#include "pch.h"
 
 const int _TEST_COUNT = 1000000;
 
 namespace CGDK
 {
+	// declare) Test String
+	int	array_int[8] =
+	{
+		3,
+		2,
+		9,
+		10,
+		11,
+		22,
+		44,
+		22
+	};
+
+	const wchar_t* array_string_wchar_t[8] =
+	{
+		L"Please Let test this",
+		L"Ïù¥Í≤É Ï¢Ä ÌÖåÏä§Ìä∏ÌïòÍ≤å Ìï¥Ï£ºÏÑ∏Ïöî.",
+		L"Ëøô‰ª∂‰∫ã ËØïÈ™å",
+		L"„Åì„Çå„ÇíË©¶„Åü„ÇÅ„Åï„Åõ„Å¶„Åè„Å†„Åï„ÅÑ",
+		L"1234567!@#$%%^&}¬¢‚Ä°¬•‚Äùw¬Ø¬•‚Äû√à√â√û¬¥¬µ¬Ω¬≤√Ç√Ñ√Ç√Å¬æ¬ø√Ä√Å√Ç",
+		L"Please Ëøô‰ª∂‰∫ã Ë©¶„Åü„ÇÅ„Åï„Åõ„Å¶„Åè„Å†„Åï„ÅÑ Ìï©ÏãúÎã§.",
+		L"Test What ever",
+		L"1234"
+	};
+
+	std::vector<std::wstring> std_vector_std_wstring
+	{
+		L"zero",
+		L"two",
+		L"tree",
+		L"fifteen",
+		L"five",
+		L"eleven"
+	};
+
+	std::map<std::wstring, std::vector<int>> std_map_std_string_std_vector_int
+	{
+		{L"zero",	{0,1,2,4}},
+		{L"two",	{3,1,22,4}},
+		{L"tree",	{4,1,12,4}},
+		{L"fifteen",{5,1,82,4}},
+		{L"five",	{7,1,22,4}},
+		{L"eleven",	{10,21,12,34}}
+	};
+
 	template<class T>
 	CGDK::buffer function_STRING_append(T* _List)
 	{
@@ -103,7 +148,7 @@ namespace CGDK
 		[[maybe_unused]] auto value_10 = _buffer.front<int64_t>(pos_now);		pos_now += sizeof(int64_t);
 		[[maybe_unused]] auto value_11 = _buffer.front<uint64_t>(pos_now);		pos_now += sizeof(uint64_t);
 		[[maybe_unused]] auto value_12 = _buffer.front<float>(pos_now);			pos_now += sizeof(float);
-		[[maybe_unused]] auto value_13 = _buffer.front<double>(pos_now);			pos_now += sizeof(double);
+		[[maybe_unused]] auto value_13 = _buffer.front<double>(pos_now);		pos_now += sizeof(double);
 	}
 
 	void function_front_with_pos_GENERAL(CGDK::buffer _buffer)
@@ -128,17 +173,17 @@ namespace CGDK
 	TEST(CGDK_buffer_benchmakr_basic, general_append_extract)
 	{
 		// X) Memory Alloc
-		char buf_temp[2048];
+		char buf_array[2048];
 
-		// 1) Buffer «“¥Á
-		CGDK::buffer buf_create(buf_temp);
+		// 1) Buffer Ìï†Îãπ
+		CGDK::buffer buf_create(buf_array);
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
-			// 2) Buffer ¥Î¿‘
+			// 2) Buffer ÎåÄÏûÖ
 			CGDK::buffer buf_temp = buf_create;
 
-			// 3) ∞™ Ω·≥÷±‚
+			// 3) Í∞í Ïç®ÎÑ£Í∏∞
 			buf_temp.append<char>(3);
 			buf_temp.append<unsigned char>(4);
 			buf_temp.append<int16_t>(4100);
@@ -150,119 +195,118 @@ namespace CGDK
 			buf_temp.append<float>(1.0f);
 			buf_temp.append<double>(2.0);
 
-			// 4) ∞™ ¿–±‚
-			auto value_01 = buf_temp.extract<char>();
-			auto value_02 = buf_temp.extract<unsigned char>();
-			auto value_06 = buf_temp.extract<int16_t>();
-			auto value_07 = buf_temp.extract<uint16_t>();
-			auto value_08 = buf_temp.extract<int32_t>();
-			auto value_09 = buf_temp.extract<uint32_t>();
-			auto value_10 = buf_temp.extract<int64_t>();
-			auto value_11 = buf_temp.extract<uint64_t>();
-			auto value_12 = buf_temp.extract<float>();
-			auto value_13 = buf_temp.extract<double>();
+			// 4) Í∞í ÏùΩÍ∏∞
+			[[maybe_unused]] auto value_01 = buf_temp.extract<char>();
+			[[maybe_unused]] auto value_02 = buf_temp.extract<unsigned char>();
+			[[maybe_unused]] auto value_06 = buf_temp.extract<int16_t>();
+			[[maybe_unused]] auto value_07 = buf_temp.extract<uint16_t>();
+			[[maybe_unused]] auto value_08 = buf_temp.extract<int32_t>();
+			[[maybe_unused]] auto value_09 = buf_temp.extract<uint32_t>();
+			[[maybe_unused]] auto value_10 = buf_temp.extract<int64_t>();
+			[[maybe_unused]] auto value_11 = buf_temp.extract<uint64_t>();
+			[[maybe_unused]] auto value_12 = buf_temp.extract<float>();
+			[[maybe_unused]] auto value_13 = buf_temp.extract<double>();
 		}
 	}
 
 
 	TEST(CGDK_buffer_benchmakr_basic, string_append_extract)
 	{
-		// X) Memory Alloc
-		char buf_temp[2048];
+		// X) static memory
+		char buf_array[2048];
 
-		// 1) Buffer «“¥Á
-		CGDK::buffer buf_create(buf_temp);
+		// 1) buffer
+		CGDK::buffer buf_create(buf_array);
 
-		wchar_t* stringExtract[8];
+		std::wstring_view str_extract[8];
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
-			// 2) Buffer ¥Î¿‘
+			// 2) Buffer ÎåÄÏûÖ
 			CGDK::buffer buf_temp = buf_create;
 
-			// 3) ∞™ Ω·≥÷±‚
-			buf_temp.append<wchar_t*>(array_string_wchar_t[0]);
-			buf_temp.append<wchar_t*>(array_string_wchar_t[1]);
-			buf_temp.append<wchar_t*>(array_string_wchar_t[2]);
-			buf_temp.append<wchar_t*>(array_string_wchar_t[3]);
-			buf_temp.append<wchar_t*>(array_string_wchar_t[4]);
-			buf_temp.append<wchar_t*>(array_string_wchar_t[5]);
-			buf_temp.append<wchar_t*>(array_string_wchar_t[6]);
-			buf_temp.append<wchar_t*>(array_string_wchar_t[7]);
+			// 3) Í∞í Ïç®ÎÑ£Í∏∞
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[0]);
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[1]);
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[2]);
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[3]);
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[4]);
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[5]);
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[6]);
+			buf_temp.append<std::wstring_view>(array_string_wchar_t[7]);
 
-			// 4) ∞™ ¿–±‚
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
-			stringExtract[0] = buf_temp.extract<wchar_t*>();
+			// 4) Í∞í ÏùΩÍ∏∞
+			str_extract[0] = buf_temp.extract<std::wstring_view>();
+			str_extract[1] = buf_temp.extract<std::wstring_view>();
+			str_extract[2] = buf_temp.extract<std::wstring_view>();
+			str_extract[3] = buf_temp.extract<std::wstring_view>();
+			str_extract[4] = buf_temp.extract<std::wstring_view>();
+			str_extract[5] = buf_temp.extract<std::wstring_view>();
+			str_extract[6] = buf_temp.extract<std::wstring_view>();
+			str_extract[7] = buf_temp.extract<std::wstring_view>();
 		}
 	}
 
 	TEST(CGDK_buffer_benchmakr_basic, list_int_append_extract)
 	{
 		// X) Memory Alloc
-		char buf_temp[2048];
+		char buf_array[2048];
 
-		// 1) Buffer «“¥Á
-		CGDK::buffer buf_create(buf_temp);
+		// 1) Buffer Ìï†Îãπ
+		CGDK::buffer buf_create(buf_array);
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
-			// 2) Buffer ¥Î¿‘
+			// 2) Buffer ÎåÄÏûÖ
 			CGDK::buffer buf_temp = buf_create;
 
-			// 3) ∞™ Ω·≥÷±‚
+			// 3) Í∞í Ïç®ÎÑ£Í∏∞
 			buf_temp.append(array_int);
 
-			// 4) ∞™ ¿–±‚
-			auto temp = buf_temp.extract<std::vector<int>>();
+			// 4) Í∞í ÏùΩÍ∏∞
+			[[maybe_unused]] auto temp = buf_temp.extract<std::vector<int>>();
 		}
 	}
-
 
 	TEST(CGDK_buffer_benchmakr_basic, list_string_append_extract)
 	{
 		// X) Memory Alloc
-		char buf_temp[2048];
+		char buf_array[2048];
 
-		// 1) Buffer «“¥Á
-		CGDK::buffer buf_create(buf_temp);
+		// 1) Buffer Ìï†Îãπ
+		CGDK::buffer buf_create(buf_array);
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
-			// 2) Buffer ¥Î¿‘
+			// 2) Buffer ÎåÄÏûÖ
 			CGDK::buffer buf_temp = buf_create;
 
-			// 3) ∞™ Ω·≥÷±‚
-			buf_temp.append(array_std_string_stdwstring);
+			// 3) Í∞í Ïç®ÎÑ£Í∏∞
+			buf_temp.append(std_vector_std_wstring);
 
-			// 4) ∞™ ¿–±‚
-			auto temp = buf_temp.extract<std::vector<wchar_t*>>();
+			// 4) Í∞í ÏùΩÍ∏∞
+			[[maybe_unused]] auto temp = buf_temp.extract<std::vector<std::wstring_view>>();
 		}
 	}
 
 	TEST(CGDK_buffer_benchmakr_basic, associated_string_list_int_append_extract)
 	{
 		// X) Memory Alloc
-		char buf_temp[2048];
+		char buf_array[2048];
 
-		// 1) Buffer «“¥Á
-		CGDK::buffer buf_create(buf_temp);
+		// 1) Buffer Ìï†Îãπ
+		CGDK::buffer buf_create(buf_array);
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
-			// 2) Buffer ¥Î¿‘
+			// 2) Buffer ÎåÄÏûÖ
 			CGDK::buffer buf_temp = buf_create;
 
-			// 3) ∞™ Ω·≥÷±‚
-			buf_temp.append(map_std_wstring_vector_int);
+			// 3) Í∞í Ïç®ÎÑ£Í∏∞
+			buf_temp.append(std_map_std_string_std_vector_int);
 
-			// 4) ∞™ ¿–±‚
-			auto temp = buf_temp.extract<std::map<wchar_t*, std::vector<int>>>();
+			// 4) Í∞í ÏùΩÍ∏∞
+			[[maybe_unused]] auto temp = buf_temp.extract<std::map<std::wstring_view, std::vector<int>>>();
 		}
 	}
 }

@@ -54,17 +54,21 @@ public:
 	constexpr _basic_buffer(_buffer_view<T> _buffer, buffer_bound&& _bound) noexcept : base_t(_buffer), bound(_bound) {}
 	template <class T>
 	constexpr _basic_buffer(std::basic_string_view<T> _string) noexcept : base_t{ _string }, bound{ _string.data(), _string.data() + _string.size() } {}
+	template <class T, std::size_t N>
+	constexpr _basic_buffer(T(&_memory)[N]) noexcept : base_t{ _memory }, bound{ _memory, _memory + N } {}
 
 protected:
-			_basic_buffer(Imemory* _pbuffer) noexcept : base_t((_pbuffer != nullptr) ? *_pbuffer : base_t()), bound((_pbuffer != nullptr) ? _pbuffer->get_bound() : buffer_bound()) {}
-			_basic_buffer(object_ptr<Imemory>&& _pbuffer) noexcept : base_t((_pbuffer.exist()) ? *_pbuffer : base_t()), bound((_pbuffer.exist()) ? _pbuffer->get_bound() : buffer_bound()) {}
+#if defined(CGDK_SYSTEM_OBJECT)
+	constexpr _basic_buffer(Imemory* _pbuffer) noexcept : base_t((_pbuffer != nullptr) ? *_pbuffer : base_t()), bound((_pbuffer != nullptr) ? _pbuffer->get_bound() : buffer_bound()) {}
+	constexpr _basic_buffer(object_ptr<Imemory>&& _pbuffer) noexcept : base_t((_pbuffer.exist()) ? *_pbuffer : base_t()), bound((_pbuffer.exist()) ? _pbuffer->get_bound() : buffer_bound()) {}
+#endif
 
 public:
 	// 1) capacity/clear/copy/clone
-	constexpr void				resize(std::size_t _new_size)													{ if (data() + _new_size > get_upper_bound()) throw std::length_error("error! data_ is out of upper bound 'resize(size_t)'"); size_ = _new_size;}
+	constexpr void				resize(std::size_t _new_size)													{ if (data() + _new_size > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'resize(size_t)'"); size_ = _new_size;}
 			std::size_t			capacity() const noexcept														{ return (bound.upper != nullptr) ? (reinterpret_cast<const char*>(bound.upper) - data_) : 0;}
 	constexpr void				clear() noexcept																{ base_t::clear(); bound.reset();}
-			void				copy(const base_t& _source)														{ if (data_ + _source.size() > get_upper_bound()) throw std::length_error("error! data_ overflow 'copy()'"); memcpy(data(), _source.data(), _source.size()); size_ = _source.size();}
+			void				copy(const base_t& _source)														{ if (data_ + _source.size() > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'copy(_source)'"); memcpy(data(), _source.data(), _source.size()); size_ = _source.size();}
 	constexpr void				swap(_basic_buffer& _rhs) noexcept												{ base_t::swap(_rhs); auto p = _rhs.get_bound(); _rhs._set_bound(bound); bound = p; }
 	constexpr void				swap(base_t& _rhs)																{ if (_rhs.data() < get_lower_bound() || (_rhs.data() + _rhs.size()) > get_upper_bound()) { assert(false); throw std::out_of_range("_rhs data_ is must in bound of this shared_buffer"); } base_t::swap(_rhs); }
 
@@ -117,7 +121,7 @@ public:
 	//							prepend_string(const T(&_text)[N])												{ return _prepend_string_pointer(_text);}
 			template <class T, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_string(const std::basic_string_view<T> _format, F&& _first, TREST&&... _rest)	{ return _prepend_string_format(_format.data(), std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								prepend_string(const std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _prepend_string_format(_format.data(), std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T, std::size_t N, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								prepend_string(const T(&_format)[N], F&& _first, TREST&&... _rest)				{ return _prepend_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
@@ -274,9 +278,11 @@ public:
 	constexpr self_t&			operator= (base_t&& _rhs) noexcept												{ _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
 	constexpr self_t&			operator= (const self_t& _rhs) noexcept											{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
 	constexpr self_t&			operator= (self_t&& _rhs) noexcept												{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
-			self_t&				operator= (Imemory* _rhs) noexcept												{ if(_rhs != nullptr) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
-			self_t&				operator= (const object_ptr<Imemory>& _rhs) noexcept							{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
-			self_t&				operator= (object_ptr<Imemory>&& _rhs) noexcept									{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
+#if defined(CGDK_SYSTEM_OBJECT)
+	constexpr self_t&			operator= (Imemory* _rhs) noexcept												{ if(_rhs != nullptr) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
+	constexpr self_t&			operator= (const object_ptr<Imemory>& _rhs) noexcept							{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
+	constexpr self_t&			operator= (object_ptr<Imemory>&& _rhs) noexcept									{ if(_rhs.exist()) { base_t::operator=(_rhs); bound = _rhs->get_bound(); } else { clear();} return *this; }
+#endif
 			// [operator] ^=
 			template<class T>
 	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs)											{ base_t::operator=(_rhs); return *this;}
@@ -459,11 +465,16 @@ public:
 		std::size_t	max_length = _buffer_string_size_saturate((reinterpret_cast<const T*>(data_ - sizeof(COUNT_T)) - reinterpret_cast<const T*>(bound_lower)));
 
 		// 4) [임시_버퍼]를 할당한다
+	#if defined(CGDK_SYSTEM_OBJECT)
 		const auto pbuf_temp = mem_alloc(max_length * sizeof(T));
 		const auto str_start = reinterpret_cast<T*>(pbuf_temp->data_);
+	#else
+		const auto pbuf_temp = ::malloc(max_length * sizeof(T));
+		const auto str_start = reinterpret_cast<T*>(pbuf_temp);
+	#endif
 
 		// 5) [원본_버퍼_시작_크기]에 [형식_문자열]를 써넣는다.
-		const auto length_string = _Xsprintf(str_start, max_length, _format, std::forward<TREST>(_rest)...) + 1;
+		const auto length_string = CGDK::_Xsprintf(str_start, max_length, _format, std::forward<TREST>(_rest)...) + 1;
 		const auto size_string = length_string * sizeof(T);
 
 		// 6) [목표_포인터]를 구한다.
@@ -474,6 +485,10 @@ public:
 	
 		// 7) [문자열]을 복사한다.
 		memcpy(p, str_start, size_string);
+
+	#if !defined(CGDK_SYSTEM_OBJECT)
+		::free(pbuf_temp);
+	#endif
 
 		// 8) [목표_포인터]를 sizeof(COUNT_T)만큼을 뺀다.
 		p -= sizeof(COUNT_T);
@@ -557,8 +572,13 @@ public:
 		constexpr std::size_t TEMP_STRING_BUFFER_SIZE = 2048;
 
 		// 1) [임시_버퍼]를 할당한다
+	#if defined(CGDK_SYSTEM_OBJECT)
 		auto pbuf_temp = mem_alloc(TEMP_STRING_BUFFER_SIZE);
 		auto str_start = reinterpret_cast<T*>(pbuf_temp->data_);
+	#else
+		auto pbuf_temp = ::malloc(TEMP_STRING_BUFFER_SIZE);
+		auto str_start = reinterpret_cast<T*>(pbuf_temp);
+	#endif
 
 		// 3) get lower bound
 		auto bound_lower = get_lower_bound();
@@ -578,6 +598,10 @@ public:
 
 		// 7) [문자열]을 추가한다.
 		memcpy(p, str_start, size_string);
+
+	#if !defined(CGDK_SYSTEM_OBJECT)
+		::free(pbuf_temp);
+	#endif
 
 		// 9) [원본_버퍼_포인터]와 [원본_버퍼_길이]를 옮긴다.
 		data_ = p;
@@ -988,7 +1012,7 @@ public:
 								_append_array(const T* _data)
 	{
 		// check)
-		static_assert(N != 0, "error! array size is 0");
+		static_assert(N != 0, "size of array '_data' is 0");
 
 		// 1) [데이터_갯수]를 써넣는다.
 		_append_general<COUNT_T>(static_cast<COUNT_T>(N));
@@ -1347,6 +1371,7 @@ public:
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_append_text_fmt_format(const T* _format, TFIRST&& _first, TREST&&... _rest)
 	{
+	#if defined(FMT_FORMAT_H_)
 		// declare) 
 		fmt::basic_memory_buffer<T> temp_buffer;
 
@@ -1359,6 +1384,10 @@ public:
 
 		// return) 
 		return _append_text(std::basic_string_view<T>(temp_buffer.data(), temp_buffer.size()));
+	#else
+		CGDK_ASSERT(false);
+		return base_t();
+	#endif
 	}
 	constexpr base_t			_append_bytes(std::size_t _size, const void* _buffer)
 	{
@@ -1844,14 +1873,14 @@ protected:
 
 									// check) 
 									if(_rhs.get_front_ptr() < get_lower_bound())
-										throw std::length_error("error! out of lower bound'");
+										throw std::length_error("buffer overflow. out of lower bound'");
 
 									// check) 
 									CGDK_ASSERT(_rhs.get_back_ptr() <= get_upper_bound());
 
 									// check) 
 									if (_rhs.get_back_ptr() > get_upper_bound())
-										throw std::length_error("error! out of upper bound'");
+										throw std::length_error("buffer overflow. out of upper bound'");
 								}
 	// 11) source
 			buffer_bound		bound;
@@ -1872,7 +1901,4 @@ constexpr CGDK::_basic_buffer<U> operator ^ (const CGDK::_basic_buffer<U>& _lhs,
 
 }
 
-
-
-
-#include "CGDK10/system/object/basic_buffer.inl"
+#include "buffer/basic_buffer.inl"

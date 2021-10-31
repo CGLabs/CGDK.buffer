@@ -50,7 +50,11 @@
 
 // 4) _buffer_view<T>
 #include "buffer/buffer_view.h"
+#include "buffer/basic_buffer.h"
 
+// 5) shared_buffer
+#include "buffer/shared_buffer.h"
+#include "buffer/make_shared_buffer.h"
 
 //-----------------------------------------------------------------------------
 // Pragma...

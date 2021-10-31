@@ -21,14 +21,14 @@
 //
 //-----------------------------------------------------------------------------
 // 1) C++ Standard Libraries and Common Includes
-#include <cstdint>
-#include <cwchar>
-#include <cstdarg>
+//#include <cstdint>
+//#include <cwchar>
+//#include <cstdarg>
 #include <cassert>
 #include <list>
 #include <stdexcept>
 #include <malloc.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <type_traits>
 
 // 2) 
@@ -87,8 +87,22 @@ namespace CGDK
 
 	template<class> class _shared_buffer;
 	class static_buffer;
+#if defined(CGDK_SYSTEM_OBJECT)
 	using shared_buffer = _shared_buffer<buffer>;
 	using const_shared_buffer = _shared_buffer<const_buffer_view>;
+#endif
+
+#if !defined(CGDK_SYSTEM_OBJECT)
+	struct buffer_bound
+	{
+	public:
+		const void* lower = nullptr;
+		const void* upper = nullptr;
+
+	public:
+		constexpr void reset() noexcept { lower = upper = nullptr; }
+	};
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -113,7 +127,7 @@ inline std::size_t _buffer_string_size_saturate(std::size_t _a) { return (_a < _
 //
 //-----------------------------------------------------------------------------
 // 1) CGDK Assert
-#define	CGDK_ASSERT(condition, ...)		if((condition)==false) { assert(condition); __VA_ARGS__;}
+#define	CGDK_ASSERT(condition, ...)		if ((condition) == false) { assert(condition); __VA_ARGS__;}
 
 // 2) ASSERT on bound check
 #if defined(_CGDK_NO_ASSERT_ON_BOUND_CHECK) || defined(NDEBUG)
@@ -128,39 +142,56 @@ namespace CGDK
 //-----------------------------------------------------------------------------
 // throwable classes
 //-----------------------------------------------------------------------------
-namespace throwable
-{
-	class buffer_exception : public Nthrowable
-	{
-	public:
-				buffer_exception() noexcept : Nthrowable(), m_offset(0)  {}
-				buffer_exception(std::size_t _offset, const std::string& _description) noexcept : CGDK::Nthrowable(_description), m_offset(_offset) {}
-				buffer_exception(std::size_t _offset, std::string&& _description) noexcept : CGDK::Nthrowable(std::forward<std::string>(_description)), m_offset(_offset) {}
-				buffer_exception(std::size_t _offset, result_code _reason, intptr_t _param = 0) noexcept : CGDK::Nthrowable(_reason, _param), m_offset(_offset) {}
-				buffer_exception(std::size_t _offset, result_code _reason, intptr_t _param, const std::string& _description) noexcept : CGDK::Nthrowable(_reason, _param, _description), m_offset(_offset) {}
-				buffer_exception(std::size_t _offset, result_code _reason, intptr_t _param, std::string&& _description) noexcept : CGDK::Nthrowable(_reason, _param, std::move(_description)), m_offset(_offset) {}
-		virtual	~buffer_exception() noexcept {}
-
-	public:
-				auto			offset() const noexcept { return m_offset; }
-	private:
-				std::size_t		m_offset;
-	};
-
-	class invalid_buffer : public buffer_exception
-	{
-	public:
-				invalid_buffer(std::size_t _offset, result_code _reason, intptr_t _param, const std::string& _description) noexcept : buffer_exception(_offset, _reason, _param, _description) {}
-				invalid_buffer(std::size_t _offset, result_code _reason, intptr_t _param, std::string&& _description) noexcept : buffer_exception(_offset, _reason, _param, std::forward<std::string>(_description)) {}
-	};
-
-	class invalid_string : public buffer_exception
-	{
-	public:
-				invalid_string(std::size_t _offset, result_code _reason, intptr_t _param, const std::string& _description) noexcept : buffer_exception(_offset, _reason, _param, _description) {}
-				invalid_string(std::size_t _offset, result_code _reason, intptr_t _param, std::string&& _description) noexcept : buffer_exception(_offset, _reason, _param, std::forward<std::string>(_description)) {}
-	};
-}
+//namespace throwable
+//{
+//	//class buffer_exception : public Nthrowable
+//	//{
+//	//public:
+//	//			buffer_exception() noexcept : Nthrowable(), m_offset(0)  {}
+//	//			buffer_exception(std::size_t _offset, const std::string& _description) noexcept : CGDK::Nthrowable(_description), m_offset(_offset) {}
+//	//			buffer_exception(std::size_t _offset, std::string&& _description) noexcept : CGDK::Nthrowable(std::forward<std::string>(_description)), m_offset(_offset) {}
+//	//			buffer_exception(std::size_t _offset, result_code _reason, intptr_t _param = 0) noexcept : CGDK::Nthrowable(_reason, _param), m_offset(_offset) {}
+//	//			buffer_exception(std::size_t _offset, result_code _reason, intptr_t _param, const std::string& _description) noexcept : CGDK::Nthrowable(_reason, _param, _description), m_offset(_offset) {}
+//	//			buffer_exception(std::size_t _offset, result_code _reason, intptr_t _param, std::string&& _description) noexcept : CGDK::Nthrowable(_reason, _param, std::move(_description)), m_offset(_offset) {}
+//	//	virtual	~buffer_exception() noexcept {}
+//
+//	//public:
+//	//			auto			offset() const noexcept { return m_offset; }
+//	//private:
+//	//			std::size_t		m_offset;
+//	//};
+//
+//	class buffer_exception : public std::exception
+//	{
+//	public:
+//				buffer_exception() noexcept : std::exception(), m_offset(0)  {}
+//				//buffer_exception(std::size_t _offset, const std::string& _description) noexcept : std::exception(_description), m_offset(_offset) {}
+//				//buffer_exception(std::size_t _offset, std::string&& _description) noexcept : std::exception(std::forward<std::string>(_description)), m_offset(_offset) {}
+//				buffer_exception(std::size_t _offset, int _reason, intptr_t _param = 0) noexcept : std::exception(/*_reason, _param*/), m_offset(_offset) {}
+//				//buffer_exception(std::size_t _offset, int _reason, intptr_t _param, const std::string& _description) noexcept : std::exception(_reason, _param, _description), m_offset(_offset) {}
+//				//buffer_exception(std::size_t _offset, int _reason, intptr_t _param, std::string&& _description) noexcept : std::exception(_reason, _param, std::move(_description)), m_offset(_offset) {}
+//		virtual	~buffer_exception() noexcept {}
+//
+//	public:
+//				auto			offset() const noexcept { return m_offset; }
+//	private:
+//				std::size_t		m_offset;
+//	};
+//
+//	class invalid_buffer : public buffer_exception
+//	{
+//	public:
+//				invalid_buffer(std::size_t _offset, int _reason, intptr_t _param, const std::string& _description) noexcept : buffer_exception(/*_offset, _reason, _param, _description*/) {}
+//				invalid_buffer(std::size_t _offset, int _reason, intptr_t _param, std::string&& _description) noexcept : buffer_exception(/*_offset, _reason, _param, std::forward<std::string>(_description)*/) {}
+//	};
+//
+//	class invalid_string : public buffer_exception
+//	{
+//	public:
+//				invalid_string(std::size_t _offset, int _reason, intptr_t _param, const std::string& _description) noexcept : buffer_exception(/*_offset, _reason, _param, _description*/) {}
+//				invalid_string(std::size_t _offset, int _reason, intptr_t _param, std::string&& _description) noexcept : buffer_exception(/*_offset, _reason, _param, std::forward<std::string>(_description)*/) {}
+//	};
+//}
 
 
 //-----------------------------------------------------------------------------
@@ -231,7 +262,7 @@ public:
 	fmt_buffer(T* _ptr = nullptr, size_t _size = 0, size_t _capacity = 0) noexcept : fmt::detail::buffer<T>(_ptr, _size, _capacity) {}
 
 protected:
-	virtual void grow(size_t _capacity) override { throw throwable::buffer_exception(); }
+	virtual void grow(size_t _capacity) override { throw std::exception(); }
 };
 #endif
 
@@ -302,8 +333,10 @@ public:
 	text(const text& _rhs) noexcept : p(_rhs.p) {}
 	text(std::basic_string_view<T> _str) noexcept : p(_str) {}
 	text(const std::basic_string<T>& _str) noexcept : p(_str) {}
+#ifdef __CGDK_STATIC_STRING
 	template <std::size_t N>
 	text(CGDK::static_string<N> _str) noexcept : p(_str) {}
+#endif
 	template <std::size_t N>
 	text(const T(&_str)[N]) noexcept : p{ _str, N } {}
 	text(const T* _str) noexcept : p(_str) {}
@@ -437,6 +470,7 @@ struct is_std_string
 template <class T> constexpr bool is_std_string_v = is_std_string<T>::value;
 
 // 4) is std::static_string
+#ifdef __CGDK_STATIC_STRING
 template<class T> struct is_static_string : public std::false_type {};
 template<std::size_t N> struct is_static_string<static_string<N>> : public std::true_type {};
 template<std::size_t N> struct is_static_string<static_wstring<N>> : public std::true_type {};
@@ -444,6 +478,7 @@ template<std::size_t N> struct is_static_string<static_u8string<N>> : public std
 template<std::size_t N> struct is_static_string<static_u16string<N>> : public std::true_type {};
 template<std::size_t N> struct is_static_string<static_u32string<N>> : public std::true_type {};
 template <class T> constexpr bool is_static_string_v = is_static_string<T>::value;
+#endif
 
 // 5) object_ptr<T>
 template<class T> struct is_object_ptr : public std::false_type {};
@@ -760,7 +795,7 @@ template<class T, class FLAG = void> class serializer_size_of
 							{	public:
 								constexpr static std::size_t  _get_append_size(const T&)								{ return sizeof(T);}
 								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset)		{ auto size = sizeof(T); if((_buffer.size() - _offset) < size) throw throwable::buffer_exception(_offset); return size;}
+								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset)		{ auto size = sizeof(T); if((_buffer.size() - _offset) < size) throw std::exception(); return size;}
 							};
 
 template<class B, class T> using APPD_t	 = serializer_append<B, std::remove_reference_t<std::remove_const_t<T>>>;
@@ -782,15 +817,15 @@ template<class T> using SIZE_OF_t = serializer_size_of<std::remove_reference_t<s
 //   get_size_of function
 //-----------------------------------------------------------------------------
 template<class TRETURN = std::size_t, class T>
-TRETURN get_size_of(const T& _object)
+constexpr TRETURN get_size_of(const T& _object)
 {
 	return static_cast<TRETURN>(SIZE_OF_t<T>::_get_append_size(_object));
 }
 
 template<class TRETURN = std::size_t, class TFIRST, class TSECOND, class... TREST>
-TRETURN get_size_of(const TFIRST& _first, const TSECOND& _second, const TREST&... _rest)
+constexpr TRETURN get_size_of(const TFIRST& _first, const TSECOND& _second, const TREST&... _rest)
 {
-	return	static_cast<TRETURN>(SIZE_OF_t<TFIRST>::_get_append_size(_first) + get_size_of<TRETURN, TSECOND, TREST...>(_second, _rest...));
+	return static_cast<TRETURN>(SIZE_OF_t<TFIRST>::_get_append_size(_first) + get_size_of<TRETURN, TSECOND, TREST...>(_second, _rest...));
 }
 
 template <class T>
@@ -896,7 +931,7 @@ template<class T, std::size_t N> class serializer_size_of<T[N], std::enable_if_t
 								public:
 								constexpr static std::size_t  _get_append_size(const TX(&_object)[N])						{ std::size_t size = sizeof(COUNT_T); for (const auto& iter : _object) size += get_size_of(iter); return size; }
 								template<class S> 
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset)			{ std::size_t size = sizeof(COUNT_T); if ((_buffer.size() - _offset) < size) throw throwable::buffer_exception(_offset);  _offset += size; /*for (const auto& iter : _object) size += get_extract_size_of<T>(_buffer, _offset);*/ return size; }
+								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset)			{ std::size_t size = sizeof(COUNT_T); if ((_buffer.size() - _offset) < size) throw std::exception();  _offset += size; /*for (const auto& iter : _object) size += get_extract_size_of<T>(_buffer, _offset);*/ return size; }
 							};
 
 template<class T, std::size_t N> class serializer_size_of<T[N], std::enable_if_t<is_memcopy_able<T>::value>>
@@ -904,7 +939,7 @@ template<class T, std::size_t N> class serializer_size_of<T[N], std::enable_if_t
 								public:
 								constexpr static std::size_t  _get_append_size(const TX(&)[N])								{ return sizeof(COUNT_T) + sizeof(TX) * N; }
 								template<class S> 
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { std::size_t size = sizeof(COUNT_T) + sizeof(TX) * N; if ((_buffer.size() - _offset) < size) throw throwable::buffer_exception(_offset);  _offset += size; return size; }
+								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { std::size_t size = sizeof(COUNT_T) + sizeof(TX) * N; if ((_buffer.size() - _offset) < size) throw std::exception();  _offset += size; return size; }
 							};
 
 // serializer_extract - T[] & !is_string_type_v<T> && !is_string_pointer_type_v<T>
@@ -978,7 +1013,7 @@ template<class T, std::size_t N> class serializer_size_of<std::array<T,N>>
 							{	public:
 								constexpr static std::size_t  _get_append_size(const std::array<T,N>& _object)				{ std::size_t size = sizeof(COUNT_T); for (const auto& iter : _object) size += get_size_of(iter); return size; }
 								template<class S> 
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { std::size_t size = sizeof(COUNT_T); if ((_buffer.size() - _offset) < size) throw throwable::buffer_exception(_offset);  _offset += size; /*for (const auto& iter : _object) size += get_extract_size_of<T>(_buffer, _offset);*/ return size; }
+								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset)			{ std::size_t size = sizeof(COUNT_T); if ((_buffer.size() - _offset) < size) throw std::exception();  _offset += size; /*for (const auto& iter : _object) size += get_extract_size_of<T>(_buffer, _offset);*/ return size; }
 							};
 
 
@@ -1047,9 +1082,9 @@ template<class B>			class serializer_peek<B, WEB>
 							};
 template<>					class serializer_size_of<WEB>
 							{	public:
-								static std::size_t  _get_append_size(const WEB&)											{ CGASSERT_ERROR(false); return 0; }
+								constexpr static std::size_t _get_append_size(const WEB&)									{ CGDK_ASSERT(false); return 0; }
 								template<class S> 
-								static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset)					{ CGDK_ASSERT(false); return 0;}
+								static constexpr std::size_t _get_extract_size(const S& _buffer, int64_t& _offset)			{ CGDK_ASSERT(false); return 0;}
 							};
 
 // 2) web_modify
@@ -1065,9 +1100,9 @@ template<class B>			class serializer_peek<B, WEB_MODIFY>
 							};
 template<>					class serializer_size_of<WEB_MODIFY>
 							{	public:
-								static std::size_t  _get_append_size(const WEB&)											{ CGASSERT_ERROR(false); return 0; }
+								constexpr static std::size_t _get_append_size(const WEB&)									{ CGDK_ASSERT(false); return 0; }
 								template<class S> 
-								static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset)					{ CGDK_ASSERT(false); return 0;}
+								constexpr static std::size_t _get_extract_size(const S& _buffer, int64_t& _offset)			{ CGDK_ASSERT(false); return 0;}
 							};
 
 
@@ -1245,7 +1280,7 @@ template<class B, class T>	class serializer_append<B, T, std::enable_if_t<std::i
 									auto result = const_cast<TX&>(_data).SerializePartialToArray(dest_ptr, remained);
 
 									if (result == false)
-										throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
+										throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
 
 									type result_return(dest_ptr, object_size);
 									_s.add_size(object_size);
@@ -1267,7 +1302,7 @@ template<class B, class T>	class serializer_extract<B, T, std::enable_if_t<std::
 									auto result = _dest.ParseFromArray(_s.template data<void>(), _s.template size<int>());
 
 									if (result == false)
-										throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(extract)")*/);
+										throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(extract)")*/);
 
 									_s += offset(_dest.ByteSizeLong());
 								}
@@ -1288,7 +1323,7 @@ template<class B, class T>	class serializer_peek<B, T, std::enable_if_t<std::is_
 									auto result = _dest.ParseFromArray(tb.template data<void>(), tb.template size<int>());
 
 									if (result == false)
-										throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(peek)")*/);
+										throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(peek)")*/);
 
 									_offset += _dest.ByteSizeLong();
 								}
@@ -1318,7 +1353,7 @@ template<class B, class T>	class serializer_append<B, T*, std::enable_if_t<std::
 										auto result = const_cast<TX&>(_data).SerializePartialToArray(dest_ptr, remained);
 
 										if (result == false)
-											throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
+											throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
 
 										type result_return(dest_ptr, object_size);
 										_s.add_size(object_size);
@@ -1356,7 +1391,7 @@ template<class B, class T>	class serializer_append<B, object_ptr<T>, std::enable
 										auto result = const_cast<TX&>(_data).SerializePartialToArray(dest_ptr, remained);
 
 										if (result == false)
-											throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
+											throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
 
 										type result_return(dest_ptr, object_size);
 										_s.add_size(object_size);
@@ -1385,7 +1420,7 @@ template<class B, class T>	class serializer_extract<B, object_ptr<T>, std::enabl
 									auto result = _dest.ParseFromArray(_s.template data<void>(), _s.template size<int>());
 
 									if (result == false)
-										throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(extract)")*/);
+										throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(extract)")*/);
 
 									_s += offset(_dest.ByteSizeLong());
 								}
@@ -1408,7 +1443,7 @@ template<class B, class T>	class serializer_peek<B, object_ptr<T>, std::enable_i
 									auto result = _dest.ParseFromArray(tb.template data<void>(), tb.template size<int>());
 
 									if (result == false)
-										throw throwable::buffer_exception(/*tb.size<std::size_t>(), std::string("protobuf:fail to serialize(peek)")*/);
+										throw std::exception(/*tb.size<std::size_t>(), std::string("protobuf:fail to serialize(peek)")*/);
 
 									_offset += _dest.ByteSizeLong();
 								}
@@ -1438,7 +1473,7 @@ template<class B, class T>	class serializer_append<B, own_ptr<T>, std::enable_if
 										auto result = const_cast<TX&>(_data).SerializePartialToArray(dest_ptr, remained);
 
 										if (result == false)
-											throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
+											throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(append)")*/);
 
 										type result_return(dest_ptr, object_size);
 										_s.add_size(object_size);
@@ -1468,7 +1503,7 @@ template<class B, class T>	class serializer_extract<B, own_ptr<T>, std::enable_i
 									auto result = _dest.ParseFromArray(_s.template data<void>(), _s.template size<int>());
 
 									if (result == false)
-										throw throwable::buffer_exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(extract)")*/);
+										throw std::exception(/*_s.size<std::size_t>(), std::string("protobuf:fail to serialize(extract)")*/);
 
 									_s += offset(_dest.ByteSizeLong());
 								}
@@ -2264,7 +2299,7 @@ std::size_t _Xsprintf(char* _dest, std::size_t /*_max_length_in_word*/, const ch
 	#pragma warning(disable:4996)
 	#endif
 
-	return	sprintf(_dest, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
+	return sprintf(_dest, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
 
 	#if defined(_MSC_VER)
 	#pragma warning(default:4996)
@@ -2278,7 +2313,7 @@ std::size_t _Xsprintf(wchar_t* _dest, std::size_t _max_length_in_word, const wch
 	#pragma warning(disable:4996)
 	#endif
 
-	return	swprintf(_dest, _max_length_in_word, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
+	return swprintf(_dest, _max_length_in_word, _format, std::forward<F>(_first), std::forward<TREST>(_rest)...);
 
 	#if defined(_MSC_VER)
 	#pragma warning(default:4996)

@@ -38,7 +38,7 @@ public:
 
 // constructor/destructor) 
 public:
-	// 1) Costructor
+	// 1) costructor
 	constexpr _buffer_view() noexcept {}
 	constexpr _buffer_view(_element_void_t<element_t>* _ptr, size_type _size = 0) noexcept : base_t{ _size, reinterpret_cast<element_t*>(_ptr) } {}
 	constexpr _buffer_view(const _buffer_view& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
@@ -83,7 +83,7 @@ public:
 	template <class T>
 	constexpr auto				to_string() const noexcept				{ return std::basic_string_view<T>(reinterpret_cast<const T*>(this->data_), this->size_); }
 
-	// 1) data/
+	// 2) data/
 	constexpr element_t*		data() const noexcept					{ return this->data_;}
 	constexpr element_t*		data(int64_t _offset) const				{ return this->data_ + _offset;}
 	template <class T = element_t>
@@ -94,15 +94,15 @@ public:
 	constexpr void				add_data(size_type _size) noexcept		{ this->data_ += _size; }
 	constexpr void				sub_data(size_type _size) noexcept		{ this->data_ -= _size; }
 
-	// 2) exist/empty
-	constexpr void				resize(size_type _new_size)				{ if (_new_size > this->size_) throw std::length_error("error! _buffer_view's resize is only for deminishing size 'resize(size_t)'"); this->size_ = _new_size;}
+	// 3) exist/empty
+	constexpr void				resize(size_type _new_size)				{ if (_new_size > this->size_) throw std::length_error("resize operation of _buffer_view<T>' is allowed only for deminishing size 'resize(size_t)'. use operator '^' instead"); this->size_ = _new_size;}
 	constexpr void				swap(base_t& _rhs) noexcept				{ element_t* a = this->data_; auto b = this->size_; this->data_ = _rhs.data_; this->size_ = _rhs.size_; _rhs.data_ = a; _rhs.size_ = b; }
 	constexpr void				swap(_buffer_view& _rhs) noexcept		{ element_t* a = this->data_; auto b = this->size_; this->data_ = _rhs.data_; this->size_ = _rhs.size_; _rhs.data_ = a; _rhs.size_ = b; }
 	template <class T>
 	constexpr void				copy_from(const _buffer_view<T>& _source) noexcept{ memcpy(this->data_, _source.data(), _source.size_); this->size_ = _source.size_; }
 	constexpr _buffer_view		split(size_type _offset) noexcept		{ if(this->size_ < _offset) _offset = this->size_; auto new_size = this->size_ - _offset; this->size_ = _offset; return _buffer_view(this->data_ + _offset, new_size);}
 
-	// 3) extract/subtract
+	// 4) extract/subtract
 			template <std::size_t ISIZE>
 	constexpr auto				extract()								{ return _extract_bytes(ISIZE);}
 	constexpr auto				extract(CGDK::size _length)				{ return _extract_bytes(_length.amount);}
@@ -141,7 +141,7 @@ public:
 	constexpr auto&				subtract()								{ return _subtract_general<T>();}
 	constexpr auto				subtract(size_type _length)				{ return _subtract_bytes(_length);}
 
-	// 4) front
+	// 5) front
 	constexpr auto				front(int64_t _offset = 0) const		{ return _front(_offset);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, peek_tr<T>>
@@ -174,14 +174,14 @@ public:
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
 								front_text(CGDK::size _length, int64_t _offset = 0) { return _front_text_by_length<T>(_length.amount, _offset);}
 
-	// 5) back
+	// 6) back
 	constexpr auto				back(int64_t _offset = 0) const			{ return _back(_offset);}
 			template <class T>
 	constexpr peek_tr<T>		back(int64_t _offset = 0) const			{ return _back<T>(_offset);}
 			template <class T>
 	constexpr peek_tr<T>		back(POS& _pos) const					{ return _back<T>(_pos.offset);}
 
-	// 6) begin/end														  
+	// 7) begin/end														  
 	constexpr auto				begin() const							{ return _begin();}
 	constexpr auto				end() const								{ return _end();}
 	constexpr auto				end(int _offset) const					{ return _end(_offset);}
@@ -196,19 +196,19 @@ public:
 			template <class T = char>
 	constexpr void				set_back_ptr(T* _pos)					{ _CGD_BUFFER_BOUND_CHECK(_pos >= this->get_front_ptr<T>()); this->size_ = reinterpret_cast<char*>(_pos) - this->data_; }
 
-	// 6) Operator Overloading
+	// 8) Operator Overloading
 			// [operator] +/-
 	constexpr _buffer_view		operator + (offset _rhs) const
 			{
 				if (_rhs.amount > this->size_)
-					throw std::length_error("error! '_rhs > size_' 'operator+='");
+					throw std::length_error("out of range. operator '+' (_rhs > size_)'");
 
 				return _buffer_view{ this->data_ + _rhs.amount, this->size_ - _rhs.amount };
 			}
 	constexpr _buffer_view		operator - (CGDK::size _rhs) const
 			{
 				if (_rhs.amount > this->size_)
-					throw std::length_error("error! '_rhs > size_' 'operator+='");
+					throw std::length_error("out of range. operator '-' (_rhs > size_)");
 
 				return _buffer_view{ this->data_, this->size_ - _rhs.amount };
 			}
@@ -226,14 +226,19 @@ public:
 	constexpr _buffer_view&		operator=(base_t&& _rhs) noexcept		{ this->data_ =_rhs.data_; this->size_ =_rhs.size_; return *this;}
 			template<class T>
 	constexpr _buffer_view&		operator = (buffer_base<T>&& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+#if defined(CGDK_SYSTEM_OBJECT)
 	constexpr _buffer_view&		operator = (Imemory* _rhs) noexcept;
 	constexpr _buffer_view&		operator = (const object_ptr<Imemory>& _rhs) noexcept;
 	constexpr _buffer_view&		operator = (object_ptr<Imemory>&& _rhs) noexcept { return operator = (_rhs); }
+#else
+	constexpr _buffer_view&		operator = (const std::shared_ptr<char>& _rhs) noexcept;
+	constexpr _buffer_view&		operator = (std::shared_ptr<char>&& _rhs) noexcept { return operator = (_rhs); }
+#endif
 			// [operator] +=/-=
 	constexpr _buffer_view&		operator += (offset _rhs)
 			{
 				if (_rhs.amount > this->size_)
-					throw std::length_error("error! '_rhs > size_' 'operator+='");
+					throw std::length_error("out of range. operator '+=' (_rhs > size_)");
 		
 				this->data_ += _rhs.amount;
 				this->size_ -= _rhs.amount;
@@ -243,7 +248,7 @@ public:
 	constexpr _buffer_view&		operator -= (CGDK::size _rhs)
 			{
 				if (_rhs.amount > this->size_)
-					throw std::length_error("error! '_rhs > size_' 'operator+='");
+					throw std::length_error("out of rangne. operator '-=' (_rhs > size_)");
 		
 				this->size_ -= _rhs.amount;
 
@@ -2038,4 +2043,4 @@ constexpr CGDK::_buffer_view<T> operator ^ (const CGDK::_buffer_view<T>& _lhs, s
 
 }
 
-#include "CGDK10/buffer/buffer_view.inl"
+#include "buffer/buffer_view.inl"

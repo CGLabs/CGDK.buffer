@@ -173,25 +173,25 @@ bool validate_message(const T* _buffers, std::size_t _count)
 	while (iTotalLength != 0)
 	{
 		// check) Message의 크기가 실제 버퍼의 크기보다 작으면 안됀다.
-		CGASSERT_ERROR(idx_buffer <= _count);
+		CGDK_ASSERT(idx_buffer <= _count);
 		if (idx_buffer > _count) return false;
 
 		// - Message의 길이를 구한다.
 		int32_t	message_size = *temp_buf.data<int32_t>();
 
 		// check) Message의 크기가 0Byte면 안됀다.
-		CGASSERT_ERROR(message_size != 0);
+		CGDK_ASSERT(message_size != 0);
 		if (message_size == 0) return false;
 
 		// check) Message의 크기가 실제 버퍼의 크기보다 작으면 안됀다.
-		CGASSERT_ERROR(message_size <= static_cast<int32_t>(iTotalLength));
+		CGDK_ASSERT(message_size <= static_cast<int32_t>(iTotalLength));
 		if (message_size > static_cast<int32_t>(iTotalLength)) return false;
 
 		// - 다음 Message
 		iTotalLength -= message_size;
 
 		// check) Total Bytes보다 더 긴 메시지를 요구할 경우 false를 리턴한다.
-		CGASSERT_ERROR(iTotalLength >= 0);
+		CGDK_ASSERT(iTotalLength >= 0);
 		if (iTotalLength < 0) return false;
 
 		while (message_size >= static_cast<int32_t>(temp_buf.size_))
@@ -202,7 +202,7 @@ bool validate_message(const T* _buffers, std::size_t _count)
 
 			BREAK_IF(message_size == 0);
 
-			CGASSERT_ERROR(idx_buffer < _count);
+			CGDK_ASSERT(idx_buffer < _count);
 			if (idx_buffer >= _count) return false;
 
 			temp_buf = _buffers[idx_buffer];
@@ -301,5 +301,78 @@ public:
 	}
 };
 
+
+template <class ELEM_T>
+constexpr _buffer_view<ELEM_T> _buffer_view<ELEM_T>::_extract_buffer_view()
+{
+	_buffer_view<ELEM_T> dest;
+	_extract_buffer_view(dest);
+	return dest;
+}
+
+template <class ELEM_T>
+constexpr void _buffer_view<ELEM_T>::_extract_buffer_view(_buffer_view<ELEM_T>& _dest)
+{
+	// check) 
+	_CGD_BUFFER_BOUND_CHECK(this->size_ >= sizeof(size_type));
+
+	// 1) [데이터_갯수를 먼저 읽어들인다.]
+	auto length = *reinterpret_cast<size_type*>(this->data_);
+
+	// check) this->data_를 넣는다.
+	if (length == 0)
+	{
+		_dest = _buffer_view<ELEM_T>();
+		return;
+	}
+
+	// 2) 
+	const auto bytes_extract = length + sizeof(size_type);
+
+	// check) 
+	_CGD_BUFFER_BOUND_CHECK(this->size_ >= bytes_extract);
+
+	// 3) extract bytes
+	_dest = _buffer_view<ELEM_T>(this->data_ + sizeof(size_type), length);
+
+	// 4) [데이터_바이트수]만큼 extract
+	this->data_ += bytes_extract;
+	this->size_ -= bytes_extract;
+}
+
+template <class ELEM_T>
+template <class BUFFER_T>
+constexpr _basic_buffer<BUFFER_T> _buffer_view<ELEM_T>::_extract_basic_buffer()
+{
+	// declare)
+	_basic_buffer<BUFFER_T> buf_temp;
+
+	// check) 
+	_CGD_BUFFER_BOUND_CHECK(this->size_ >= sizeof(size_type));
+
+	// 1) [데이터_갯수를 먼저 읽어들인다.]
+	auto length = *reinterpret_cast<size_type*>(this->data_);
+
+	// check) this->data_를 넣는다.
+	if(length == 0)
+		return buf_temp;
+
+	// 2) 
+	const auto bytes_extract = length + sizeof(size_type);
+	const auto ptr_data = this->data_ + sizeof(size_type);
+
+	// check) 
+	_CGD_BUFFER_BOUND_CHECK(this->size_ >= bytes_extract);
+
+	// 3) make buffer
+	buf_temp = _basic_buffer<BUFFER_T>({ ptr_data , length }, buffer_bound{ ptr_data, this->data_ + bytes_extract });
+
+	// 3) [데이터_바이트수]만큼 extract
+	this->data_ += bytes_extract;
+	this->size_ -= bytes_extract;
+
+	// return) 
+	return buf_temp;
+}
 
 }

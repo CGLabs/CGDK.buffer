@@ -1,6 +1,6 @@
 //*****************************************************************************
 //*                                                                           *
-//*                                CGD::buffer                                *
+//*                              CGD::buffer_view                             *
 //*                      Ver 2.0pre / Release 2015.01.05                      *
 //*                                                                           *
 //*                                                                           *
@@ -17,14 +17,14 @@
 #pragma once
 //-----------------------------------------------------------------------------
 //
-// CGD::buffer
+// CGD::_buffer_view<T>
 //
 //-----------------------------------------------------------------------------
 #ifndef _CGD_BUFFER
 #define	_CGD_BUFFER
 
 //-----------------------------------------------------------------------------
-// Pragma...
+// pragma...
 //-----------------------------------------------------------------------------
 #if defined(_MSC_VER)
 	// warning C4344: behavior change: use of explicit template arguments results in call to ...
@@ -37,24 +37,29 @@
 
 
 //-----------------------------------------------------------------------------
-// Main
+// main
 //-----------------------------------------------------------------------------
-// 1) 
-#include "Buffers/CGDbufferCommon.h"
+// 1) shared_buffer traits
+#include "buffer/buffer_traits.h"
 
-// 2) Buffers
-#include "Buffers/CGDbuffer.h"
-#include "Buffers/CGDptr.h"
+// 2) shared_buffer
+#include "buffer/buffer_common.h"
+
+// 3) shared_buffer base
+#include "buffer/buffer_base.h"
+
+// 4) _buffer_view<T>
+#include "buffer/buffer_view.h"
+#include "buffer/basic_buffer.h"
 
 
 //-----------------------------------------------------------------------------
-// Pragma...
+// pragma...
 //-----------------------------------------------------------------------------
 #if defined(_MSC_VER)
 	#pragma warning(default:4344)
 #else
 	#pragma GCC diagnostic pop
 #endif
-
 
 #endif

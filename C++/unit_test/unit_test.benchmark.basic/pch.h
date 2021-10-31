@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include <SDKDDKVer.h>
 #include "gtest/gtest.h"
 
 #include <buffer/buffer_view>
