@@ -15,21 +15,19 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\basic_buffer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\buffer_base.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\buffer_common.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\buffer_traits.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\buffer_view.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\ioserializer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\iserializer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\make_shared_buffer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\oserializer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\serializer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\buffer\shared_buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_basic_buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_buffer_base.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_buffer_common.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_buffer_traits.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_buffer_view.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_Imemory.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_make_shared_buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\include\cgdk\_shared_buffer.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\buffer\basic_buffer.inl" />
-    <None Include="$(MSBuildThisFileDirectory)..\buffer\buffer_view" />
-    <None Include="$(MSBuildThisFileDirectory)..\buffer\buffer_view.inl" />
+    <None Include="$(MSBuildThisFileDirectory)..\include\cgdk\buffer" />
+    <None Include="$(MSBuildThisFileDirectory)..\include\cgdk\shared_buffer" />
+    <None Include="$(MSBuildThisFileDirectory)..\include\cgdk\_basic_buffer.inl" />
+    <None Include="$(MSBuildThisFileDirectory)..\include\cgdk\_buffer_view.inl" />
   </ItemGroup>
 </Project>

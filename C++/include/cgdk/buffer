@@ -1,0 +1,64 @@
+﻿//*****************************************************************************
+//*                                                                           *
+//*                               CGDK::buffer                                *
+//*                       ver 5.0 / release 2021.11.01                        *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*  programmed by Cho SangHyun. sangduck@cgcii.com                           *
+//*                                                                           *
+//*                          http://www.CGCII.co.kr                           *
+//*                                                                           *
+//*****************************************************************************
+
+#pragma once
+//-----------------------------------------------------------------------------
+//
+// CGD::_buffer_view<T>
+//
+//-----------------------------------------------------------------------------
+#ifndef _CGDK_BUFFER
+#define	_CGDK_BUFFER
+
+//-----------------------------------------------------------------------------
+// Pragma...
+//-----------------------------------------------------------------------------
+#if defined(_MSC_VER)
+	// warning C4344: behavior change: use of explicit template arguments results in call to ...
+	//    - Causes in front function
+	#pragma warning(disable:4344)
+#else
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wvarargs"
+#endif
+
+//-----------------------------------------------------------------------------
+// Main
+//-----------------------------------------------------------------------------
+// 1) shared_buffer traits
+#include "cgdk/buffers/_buffer_traits.h"
+
+// 2) shared_buffer
+#include "cgdk/buffers/_buffer_common.h"
+
+// 3) shared_buffer base
+#include "cgdk/buffers/_buffer_base.h"
+
+// 4) _buffer_view<T>
+#include "cgdk/buffers/_buffer_view.h"
+
+// 5) basic_buffer
+#include "cgdk/buffers/_Imemory.h"
+#include "cgdk/buffers/_basic_buffer.h"
+
+//-----------------------------------------------------------------------------
+// Pragma...
+//-----------------------------------------------------------------------------
+#if defined(_MSC_VER)
+	#pragma warning(default:4344)
+#else
+	#pragma GCC diagnostic pop
+#endif
+
+#endif

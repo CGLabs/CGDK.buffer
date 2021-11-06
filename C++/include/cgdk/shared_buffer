@@ -1,0 +1,26 @@
+﻿//*****************************************************************************
+//*                                                                           *
+//*                               CGDK::buffer                                *
+//*                       ver 5.0 / release 2021.11.01                        *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*  programmed by Cho SangHyun. sangduck@cgcii.com                           *
+//*                                                                           *
+//*                          http://www.CGCII.co.kr                           *
+//*                                                                           *
+//*****************************************************************************
+
+#pragma once
+//-----------------------------------------------------------------------------
+//
+// CGD::_shared_buffer<T>
+//
+//-----------------------------------------------------------------------------
+// 1) buffer
+#include "cgdk/buffer"
+
+// 2) shared_buffer
+#include "cgdk/buffers/_shared_buffer.h"
+#include "cgdk/buffers/_make_shared_buffer.h"

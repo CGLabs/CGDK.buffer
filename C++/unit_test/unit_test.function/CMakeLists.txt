@@ -3,7 +3,7 @@
 #*                      Cho sanghyun's Game Classes II                       *
 #*                      Ver 10.0 / release 2019.12.11                        *
 #*                                                                           *
-#*               CMake - CGDK10.system.unit_test.object.buffer               *
+#*                  CMake - CGDK.buffer.unit_test.function                   *
 #*                                                                           *
 #*                                                                           *
 #*                                                                           *
@@ -20,7 +20,7 @@
 # setting
 #-----------------------------------------------------------------------------
 # 1) project name
-PROJECT ( "CGDK10.unit_test.system.object.buffer" )
+PROJECT ( "CGDK.buffer.unit_test.function" )
 
 # 2) project version
 SET ( PROJECT_VERSION_MAJOR 10 )
@@ -37,26 +37,24 @@ IF (NOT DEFINED CMAKE_BULD_TYPE)
 ENDIF()
 
 # 5) directories
-SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../../../lib/CGDK10 )
-SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../../../lib/CGDK10 )
-SET ( CMAKE_RUNTIME_OTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../../unit_test )
-SET ( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../unit_test )
+SET ( CMAKE_RUNTIME_OTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../execute )
+SET ( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../execute )
 
 # 6) compile options
-SET ( CMAKE_CXX_FLAGS "-DC_FLAGS -fexceptions -std=c++17" )
+SET ( CMAKE_CXX_FLAGS "-DC_FLAGS -fexceptions -std=c++2a" )
 SET ( CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Wextra" )
 SET ( CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -Wall -Wextra" )
 
 # 7) include directories
 INCLUDE_DIRECTORIES(
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../../include
+	${CMAKE_CURRENT_SOURCE_DIR}/../../include/
 	./
 	${GTEST_INCLUDE_DIRS}
 )
 
 # 8) library directories
 LINK_DIRECTORIES(
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../../lib/CGDK10
+	${CMAKE_CURRENT_SOURCE_DIR}/../execute/
 )
 
 # 9) requires
@@ -71,7 +69,9 @@ SET (SRC_FILES
 pch.cpp
 
 #CGDK/License
-test.cpp
+test_data.cpp
+test_buffer_view.cpp
+test_shared_buffer.cpp
 )
 
 
@@ -100,7 +100,6 @@ ADD_EXECUTABLE(${PROJECT_NAME}.${BUILD_TYPE} ${SRC_FILES})
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME}.${BUILD_TYPE}
 	${GTEST_LIBRARIES}
 	${GTEST_MAIN_LIBRARIES}
-	CGDK10.system.object_linux.${BUILD_TYPE}
 	rt
 	pthread
 )

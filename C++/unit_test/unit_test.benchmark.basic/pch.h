@@ -1,13 +1,7 @@
-//
-// pch.h
-//
-
 #pragma once
-#include <SDKDDKVer.h>
+
 #include "gtest/gtest.h"
 
-#include <buffer/buffer_view>
-#include <buffer/basic_buffer>
 #include <vector>
 #include <deque>
 #include <list>
@@ -15,5 +9,7 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
+#include <string>
+#include <cgdk/buffer>
 
 #include "definitions.h"
