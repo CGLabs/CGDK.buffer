@@ -13,16 +13,16 @@
 //*****************************************************************************
 namespace std
 {
-	[[nodiscard]] constexpr auto begin(CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr())			{ return _buf.get_front_ptr(); }
-	[[nodiscard]] constexpr auto cbegin(const CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr())	{ return _buf.get_front_ptr(); }
-	[[nodiscard]] constexpr auto rbegin(CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr())			{ return _buf.get_back_ptr(); }
-	[[nodiscard]] constexpr auto crbegin(const CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr())	{ return _buf.get_back_ptr(); }
-	[[nodiscard]] constexpr auto end(CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr())				{ return _buf.get_back_ptr(); }
-	[[nodiscard]] constexpr auto cend(const CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr())		{ return _buf.get_back_ptr(); }
-	[[nodiscard]] constexpr auto rend(CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr())			{ return _buf.get_front_ptr(); }
-	[[nodiscard]] constexpr auto crend(const CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr())		{ return _buf.get_front_ptr(); }
-	[[nodiscard]] constexpr auto size(CGDK::buffer_view& _buf) -> decltype(_buf.size())						{ return _buf.size(); }
-	[[nodiscard]] constexpr bool empty(CGDK::buffer_view& _buf)												{ return _buf.size() == 0; }
+	[[nodiscard]] constexpr auto begin(CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr()) { return _buf.get_front_ptr(); }
+	[[nodiscard]] constexpr auto cbegin(const CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr()) { return _buf.get_front_ptr(); }
+	[[nodiscard]] constexpr auto rbegin(CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr()) { return _buf.get_back_ptr(); }
+	[[nodiscard]] constexpr auto crbegin(const CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr()) { return _buf.get_back_ptr(); }
+	[[nodiscard]] constexpr auto end(CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr()) { return _buf.get_back_ptr(); }
+	[[nodiscard]] constexpr auto cend(const CGDK::buffer_view& _buf) -> decltype(_buf.get_back_ptr()) { return _buf.get_back_ptr(); }
+	[[nodiscard]] constexpr auto rend(CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr()) { return _buf.get_front_ptr(); }
+	[[nodiscard]] constexpr auto crend(const CGDK::buffer_view& _buf) -> decltype(_buf.get_front_ptr()) { return _buf.get_front_ptr(); }
+	[[nodiscard]] constexpr auto size(CGDK::buffer_view& _buf) -> decltype(_buf.size()) { return _buf.size(); }
+	[[nodiscard]] constexpr bool empty(CGDK::buffer_view& _buf) { return _buf.size() == 0; }
 }
 
 namespace CGDK
@@ -98,7 +98,7 @@ struct _Sfromt_member_auto_close
 
 	_buffer_view<typename B::element_t> buf_extract;
 	const char*	buf_source;
-	int64_t&	offset;
+	int64_t& offset;
 };
 
 template <class B, class T, std::size_t... I>
@@ -137,7 +137,7 @@ struct member_size_of
 	}
 };
 
-// 5) for structure (Reflection)
+// 5) for structure (reflection)
 template <class T, std::size_t... I>
 constexpr std::size_t size_of_member_impl(const char* _source, std::index_sequence<I...>)
 {

@@ -718,36 +718,36 @@ namespace CGDK
 	// Test) string append / front 
 	//-----------------------------------------------------------------
 	// 1) string(pointer type) append/extract
-	TEST(CGDK_shared_buffer, buffer_string_extract_char)					{ test_shared_buffer_extract_string(array_string_char); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_char)				{ test_shared_buffer_extract_string(array_string_char); }
 	TEST(CGDK_shared_buffer, buffer_string_extract_wchar_t)				{ test_shared_buffer_extract_string(array_string_wchar_t); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_char16_t)				{ test_shared_buffer_extract_string(array_string_char16_t); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_char32_t)				{ test_shared_buffer_extract_string(array_string_char32_t); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_char16_t)			{ test_shared_buffer_extract_string(array_string_char16_t); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_char32_t)			{ test_shared_buffer_extract_string(array_std_u32string_view); }
 	// 2) string(std::basic_string_view<T> type) append/extract
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_string_view)		{ test_shared_buffer_extract_string(array_string_std_string_view); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_wstring_view)		{ test_shared_buffer_extract_string(array_string_std_wstring_view); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_u16string_view)	{ test_shared_buffer_extract_string(array_string_std_u16string_view); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_u32string_view)	{ test_shared_buffer_extract_string(array_string_std_u32string_view); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_string_view)		{ test_shared_buffer_extract_string(array_std_string_view); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_wstring_view)	{ test_shared_buffer_extract_string(array_std_wstring_view); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_u16string_view)	{ test_shared_buffer_extract_string(array_std_u16string_view); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_u32string_view)	{ test_shared_buffer_extract_string(array_std_u32string_view); }
 	// 3) string(std::basic_string<T> type) append/extract
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_string)			{ test_shared_buffer_extract_string(array_string_std_string); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_wstring)			{ test_shared_buffer_extract_string(array_string_std_wstring); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_u16string)			{ test_shared_buffer_extract_string(array_string_std_u16string); }
-	TEST(CGDK_shared_buffer, buffer_string_extract_std_u32string)			{ test_shared_buffer_extract_string(array_string_std_u32string); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_string)			{ test_shared_buffer_extract_string(array_std_string); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_wstring)			{ test_shared_buffer_extract_string(array_std_wstring); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_u16string)		{ test_shared_buffer_extract_string(array_std_u16string); }
+	TEST(CGDK_shared_buffer, buffer_string_extract_std_u32string)		{ test_shared_buffer_extract_string(array_std_u32string); }
 
 	// 4) string(pointer type) append/front
 	TEST(CGDK_shared_buffer, buffer_front_string_char)					{ test_shared_buffer_front_string(array_string_char); }
-	TEST(CGDK_shared_buffer, buffer_front_string_wchar_t)					{ test_shared_buffer_front_string(array_string_wchar_t); }
+	TEST(CGDK_shared_buffer, buffer_front_string_wchar_t)				{ test_shared_buffer_front_string(array_string_wchar_t); }
 	TEST(CGDK_shared_buffer, buffer_front_string_char16_t)				{ test_shared_buffer_front_string(array_string_char16_t); }
-	TEST(CGDK_shared_buffer, buffer_front_string_char32_t)				{ test_shared_buffer_front_string(array_string_char32_t); }
+	TEST(CGDK_shared_buffer, buffer_front_string_char32_t)				{ test_shared_buffer_front_string(array_std_u32string_view); }
 	// 5) string(std::basic_string_view<T> type) append/front
-	TEST(CGDK_shared_buffer, buffer_front_string_std_string_view)			{ test_shared_buffer_front_string(array_string_std_string_view); }
-	TEST(CGDK_shared_buffer, buffer_front_string_std_wstring_view)		{ test_shared_buffer_front_string(array_string_std_wstring_view); }
-	TEST(CGDK_shared_buffer, buffer_front_string_std_u16string_view)		{ test_shared_buffer_front_string(array_string_std_u16string_view); }
-	TEST(CGDK_shared_buffer, buffer_front_string_std_u32string_view)		{ test_shared_buffer_front_string(array_string_std_u32string_view); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_string_view)		{ test_shared_buffer_front_string(array_std_string_view); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_wstring_view)		{ test_shared_buffer_front_string(array_std_wstring_view); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_u16string_view)	{ test_shared_buffer_front_string(array_std_u16string_view); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_u32string_view)	{ test_shared_buffer_front_string(array_std_u32string_view); }
 	// 6) string(std::basic_string<T> type) append/front
-	TEST(CGDK_shared_buffer, buffer_front_string_std_string)				{ test_shared_buffer_front_string(array_string_std_string); }
-	TEST(CGDK_shared_buffer, buffer_front_string_std_wstring)				{ test_shared_buffer_front_string(array_string_std_wstring); }
-	TEST(CGDK_shared_buffer, buffer_front_string_std_u16string)			{ test_shared_buffer_front_string(array_string_std_u16string); }
-	TEST(CGDK_shared_buffer, buffer_front_string_std_u32string)			{ test_shared_buffer_front_string(array_string_std_u32string); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_string)			{ test_shared_buffer_front_string(array_std_string); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_wstring)			{ test_shared_buffer_front_string(array_std_wstring); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_u16string)			{ test_shared_buffer_front_string(array_std_u16string); }
+	TEST(CGDK_shared_buffer, buffer_front_string_std_u32string)			{ test_shared_buffer_front_string(array_std_u32string); }
 
 	// 7) bound check test
 	TEST(CGDK_shared_buffer, buffer_string_append_bound_check)
@@ -758,7 +758,7 @@ namespace CGDK
 		char buf_array[get_size_of("Test String")];
 
 		// - alloc shared_buffer
-		CGDK::buffer buf_alloc(buf_array);
+		CGDK::buffer buf_alloc = CGDK::make_buffer(buf_array);
 
 		// - overflow test - pass
 		{
@@ -887,10 +887,10 @@ namespace CGDK
 	// Test) array
 	//-----------------------------------------------------------------
 	// 1) array
-	//char*										array_string_char[];
-	//wchar_t*									array_string_wchar_t[];
-	//std::string								array_std_string_stdstring[];
-	//std::wstring								array_std_string_stdwstring[];
+	//const char*								array_string_char[];
+	//const wchar_t*							array_string_wchar_t[];
+	//std::string								array_std_string[];
+	//std::wstring								array_std_wstring[];
 	TEST(CGDK_shared_buffer, buffer_append_CONTAINER_array_wchar_t)
 	{
 		// 1) alloc buffer 
@@ -1076,7 +1076,7 @@ namespace CGDK
 	// Test) Container-vector
 	//-----------------------------------------------------------------
 	// 2) vector
-	//std::vector<int>			vector_int;
+	//std::vector<int>			std_vector_int;
 	//std::vector<std::string>	std_vector_std_string;
 	TEST(CGDK_shared_buffer, buffer_append_CONTAINER_vector_int)
 	{
@@ -1087,10 +1087,10 @@ namespace CGDK
 		{
 			auto buf_write = buf_alloc;
 
-			buf_write.append(vector_int);
+			buf_write.append(std_vector_int);
 
 			// check) 
-			EXPECT_TRUE(buf_write.size() == get_size_of(vector_int));
+			EXPECT_TRUE(buf_write.size() == get_size_of(std_vector_int));
 		}
 	}
 
@@ -1100,20 +1100,20 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(vector_int);
+		buf_alloc.append(std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int));
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			auto buf_temp = buf_alloc;
 
-			auto temp = buf_temp.extract<decltype(vector_int)>();
+			auto temp = buf_temp.extract<decltype(std_vector_int)>();
 
 			// check) 
-			EXPECT_TRUE(temp == vector_int); // L"Fail to vector<int> append/extract"
+			EXPECT_TRUE(temp == std_vector_int); // L"Fail to vector<int> append/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -1124,22 +1124,22 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(vector_int);
+		buf_alloc.append(std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int));
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
 
-			decltype(vector_int) temp;
+			decltype(std_vector_int) temp;
 			
 			buf_temp.extract_to(temp);
 
 			// check) 
-			EXPECT_TRUE(temp == vector_int); // L"Fail to vector<int> append/extract"
+			EXPECT_TRUE(temp == std_vector_int); // L"Fail to vector<int> append/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -1150,22 +1150,22 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(vector_int);
+		buf_alloc.append(std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int));
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
-			auto temp = buf_temp.front<decltype(vector_int)>(pos_temp);
+			auto temp = buf_temp.front<decltype(std_vector_int)>(pos_temp);
 
 			// check) 
-			EXPECT_TRUE(temp == vector_int); // L"Fail to vector<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(temp == std_vector_int); // L"Fail to vector<int> append/front"
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -1175,25 +1175,25 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(vector_int);
+		buf_alloc.append(std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int));
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			// declare) 
-			decltype(vector_int) temp;
+			decltype(std_vector_int) temp;
 			
 			buf_temp.front_to(temp, pos_temp);
 
 			// check) 
-			EXPECT_TRUE(temp == vector_int); // L"Fail to vector<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(temp == std_vector_int); // L"Fail to vector<int> append/front"
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -1209,13 +1209,13 @@ namespace CGDK
 			auto buf_temp = buf_alloc + offset(2048);
 
 			// - 
-			buf_temp.prepend(vector_int);
+			buf_temp.prepend(std_vector_int);
 
 			// - pop front!
-			auto temp = buf_temp.extract<decltype(vector_int)>();
+			auto temp = buf_temp.extract<decltype(std_vector_int)>();
 
 			// check) 
-			EXPECT_TRUE(temp == vector_int); // L"Fail to vector[int] prepend/extract"
+			EXPECT_TRUE(temp == std_vector_int); // L"Fail to vector[int] prepend/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -1232,16 +1232,16 @@ namespace CGDK
 			auto buf_temp = buf_alloc + offset(2048);
 
 			// - 
-			buf_temp.prepend(vector_int);
+			buf_temp.prepend(std_vector_int);
 
 			// declare) 
-			decltype(vector_int) temp;
+			decltype(std_vector_int) temp;
 			
 			// - pop front!
 			buf_temp.extract_to(temp);
 
 			// check) 
-			EXPECT_TRUE(temp == vector_int); // L"Fail to vector[int] prepend/extract"
+			EXPECT_TRUE(temp == std_vector_int); // L"Fail to vector[int] prepend/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -1329,13 +1329,13 @@ namespace CGDK
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			auto temp = buf_temp.front<decltype(std_vector_std_string)>(pos_temp);
 
 			// check) 
 			EXPECT_TRUE(temp == std_vector_std_string); // L"Fail to vector<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -1354,7 +1354,7 @@ namespace CGDK
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			// declare) 
 			decltype(std_vector_std_string) temp;
@@ -1363,7 +1363,7 @@ namespace CGDK
 
 			// check) 
 			EXPECT_TRUE(temp == std_vector_std_string); // L"Fail to vector<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -1496,7 +1496,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[2048];
-		CGDK::buffer buf_alloc = CGDK::buffer(buf_array);
+		CGDK::buffer buf_alloc = make_buffer(buf_array);
 
 		// - 임시로...
 		CGDK::buffer buf_test = buf_alloc;
@@ -1752,13 +1752,13 @@ namespace CGDK
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			auto temp = buf_temp.front<decltype(std_list_int)>(pos_temp);
 
 			// check) 
 			EXPECT_TRUE(temp == std_list_int); // L"Fail to list<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -1777,7 +1777,7 @@ namespace CGDK
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			// declare) 
 			decltype(std_list_int) temp;
@@ -1787,7 +1787,7 @@ namespace CGDK
 
 			// check) 
 			EXPECT_TRUE(temp == std_list_int); // L"Fail to list<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -1920,13 +1920,13 @@ namespace CGDK
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			auto temp = buf_temp.front<decltype(std_list_std_string)>(pos_temp);
 
 			// check) 
 			EXPECT_TRUE(temp == std_list_std_string); // L"Fail to list<string> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -1945,7 +1945,7 @@ namespace CGDK
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			decltype(std_list_std_string) temp;
 			
@@ -1953,7 +1953,7 @@ namespace CGDK
 
 			// check) 
 			EXPECT_TRUE(temp == std_list_std_string); // L"Fail to list<string> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2006,7 +2006,7 @@ namespace CGDK
 		}
 	}
 
-	// 3) std::list<std::vector<int>>		std_list_vector_int;
+	// 3) std::list<std::vector<int>>		std_list_std_vector_int;
 	TEST(CGDK_shared_buffer, buffer_append_CONTAINER_list_vector_int)
 	{
 		// - alloc shared_buffer 
@@ -2016,10 +2016,10 @@ namespace CGDK
 		{
 			auto buf_write = buf_alloc;
 
-			buf_write.append(std_list_vector_int);
+			buf_write.append(std_list_std_vector_int);
 
 			// check) 
-			EXPECT_TRUE(buf_write.size() == get_size_of(std_list_vector_int));
+			EXPECT_TRUE(buf_write.size() == get_size_of(std_list_std_vector_int));
 		}
 	}
 
@@ -2029,20 +2029,20 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append string
-		buf_alloc.append(std_list_vector_int);
+		buf_alloc.append(std_list_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_std_vector_int));
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			auto buf_temp = buf_alloc;
 
-			auto temp = buf_temp.extract<decltype(std_list_vector_int)>();
+			auto temp = buf_temp.extract<decltype(std_list_std_vector_int)>();
 
 			// check) 
-			EXPECT_TRUE(temp == std_list_vector_int); // L"Fail to list<vector<int>> append/extract"
+			EXPECT_TRUE(temp == std_list_std_vector_int); // L"Fail to list<vector<int>> append/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -2053,22 +2053,22 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append string
-		buf_alloc.append(std_list_vector_int);
+		buf_alloc.append(std_list_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_std_vector_int));
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
 
-			decltype(std_list_vector_int) temp;
+			decltype(std_list_std_vector_int) temp;
 			
 			buf_temp.extract_to(temp);
 
 			// check) 
-			EXPECT_TRUE(temp == std_list_vector_int); // L"Fail to list<vector<int>> append/extract"
+			EXPECT_TRUE(temp == std_list_std_vector_int); // L"Fail to list<vector<int>> append/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -2079,22 +2079,22 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(std_list_vector_int);
+		buf_alloc.append(std_list_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_std_vector_int));
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
-			auto temp = buf_temp.front<decltype(std_list_vector_int)>(pos_temp);
+			auto temp = buf_temp.front<decltype(std_list_std_vector_int)>(pos_temp);
 
 			// check) 
-			EXPECT_TRUE(temp == std_list_vector_int); // L"Fail to list<vector<int>> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(temp == std_list_std_vector_int); // L"Fail to list<vector<int>> append/front"
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2104,25 +2104,25 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(std_list_vector_int);
+		buf_alloc.append(std_list_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_list_std_vector_int));
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			auto buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			// declare) 
-			decltype(std_list_vector_int) temp;
+			decltype(std_list_std_vector_int) temp;
 			
 			buf_temp.front_to(temp, pos_temp);
 
 			// check) 
-			EXPECT_TRUE(temp == std_list_vector_int); // L"Fail to list<vector<int>> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(temp == std_list_std_vector_int); // L"Fail to list<vector<int>> append/front"
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2138,13 +2138,13 @@ namespace CGDK
 			auto buf_temp = buf_alloc + offset(2048);
 
 			// - 
-			buf_temp.prepend(std_list_vector_int);
+			buf_temp.prepend(std_list_std_vector_int);
 
 			// - pop front!
-			auto temp = buf_temp.extract<decltype(std_list_vector_int)>();
+			auto temp = buf_temp.extract<decltype(std_list_std_vector_int)>();
 
 			// check) 
-			EXPECT_TRUE(temp == std_list_vector_int); // L"Fail to list<vector<int>> prepend/extract"
+			EXPECT_TRUE(temp == std_list_std_vector_int); // L"Fail to list<vector<int>> prepend/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -2161,16 +2161,16 @@ namespace CGDK
 			auto buf_temp = buf_alloc + offset(2048);
 
 			// - 
-			buf_temp.prepend(std_list_vector_int);
+			buf_temp.prepend(std_list_std_vector_int);
 
 			// declare) 
-			decltype(std_list_vector_int) temp;
+			decltype(std_list_std_vector_int) temp;
 			
 			// - pop front!
 			buf_temp.extract_to(temp);
 
 			// check) 
-			EXPECT_TRUE(temp == std_list_vector_int); // L"Fail to list<vector<int>> prepend/extract"
+			EXPECT_TRUE(temp == std_list_std_vector_int); // L"Fail to list<vector<int>> prepend/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -2263,13 +2263,13 @@ namespace CGDK
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			auto temp = buf_temp.front<decltype(std_set_int)>(pos_temp);
 
 			// check) 
 			EXPECT_TRUE(temp == std_set_int); // L"Fail to set<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2288,7 +2288,7 @@ namespace CGDK
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			// declare) 
 			decltype(std_set_int) temp;
@@ -2297,7 +2297,7 @@ namespace CGDK
 
 			// check) 
 			EXPECT_TRUE(temp == std_set_int); // L"Fail to set<int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2432,13 +2432,13 @@ namespace CGDK
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			auto temp = buf_temp.front<decltype(std_set_std_string)>(pos_temp);
 
 			// check) 
 			EXPECT_TRUE(temp == std_set_std_string); // L"Fail to set<std::string> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2457,7 +2457,7 @@ namespace CGDK
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			// declare) 
 			decltype(std_set_std_string) temp;
@@ -2466,7 +2466,7 @@ namespace CGDK
 
 			// check) 
 			EXPECT_TRUE(temp == std_set_std_string); // L"Fail to set<std::string> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2605,13 +2605,13 @@ namespace CGDK
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			auto temp = buf_temp.front<decltype(std_map_int_int)>(pos_temp);
 
 			// check) 
 			EXPECT_TRUE(temp == std_map_int_int); // L"Fail to map<int,int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2630,7 +2630,7 @@ namespace CGDK
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			decltype(std_map_int_int) temp;
 			
@@ -2638,7 +2638,7 @@ namespace CGDK
 
 			// check) 
 			EXPECT_TRUE(temp == std_map_int_int); // L"Fail to map<int,int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2752,13 +2752,13 @@ namespace CGDK
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			auto temp = buf_temp.front<decltype(std_map_std_string_int)>(pos_temp);
 
 			// check) 
 			EXPECT_TRUE(temp == std_map_std_string_int); // L"Fail to map<string,int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2777,7 +2777,7 @@ namespace CGDK
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
 			decltype(std_map_std_string_int) temp;
 			
@@ -2785,7 +2785,7 @@ namespace CGDK
 
 			// check) 
 			EXPECT_TRUE(temp == std_map_std_string_int); // L"Fail to map<string,int> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 	TEST(CGDK_shared_buffer, buffer_prepend_extract_CONTAINER_map_string_int_push)
@@ -2811,7 +2811,7 @@ namespace CGDK
 		}
 	}
 
-	// 3) std::map<std::string, std::vector<int>>		std_map_std_string_std_vector_int;
+	// 3) std::map<std::string, std::vector<int>>		std_map_std_wstring_std_vector_int;
 	TEST(CGDK_shared_buffer, buffer_append_CONTAINER_map_string_vector_int)
 	{
 		// - alloc shared_buffer 
@@ -2822,10 +2822,10 @@ namespace CGDK
 		{
 			auto buf_write = buf_alloc;
 
-			buf_write.append(std_map_std_string_std_vector_int);
+			buf_write.append(std_map_std_wstring_std_vector_int);
 
 			// check) 
-			EXPECT_TRUE(buf_write.size() == get_size_of(std_map_std_string_std_vector_int));
+			EXPECT_TRUE(buf_write.size() == get_size_of(std_map_std_wstring_std_vector_int));
 		}
 	}
 
@@ -2835,20 +2835,20 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(std_map_std_string_std_vector_int);
+		buf_alloc.append(std_map_std_wstring_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_string_std_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_wstring_std_vector_int));
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			buffer_view buf_temp = buf_alloc;
 
-			auto temp = buf_temp.extract<decltype(std_map_std_string_std_vector_int)>();
+			auto temp = buf_temp.extract<decltype(std_map_std_wstring_std_vector_int)>();
 
 			// check) 
-			EXPECT_TRUE(temp == std_map_std_string_std_vector_int); // L"Fail to map<string,vector<int>> append/extract"
+			EXPECT_TRUE(temp == std_map_std_wstring_std_vector_int); // L"Fail to map<string,vector<int>> append/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -2859,22 +2859,22 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(std_map_std_string_std_vector_int);
+		buf_alloc.append(std_map_std_wstring_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_string_std_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_wstring_std_vector_int));
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			buffer_view buf_temp = buf_alloc;
 
-			decltype(std_map_std_string_std_vector_int) temp;
+			decltype(std_map_std_wstring_std_vector_int) temp;
 			
 			buf_temp.extract_to(temp);
 
 			// check) 
-			EXPECT_TRUE(temp == std_map_std_string_std_vector_int); // L"Fail to map<string,vector<int>> append/extract"
+			EXPECT_TRUE(temp == std_map_std_wstring_std_vector_int); // L"Fail to map<string,vector<int>> append/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -2885,22 +2885,22 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(std_map_std_string_std_vector_int);
+		buf_alloc.append(std_map_std_wstring_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_string_std_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_wstring_std_vector_int));
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
-			auto temp = buf_temp.front<decltype(std_map_std_string_std_vector_int)>(pos_temp);
+			auto temp = buf_temp.front<decltype(std_map_std_wstring_std_vector_int)>(pos_temp);
 
 			// check) 
-			EXPECT_TRUE(temp == std_map_std_string_std_vector_int); // L"Fail to map<string,vector<int>> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(temp == std_map_std_wstring_std_vector_int); // L"Fail to map<string,vector<int>> append/front"
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2910,24 +2910,24 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		// - append data
-		buf_alloc.append(std_map_std_string_std_vector_int);
+		buf_alloc.append(std_map_std_wstring_std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_string_std_vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_map_std_wstring_std_vector_int));
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			buffer_view buf_temp = buf_alloc;
-			POS pos_temp;
+			offset pos_temp;
 
-			decltype(std_map_std_string_std_vector_int) temp;
+			decltype(std_map_std_wstring_std_vector_int) temp;
 			
 			buf_temp.front_to(temp, pos_temp);
 
 			// check) 
-			EXPECT_TRUE(temp == std_map_std_string_std_vector_int); // L"Fail to map<string,vector<int>> append/front"
-			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.get_pos());
+			EXPECT_TRUE(temp == std_map_std_wstring_std_vector_int); // L"Fail to map<string,vector<int>> append/front"
+			EXPECT_TRUE(static_cast<int64_t>(buf_temp.size()) == pos_temp.amount);
 		}
 	}
 
@@ -2944,13 +2944,13 @@ namespace CGDK
 			auto buf_temp = buf_alloc + offset(2048);
 
 			// - 
-			buf_temp.prepend(std_map_std_string_std_vector_int);
+			buf_temp.prepend(std_map_std_wstring_std_vector_int);
 
 			// - pop front!
-			auto temp = buf_temp.extract<decltype(std_map_std_string_std_vector_int)>();
+			auto temp = buf_temp.extract<decltype(std_map_std_wstring_std_vector_int)>();
 
 			// check) 
-			EXPECT_TRUE(temp == std_map_std_string_std_vector_int); // L"Fail to map<string,vector<int>> prepend/extract"
+			EXPECT_TRUE(temp == std_map_std_wstring_std_vector_int); // L"Fail to map<string,vector<int>> prepend/extract"
 			EXPECT_TRUE(buf_temp.size() == 0);
 		}
 	}
@@ -3300,21 +3300,21 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		char buf_array_A[2048];
-		CGDK::buffer bufA(buf_array_A);
+		CGDK::buffer bufA = make_buffer(buf_array_A);
 		bufA.resize(100);
 
-		buf_alloc.append(vector_int);
+		buf_alloc.append(std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int));
 
 		buf_alloc.append(bufA);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int) + get_size_of(bufA));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int) + get_size_of(bufA));
 
 		// - extract
-		[[maybe_unused]] auto a = buf_alloc.extract<decltype(vector_int)>();
+		[[maybe_unused]] auto a = buf_alloc.extract<decltype(std_vector_int)>();
 		[[maybe_unused]] auto b = buf_alloc.extract<buffer_view>();
 
 		// check) 
@@ -3326,21 +3326,21 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		char buf_array_A[2048];
-		CGDK::buffer bufA(buf_array_A);
+		CGDK::buffer bufA = make_buffer(buf_array_A);
 		bufA.resize(100);
 
-		buf_alloc.append(vector_int);
+		buf_alloc.append(std_vector_int);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int));
 
 		buf_alloc.append(bufA);
 
 		// check) 
-		EXPECT_TRUE(buf_alloc.size() == get_size_of(vector_int) + get_size_of(bufA));
+		EXPECT_TRUE(buf_alloc.size() == get_size_of(std_vector_int) + get_size_of(bufA));
 
 		// - extract
-		[[maybe_unused]] decltype(vector_int) a;
+		[[maybe_unused]] decltype(std_vector_int) a;
 		buf_alloc.extract_to(a);
 		[[maybe_unused]] buffer_view b;
 		buf_alloc.extract_to(b);
@@ -3662,7 +3662,7 @@ namespace CGDK
 			float				dest_c;
 
 			// 3) std::tie<...>를 사용해서 값을 대입하기
-			std::tie<int, std::string_view, float>(dest_a, dest_b, dest_c)	 = buf_read.extract<std::tuple<int, std::string_view, float>>();
+			std::tie<int, std::string_view, float>(dest_a, dest_b, dest_c) = buf_read.extract<std::tuple<int, std::string_view, float>>();
 
 			// check) 
 			EXPECT_TRUE(buf_read.size() == 0);
@@ -3684,7 +3684,7 @@ namespace CGDK
 		using TUPPLE_B = std::tuple<int, TUPPLE_A, std::string_view>;
 
 		// 1) 써넣은 예제 Tupple
-		TUPPLE_B temp = TUPPLE_B(0, TUPPLE_A(0, 0, 1.0f, "Test"), "Value");
+		TUPPLE_B temp{ 0, {0, 0, 1.0f, "Test"}, "Value" };
 
 		// - alloc shared_buffer 
 		auto buf_alloc = alloc_shared_buffer(2048);
@@ -3725,7 +3725,7 @@ namespace CGDK
 		using TUPPLE_B = std::tuple<int, TUPPLE_A, std::string_view>;
 
 		// 1) 써넣은 예제 Tupple
-		TUPPLE_B temp = TUPPLE_B(0, TUPPLE_A(0, 0, 1.0f, "Test"), "Value");
+		TUPPLE_B temp{ 0, TUPPLE_A{0, 0, 1.0f, "Test"}, "Value" };
 
 		// - alloc shared_buffer 
 		auto buf_alloc = alloc_shared_buffer(2048);
@@ -3761,6 +3761,45 @@ namespace CGDK
 			EXPECT_TRUE(std::get<2>(temp) == std::get<2>(tupple_read)); // L"Fail! Tupple 2"
 		}
 	}
+
+	TEST(CGDK_shared_buffer, test_buffer_map_tuple11)
+	{
+		// definitions)
+		using TUPPLE_A = std::tuple<int, int, float, std::string_view>;
+
+		// 1) 써넣은 예제 Tupple
+		auto temp = TUPPLE_A{ 0, 0, 1.0f, "Test" };
+
+		// - alloc shared_buffer 
+		auto buf_alloc = alloc_shared_buffer(2048);
+
+		// 1) Buffer를 할당한다. (최소 64Byte를 할당받는다.)
+		auto buf_temp = buf_alloc;
+
+		// 2) 
+		buf_temp.append(std::tuple{0, 0, 1.0f, "Test"});
+
+		// check) 
+		EXPECT_TRUE(buf_temp.size() == get_size_of(temp));
+
+		{
+			// 1) 값을 읽어온다.
+			buffer_view temp_read = buf_temp;
+
+			// 2) 일어 값을 저장할 Tupple
+			auto [v1, v2, v3, v4] = temp_read.extract < std::tuple<int, int, float, std::string_view> > ();
+
+			// check) 
+			EXPECT_TRUE(temp_read.size() == 0);
+
+			// check) 
+			EXPECT_TRUE(std::get<0>(temp) == v1);
+			EXPECT_TRUE(std::get<1>(temp) == v2);
+			EXPECT_TRUE(std::get<2>(temp) == v3);
+			EXPECT_TRUE(std::get<3>(temp) == v4);
+	}
+	}
+
 
 	TEST(CGDK_shared_buffer, buffer_time_1)
 	{

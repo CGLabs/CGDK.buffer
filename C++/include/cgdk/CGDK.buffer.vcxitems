@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{16bd894d-7fa1-4c50-8f5a-4f1a49355c93}</ItemsProjectGuid>
+    <ItemsProjectName>CGDK.buffer</ItemsProjectName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_basic_buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_buffer_base.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_buffer_common.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_buffer_traits.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_buffer_unreal.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_buffer_view.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_Imemory.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_make_shared_buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)buffers\_shared_buffer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)buffers\_basic_buffer.inl" />
+    <None Include="$(MSBuildThisFileDirectory)buffers\_buffer_view.inl" />
+  </ItemGroup>
+</Project>

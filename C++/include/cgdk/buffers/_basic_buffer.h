@@ -14,23 +14,49 @@
 
 #pragma once
 
+#if !defined(FMT_FORMAT_H_) && !defined(__GNUC__)
+	#include <format>
+#endif
+
 namespace CGDK
 {
-//-----------------------------------------------------------------------------
-//
-// CGDK::basic_buffer
-//
-//-----------------------------------------------------------------------------
+#if defined(FMT_FORMAT_H_)
+	template <class T, class... TREST>
+	constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
+	{
+		return fmt::format(_format, std::forward<TREST>(_rest)...);
+	}
+#else
+	#if defined(__GNUC__)
+		template <class T, class... TREST>
+		constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
+		{
+			return std::format(_format, std::forward<TREST>(_rest)...);
+		}
+	#else
+		template <class... TREST>
+		constexpr std::string _fmt_format_string(std::string_view _format, TREST&&... _rest)
+		{
+			return std::vformat(_format, std::make_format_args(std::forward<TREST>(_rest)...));
+		}
+		template <class... TREST>
+		constexpr std::wstring _fmt_format_string(std::wstring_view _format, TREST&&... _rest)
+		{
+			return std::vformat(_format, std::make_wformat_args(std::forward<TREST>(_rest)...));
+		}
+	#endif
+#endif
+
 template <class ELEM_T>
 class _basic_buffer : public _buffer_view<char>
 {
 // traits) 
 public:
-			using base_t	  = _buffer_view<char>;
-			using self_t	  = _basic_buffer<ELEM_T>;
-			using traits	  = typename base_t::traits;
-			using element_t	  = typename base_t::element_t;
-			using size_type	  = typename base_t::size_type;
+			using base_t = _buffer_view<char>;
+			using self_t = _basic_buffer<ELEM_T>;
+			using traits = typename base_t::traits;
+			using element_t = typename base_t::element_t;
+			using size_type = typename base_t::size_type;
 
 			template<class T> using peek_tr = PEEK_tr<self_t, T>;
 			template<class T> using extr_tr = EXTR_tr<self_t, T>;
@@ -45,155 +71,153 @@ public:
 	template <class T>
 	constexpr _basic_buffer(_buffer_view<T> _buffer) noexcept : base_t(_buffer), bound{ _buffer.get_front_ptr(), _buffer.get_back_ptr() } {}
 	template <class T>
-	constexpr _basic_buffer(_buffer_view<T> _buffer, const buffer_bound& _bound) noexcept : base_t(_buffer), bound(_bound) {}
+	constexpr _basic_buffer(_buffer_view<T> _buffer, const buffer_bound& _bound) : base_t(_buffer), bound(_bound) { _CGD_BUFFER_BOUND_CHECK(_buffer.get_front_ptr() >= _bound.lower && _buffer.get_back_ptr() <= _bound.upper); }
 	template <class T>
-	constexpr _basic_buffer(_buffer_view<T> _buffer, buffer_bound&& _bound) noexcept : base_t(_buffer), bound(_bound) {}
-	template <class T>
-	constexpr _basic_buffer(std::basic_string_view<T> _string) noexcept : base_t{ _string }, bound{ _string.data(), _string.data() + _string.size() } {}
-	template <class T, std::size_t N>
-	constexpr _basic_buffer(T(&_memory)[N]) noexcept : base_t{ _memory }, bound{ _memory, _memory + N } {}
+	constexpr _basic_buffer(_buffer_view<T> _buffer, buffer_bound&& _bound) : base_t(_buffer), bound(_bound) { _CGD_BUFFER_BOUND_CHECK(_buffer.get_front_ptr() >= get_lower_bound() && _buffer.get_back_ptr() <= this->get_back_ptr<T>()); }
 
 public:
 	// 1) capacity/clear/copy/clone
-	constexpr void				resize(std::size_t _new_size)													{ if (data() + _new_size > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'resize(size_t)'"); size_ = _new_size;}
-			std::size_t			capacity() const noexcept														{ return (bound.upper != nullptr) ? (reinterpret_cast<const char*>(bound.upper) - data_) : 0;}
-	constexpr void				clear() noexcept																{ base_t::clear(); bound.reset();}
+	constexpr void				resize(std::size_t _new_size) { if (data() + _new_size > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'resize(size_t)'"); size_ = _new_size;}
+	constexpr std::size_t		capacity() const noexcept { return (bound.upper != nullptr) ? (reinterpret_cast<const char*>(bound.upper) - data_) : 0;}
+	constexpr std::size_t		remained_size() const noexcept { return get_remained_size();}
+	constexpr void				clear() noexcept { base_t::clear(); bound.reset();}
 			template <class T>
-			void				copy_from(const _buffer_view<T>& _source)										{ if (data_ + _source.size() > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'copy(_source)'"); memcpy(data(), _source.data(), _source.size()); size_ = _source.size();}
-	constexpr void				swap(_basic_buffer& _rhs) noexcept												{ base_t::swap(_rhs); auto p = _rhs.get_bound(); _rhs._set_bound(bound); bound = p; }
-	constexpr void				swap(base_t& _rhs)																{ if (_rhs.data() < get_lower_bound() || (_rhs.data() + _rhs.size()) > get_upper_bound()) { assert(false); throw std::out_of_range("_rhs data_ is must in bound of this shared_buffer"); } base_t::swap(_rhs); }
+			void				copy_from(const _buffer_view<T>& _source) { if (this->data_ + _source.size() > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'copy(_source)'"); memcpy(data(), _source.data(), _source.size()); size_ = _source.size();}
+	constexpr void				swap(_basic_buffer& _rhs) noexcept { base_t::swap(_rhs); auto p = _rhs.get_bound(); _rhs._set_bound(bound); bound = p; }
+	constexpr void				swap(base_t& _rhs) { if (_rhs.data() < get_lower_bound() || (_rhs.data() + _rhs.size()) > get_upper_bound()) { assert(false); throw std::out_of_range("_rhs data_ is must in bound of this shared_buffer"); } base_t::swap(_rhs); }
 			self_t				split_head(const base_t& _source)
 			{
 				_CGD_BUFFER_BOUND_CHECK(size_ >= _source.size());
-				char* p = data_;
+				char* p = this->data_;
 				memcpy(p, _source.data(), _source.size());
-				data_+= _source.size();
-				size_-=_source.size();
+				this->data_+= _source.size();
+				this->size_-=_source.size();
 				return self_t{ buffer_view{p, _source.size()}, bound };
 			}
 			self_t				split_tail(const base_t& _source)
 			{
 				_CGD_BUFFER_BOUND_CHECK(size_ >= _source.size());
-				char* p = data_;
-				memcpy(p + size_ - _source.size(), _source.data(), _source.size());
-				size_ -= _source.size();
-				return self_t{ buffer_view{p + size_, _source.size()}, bound };
+				char* p = this->data_;
+				memcpy(p + this->size_ - _source.size(), _source.data(), _source.size());
+				this->size_ -= _source.size();
+				return self_t{ buffer_view{p + this->size_, _source.size()}, bound };
 			}
 
 	// 2) prepend																								  
 			template <std::size_t ISIZE>
-	constexpr auto				prepend()																		{ return _prepend_skip(ISIZE);}
+	constexpr auto				prepend() { return _prepend_skip(ISIZE);}
 			template <class T>																					  
-	constexpr T&				prepend()																		{ return *reinterpret_cast<T*>(_prepend_skip(sizeof(T)));}
+	constexpr T&				prepend() { return *reinterpret_cast<T*>(_prepend_skip(sizeof(T)));}
 			template <class T>																					  
-	constexpr prpd_tr<T>		prepend(const T& _data)															{ return PRPD_t<self_t, T>::_do_prepend(*this, _data);;}
+	constexpr prpd_tr<T>		prepend(const T& _data) { return PRPD_t<self_t, T>::_do_prepend(*this, _data);;}
 			template <class T>																					  
-	constexpr prpd_tr<T>		prepend(T&& _data)																{ return PRPD_t<self_t, T>::_do_prepend(*this, _data);;}
+	constexpr prpd_tr<T>		prepend(T&& _data) { return PRPD_t<self_t, T>::_do_prepend(*this, _data);;}
 			template <class T> 																					  
-	constexpr base_t			prepend(const T* _data, std::size_t _count)										{ return _prepend_array(_data, _count);}
+	constexpr base_t			prepend(const T* _data, std::size_t _count) { return _prepend_array(_data, _count);}
 			template <class T> 																					  
-	constexpr auto				prepend(const std::initializer_list<T>& _list)									{ _prepend_initializer_list<T>(_list); return data();}
+	constexpr auto				prepend(const std::initializer_list<T>& _list) { _prepend_initializer_list<T>(_list); return data();}
 			template<class I> 																					  
 	constexpr std::enable_if_t<is_iterator<I>::value, base_t>
-								prepend(I _first, I _last)														{ return _prepend_iterator(_first, _last);}
-			auto				prepend(std::size_t _size, const void* _buffer)									{ return _prepend_bytes(_size, _buffer);}
+								prepend(I _first, I _last) { return _prepend_iterator(_first, _last);}
+			auto				prepend(std::size_t _size, const void* _buffer) { return _prepend_bytes(_size, _buffer);}
 			template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_string(std::basic_string_view<T> _text)									{ return _prepend_string(_text);}
+								prepend_string(std::basic_string_view<T> _text) { return _prepend_string(_text);}
 			template <class T, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								prepend_string(const std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _prepend_string_format(_format.data(), std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T, std::size_t N, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_string(const T(&_format)[N], F&& _first, TREST&&... _rest)				{ return _prepend_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								prepend_string(const T(&_format)[N], F&& _first, TREST&&... _rest) { return _prepend_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_text(std::string_view _text)											{ return _prepend_text(_text);}
+								prepend_text(std::string_view _text) { return _prepend_text(_text);}
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_text(const T(&_text)[N])												{ return _prepend_text(_text);}
+								prepend_text(const T(&_text)[N]) { return _prepend_text(_text);}
 			template <class T, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest)	{ return _prepend_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								prepend_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _prepend_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T, std::size_t N, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_text(const T(&_format)[N], F&& _first, TREST&&... _rest)				{ return _prepend_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								prepend_text(const T(&_format)[N], F&& _first, TREST&&... _rest) { return _prepend_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 
 	// 3) append
 			template <std::size_t ISIZE>
-	constexpr auto&				append()																		{ return _append_skip(ISIZE);}
+	constexpr auto&				append() { return _append_skip(ISIZE);}
 			template <class T>																					  
-	constexpr auto&				append()																		{ return _append_emplace<std::remove_reference_t<std::remove_const_t<T>>>();}
+	constexpr auto&				append() { return _append_emplace<std::remove_reference_t<std::remove_const_t<T>>>();}
 			template <class T>																					  
-	constexpr appd_tr<T>		append(const T& _data)															{ return APPD_t<self_t,T>::_do_append(*this, _data); }
+	constexpr appd_tr<T>		append(const T& _data) { return APPD_t<self_t,T>::_do_append(*this, _data); }
 			template <class T>																					  
-	constexpr appd_tr<T>		append(T&& _data)																{ return APPD_t<self_t,T>::_do_append(*this, std::forward<T>(_data)); }
+	constexpr appd_tr<T>		append(T&& _data) { return APPD_t<self_t,T>::_do_append(*this, std::forward<T>(_data)); }
 			template <class T>																					  
-	constexpr auto				append(const T* _data, std::size_t _count)										{ return _append_array(_data, _count);}
+	constexpr auto				append(const T* _data, std::size_t _count) { return _append_array(_data, _count);}
 			template <class T> 																					  
-	constexpr base_t			append(const std::initializer_list<T>& _List)									{ return _append_initializer_list<T>(_List);}
+	constexpr base_t			append(const std::initializer_list<T>& _List) { return _append_initializer_list<T>(_List);}
 			template<class I> 																					  
 	constexpr std::enable_if_t<is_iterator<I>::value, base_t>
-								append(I _first, I _last)														{ return _append_iterator(_first, _last);}
-	constexpr auto				append(std::size_t _size, const void* _buffer)									{ return _append_bytes(_size, _buffer); }
+								append(I _first, I _last) { return _append_iterator(_first, _last);}
+	constexpr auto				append(std::size_t _size, const void* _buffer) { return _append_bytes(_size, _buffer); }
 
 			template <class T, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest)			{ return _append_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								append(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _append_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T, std::size_t N, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append(const T(&_format)[N], F&& _first, TREST&&... _rest)						{ return _append_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								append(const T(&_format)[N], F&& _first, TREST&&... _rest) { return _append_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(std::basic_string_view<T> _text)									{ return _append_text(_text);}
+								append_text(std::basic_string_view<T> _text) { return _append_text(_text);}
 
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(const T(&_text)[N])													{ return _append_text(_text);}
+								append_text(const T(&_text)[N]) { return _append_text(_text);}
 			template <class T, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest)	{ return _append_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								append_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _append_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T, std::size_t N, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(const T(&_format)[N] , F&& _first, TREST&&... _rest)				{ return _append_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								append_text(const T(&_format)[N] , F&& _first, TREST&&... _rest) { return _append_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 
 			template <class T = char, class TNUM>
 	constexpr std::enable_if_t<std::is_integral_v<TNUM>, base_t>
-				 				append_text(TNUM _value)														{ return _append_text_integer<T>(_value);}
+				 				append_text(TNUM _value) { return _append_text_integer<T>(_value);}
 			template <class T = char, class TNUM>
 	constexpr std::enable_if_t<std::is_floating_point_v<TNUM>, base_t>
-				 				append_text(TNUM _value)														{ return _append_text_float<T>(_value);}
+				 				append_text(TNUM _value) { return _append_text_float<T>(_value);}
+			template <class T = char>
+			base_t				append_text_hex(const char* _data, std::size_t _size) { return _append_text_binary<T>(_data, _size); }
 
 	// 4) extract/subtract
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, extr_tr<T>>
-								extract()																		{ return base_t::template extract<T>();}
+								extract() { return base_t::template extract<T>();}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, void>
-								extract_to(T& _dest)															{ base_t::template extract_to<T>(_dest);}
+								extract_to(T& _dest) { base_t::template extract_to<T>(_dest);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, T>
-								extract()																		{ return base_t::template extract<T>();}
+								extract() { return base_t::template extract<T>();}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, void>
-								extract_to(T& _dest)															{ base_t::template extract_to<T>(_dest);}
+								extract_to(T& _dest) { base_t::template extract_to<T>(_dest);}
 			template <std::size_t ISIZE>
-	constexpr auto				extract()																		{ return self_t(base_t::extract(CGDK::size(ISIZE)), bound);}
-	constexpr auto				extract(CGDK::size _length)														{ return self_t(base_t::extract(_length), bound);}
-	constexpr auto				extract(CGDK::skip _length)														{ return self_t(base_t::extract(_length), bound);}
+	constexpr auto				extract() { return self_t(base_t::extract(CGDK::size(ISIZE)), bound);}
+	constexpr auto				extract(CGDK::size _length) { return self_t(base_t::extract(_length), bound);}
 
 	// 5) reference
 			template <class T = char>
-	constexpr void				set_front_ptr(T* _pos)															{ _CGD_BUFFER_BOUND_CHECK(_pos >= get_lower_bound() && _pos <= this->get_back_ptr<T>()); auto temp_offset = reinterpret_cast<char*>(_pos) - this->data_; this->data_ = reinterpret_cast<char*>(_pos); this->size_ -= temp_offset;  }
+	constexpr void				set_front_ptr(T* _pos) { _CGD_BUFFER_BOUND_CHECK(_pos >= get_lower_bound() && _pos <= this->get_back_ptr<T>()); auto temp_offset = reinterpret_cast<char*>(_pos) - this->data_; this->data_ = reinterpret_cast<char*>(_pos); this->size_ -= temp_offset;  }
 			template <class T = char>
-	constexpr void				set_back_ptr(T* _pos)															{ _CGD_BUFFER_BOUND_CHECK(_pos >= this->get_front_ptr<T>() && _pos <= get_upper_bound()); this->size_ = reinterpret_cast<char*>(_pos) - this->data_; }
-	constexpr const buffer_bound& get_bound() const noexcept													{ return bound;}
-	constexpr std::size_t		get_remained_size() const noexcept												{ return static_cast<const char*>(bound.upper) - data_ - size_;}
+	constexpr void				set_back_ptr(T* _pos) { _CGD_BUFFER_BOUND_CHECK(_pos >= this->get_front_ptr<T>() && _pos <= get_upper_bound()); this->size_ = reinterpret_cast<char*>(_pos) - this->data_; }
+	constexpr const buffer_bound& get_bound() const noexcept { return bound;}
+	constexpr std::size_t		get_remained_size() const noexcept { return static_cast<const char*>(this->bound.upper) - this->data_ - this->size_;}
 
 	// 6) operator overloading																					  
 			// [operator] +/-		
-	constexpr self_t			operator ~ () const																{ auto data_value = data_ + size_; return self_t{ base_t { data_value, static_cast<size_type>(static_cast<const element_t*>(bound.upper) - data_value) }, bound }; }
-	constexpr self_t			operator+(offset _rhs) const													{ return self_t{ base_t::operator+(_rhs), bound };}
+	constexpr self_t			operator ~ () const { auto data_value = this->data_ + this->size_; return self_t{ base_t { data_value, static_cast<size_type>(static_cast<const element_t*>(this->bound.upper) - data_value) }, this->bound }; }
+	constexpr self_t			operator+(offset _rhs) const { return self_t{ base_t::operator+(_rhs), bound };}
 	constexpr self_t			operator-(offset _rhs) const
 			{
 				// check) upper bound
@@ -210,9 +234,9 @@ public:
 				// return) 
 				return self_t(base_t{ this->data_, this->size_ + _rhs.amount }, bound);
 			}
-	constexpr self_t			operator-(CGDK::size _rhs) const												{ return self_t{ base_t::operator-(_rhs), bound }; }
+	constexpr self_t			operator-(CGDK::size _rhs) const { return self_t{ base_t::operator-(_rhs), bound }; }
 			// [operator] +=/-=
-	constexpr self_t&			operator+=(offset _rhs)															{ base_t::operator+=(_rhs); return *this; }
+	constexpr self_t&			operator+=(offset _rhs) { base_t::operator+=(_rhs); return *this; }
 	constexpr self_t&			operator-=(offset _rhs)
 			{
 				// check) upper bound
@@ -234,47 +258,52 @@ public:
 				// return) 
 				return *this;
 			}
-	constexpr self_t			operator-=(CGDK::size _rhs)														{ base_t::operator-=(_rhs); return *this; }
-	constexpr self_t&			operator+=(const base_t& _rhs)													{ _append_bytes(_rhs.size(), _rhs.data()); return *this;}
-	constexpr self_t&			operator+=(base_t&& _rhs)														{ _append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t			operator-=(CGDK::size _rhs) { base_t::operator-=(_rhs); return *this; }
+	constexpr self_t&			operator+=(const base_t& _rhs) { _append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t&			operator+=(base_t&& _rhs) { _append_bytes(_rhs.size(), _rhs.data()); return *this;}
 			template <class T>
 	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
-								operator+=(const T& _rhs)														{ for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
+								operator+=(const T& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
 			template <class T>
 	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
-								operator+=(T&& _rhs)															{ for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
+								operator+=(T&& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
-								operator+=(const std::array<T, N>& _rhs)										{ for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
+								operator+=(const std::array<T, N>& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
-								operator+=(std::array<T, N>&& _rhs)												{ for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
+								operator+=(std::array<T, N>&& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
-								operator+=(const base_t(&_rhs)[N] )												{ const T* iter = _rhs; const T* iter_end = _rhs + N; for(;iter != iter_end; ++iter) { if (iter->empty()) continue; _append_bytes(iter->size_, iter->data_); } return *this;	}
-	constexpr self_t&			operator+=(const self_t& _rhs)													{ _append_bytes(_rhs.size_, _rhs.data()); return *this;}
-	constexpr self_t&			operator+=(self_t&& _rhs)														{ _append_bytes(_rhs.size_, _rhs.data()); return *this;}
+								operator+=(const base_t(&_rhs)[N] ) { const T* iter = _rhs; const T* iter_end = _rhs + N; for(;iter != iter_end; ++iter) { if (iter->empty()) continue; _append_bytes(iter->size_, iter->data_); } return *this;	}
+	constexpr self_t&			operator+=(const self_t& _rhs) { _append_bytes(_rhs.size_, _rhs.data()); return *this;}
+	constexpr self_t&			operator+=(self_t&& _rhs) { _append_bytes(_rhs.size_, _rhs.data()); return *this;}
 			// [operator] =
-	constexpr self_t&			operator= (const base_t& _rhs) noexcept											{ _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
-	constexpr self_t&			operator= (base_t&& _rhs) noexcept												{ _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
-	constexpr self_t&			operator= (const self_t& _rhs) noexcept											{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
-	constexpr self_t&			operator= (self_t&& _rhs) noexcept												{ base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
+	constexpr self_t&			operator= (const base_t& _rhs) noexcept { _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
+	constexpr self_t&			operator= (base_t&& _rhs) noexcept { _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
+	constexpr self_t&			operator= (const self_t& _rhs) noexcept { base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
+	constexpr self_t&			operator= (self_t&& _rhs) noexcept { base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
+	template <class T>
+	constexpr self_t&			operator= (std::basic_string_view<T> _string) noexcept { base_t::operator=(_string); bound = buffer_bound{_string.data(), _string.data() + _string.size()}; return *this; }
+	template <class T, std::size_t N>
+	constexpr self_t&			operator= (T(&_memory)[N]) noexcept { base_t::operator=(_memory);  bound = buffer_bound{_memory, _memory + N}; return *this;}
+
 			// [operator] ^=
 			template<class T>
-	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs)											{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs)												{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator^=(const buffer_base<T>& _rhs)											{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(const buffer_base<T>& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator^=(buffer_base<T>&& _rhs)												{ base_t::operator=(_rhs); return *this;}
-	constexpr self_t&			operator^=(std::size_t _rhs)													{ base_t::set_size(_rhs); return *this;}
+	constexpr self_t&			operator^=(buffer_base<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(std::size_t _rhs) { base_t::set_size(_rhs); return *this;}
 			// [operator >> - extract
 			template <class T>
-			self_t&				operator>>(T& _rhs)																{ _rhs = _extract<T>(); return *this;}
+			self_t&				operator>>(T& _rhs) { _rhs = _extract<T>(); return *this;}
 			// [operator] << - append																			  
 			template <class T>																					  
-			self_t&				operator<<(const T& _rhs)														{ APPD_t<self_t, T>::_do_append(*this, _rhs); return *this;}
+			self_t&				operator<<(const T& _rhs) { APPD_t<self_t, T>::_do_append(*this, _rhs); return *this;}
 
 public:
 	// prepend) 
@@ -285,16 +314,16 @@ public:
 	constexpr base_t			_prepend_skip(std::size_t _size)
 			{
 				// check) lower bound
-				_CGD_BUFFER_BOUND_CHECK((data_ - _size) >= get_lower_bound());
+				_CGD_BUFFER_BOUND_CHECK((this->data_ - this->_size) >= get_lower_bound());
 
-				// 1) [원본_버퍼_포인터]를 _size만큼 줄인다.
-				data_ -= _size;
+				// 1) decrease [source_buffer_pointer] as much as _size
+				this->data_ -= _size;
 
-				// 2) [원본_버퍼_길이]를 _size만큼 늘린다. 
-				size_ += _size;
+				// 2) increase [source_buffer_size] as much as _size
+				this->size_ += _size;
 
 				// return) 
-				return base_t(data_, _size);
+				return base_t(this->data_, _size);
 			}
 
 	template <class T>
@@ -304,14 +333,14 @@ public:
 		//static_assert(is_general_serializable_v<T>, "T is not basic type, so it may not work properly. use ENABLE_STRUCT_SERIALIZABLE");
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - sizeof(T)) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - sizeof(T)) >= get_lower_bound());
 
 		// 1) copy into [buffer]
-		*reinterpret_cast<T*>(data() - sizeof(T)) = _data;
+		*reinterpret_cast<T*>(this->data_ - sizeof(T)) = _data;
 	
 		// 2) ...
-		data_ -= sizeof(T);
-		size_ += sizeof(T);
+		this->data_ -= sizeof(T);
+		this->size_ += sizeof(T);
 	
 		// return) 
 		return *reinterpret_cast<T*>(data());
@@ -320,42 +349,36 @@ public:
 	constexpr std::enable_if_t<is_memcopy_able<T>::value, base_t>
 								_prepend_array(const T* _data, std::size_t _count)
 	{
-		// check)
-		CGDK_ASSERT(_count >= 0, throw std::invalid_argument("_count is invalid [0]"));
-
 		// 1)
-		auto buf_old = data_;
+		auto buf_old = this->data_;
 
-		// 2) [데이터_갯수]만큼 데이터들을 통채로 복사한다.
+		// 2) copy by size [data_count]
 		_prepend_bytes(sizeof(T)*_count, _data);
 
-		// 3) [데이터_갯수]를 써넣는다.
+		// 3) write [data_count]
 		_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
 
 		// return) 
-		return base_t(data_, buf_old - data_);
+		return base_t(this->data_, buf_old - this->data_);
 	}
 	template <class T> 
 	constexpr std::enable_if_t<!is_memcopy_able<T>::value, base_t>
 								_prepend_array(const T* _data, std::size_t _count)
 	{
-		// check) _count가 0이하면 안된다.
-		CGDK_ASSERT(_count >= 0, throw std::invalid_argument("_count is invalid [0]"));
-
 		// 1)
-		auto buf_old = data_;
+		auto buf_old = this->data_;
 
-		// 2) [데이터_갯수]만큼 데이터들을 추가한다.
+		// 2) prepend data by [data_count]
 		for(int i=static_cast<int>(_count-1);i>=0;--i)
 		{
 			_prepend<T>(_data[i]);
 		}
 
-		// 3) [데이터_갯수]를 써넣는다.
+		// 3) write [data_count]
 		_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
 
 		// return) 
-		return base_t(data_, buf_old - data_);
+		return base_t(this->data_, buf_old - this->data_);
 	}
 	template <class T, std::size_t N>
 	constexpr base_t			_prepend_string(const T(&_string)[N])
@@ -366,23 +389,23 @@ public:
 		constexpr auto added_length = sizeof(COUNT_T) + bytes_copy;
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - added_length) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - added_length) >= this->get_lower_bound());
 
-		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		auto p = data_ - bytes_copy;
+		// 2) obtain [target_pointer] by subtracting [source_buffer_pointer] by [string_length]
+		auto p = this->data_ - bytes_copy;
 
-		// 3) [원본_버퍼_포인터]에 문자열을 [문자열 길이] 만큼 복사한다.
+		// 3) copy string to [source_buffer_pointer] as much as [string_length]
 		memcpy(p, _string, bytes_copy);
 
 		// 4) 이동
 		p -= sizeof(COUNT_T);
 
-		// 4) [문자열 길이]를 써넣는다.
+		// 4) write [string_length]
 		*reinterpret_cast<COUNT_T*>(p) = bytes_copy;
 
-		// 5) [원본_버퍼_포인터]와 [원본_버퍼_길이]를 옮긴다.
-		data_  = p;
-		size_ += added_length;
+		// 5) update [source_buffer_pointer] and [source_buffer_length]
+		this->data_  = p;
+		this->size_ += added_length;
 
 		// return) 
 		return base_t(p, added_length);
@@ -396,75 +419,69 @@ public:
 		constexpr auto added_length = sizeof(COUNT_T) + bytes_copy;
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - added_length) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - added_length) >= this->get_lower_bound());
 
-		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		auto p = data_ - bytes_copy;
+		// 2) obtain [target_pointer] by subtracting [source_buffer_pointer] by [string_length]
+		auto p = this->data_ - bytes_copy;
 
-		// 3) 문자열을 변환한다.
+		// 3) encoding string
 		if (bytes_copy != 0 && p != _string)
 		{
 			encode_string(reinterpret_cast<T*>(p), _string);
 		}
 
-		// 4) 이동
+		// 4) move [target_pointer] by size of COUNT_T
 		p -= sizeof(COUNT_T);
 
-		// 4) [문자열 길이]를 써넣는다.
+		// 4) write [string_length]
 		*reinterpret_cast<COUNT_T*>(p) = bytes_copy;
 
-		// 5) [원본_버퍼_포인터]와 [원본_버퍼_길이]를 옮긴다.
-		data_  = p;
-		size_ += added_length;
+		// 5) update [source_buffer_pointer] and [source_buffer_length]
+		this->data_  = p;
+		this->size_ += added_length;
 				
 		// return) 
 		return base_t(p, added_length);
 	}
+
 	template <class T, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_prepend_string_format(const T* _format, TREST&&... _rest)
 	{
 #if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
-		// check) _format이 nullptr이면 안된다.
+		// check) _format must not be nullptr
 		CGDK_ASSERT(_format != nullptr, throw std::invalid_argument("_format is nullptr [0]"));
 
 		// 1) store data_
-		auto buf_old = data_;
+		auto buf_old = this->data_;
 
-		// 5) [원본_버퍼_시작_크기]에 [형식_문자열]를 써넣는다.
-	#if defined(FMT_FORMAT_H_)
-		auto temp_buffer = fmt::format(_format, std::forward<TREST>(_rest)...);
+		// 2) [원본_버퍼_시작_크기]에 [형식_문자열]를 써넣는다.
+		auto temp_buffer = _fmt_format_string(std::basic_string_view<T>(_format), std::forward<TREST>(_rest)...);
 		const auto str_start = temp_buffer.data();
 		const auto length_string = temp_buffer.size() + 1;
 		const auto size_string = length_string * sizeof(T);
-	#else
-			auto temp_buffer = std::format(_format, std::forward<TREST>(_rest)...);
-			const auto str_start = temp_buffer.data();
-			const auto length_string = temp_buffer.size() + 1;
-			const auto size_string = length_string * sizeof(T);
-	#endif
 
-		// 6) [목표_포인터]를 구한다.
-		auto p = data_ - size_string;
+		// 3) [목표_포인터]를 구한다.
+		auto p = this->data_ - size_string;
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((p - sizeof(COUNT_T)) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((p - sizeof(COUNT_T)) >= this->get_lower_bound());
 	
-		// 7) [문자열]을 복사한다.
+		// 4) [문자열]을 복사한다.
 		memcpy(p, str_start, size_string);
 
-		// 8) [목표_포인터]를 sizeof(COUNT_T)만큼을 뺀다.
+		// 5) [목표_포인터]를 sizeof(COUNT_T)만큼을 뺀다.
 		p -= sizeof(COUNT_T);
 
-		// 9) [문자열_길이]를 써넣는다.
+		// 6) [문자열_길이]를 써넣는다.
 		*reinterpret_cast<COUNT_T*>(p) = static_cast<COUNT_T>(length_string);
 
-		// 10)[원본_버퍼_포인터]를 업데이트한다.
-		data_ = p;
-		size_ += size_string + sizeof(COUNT_T);
+		// 7)[원본_버퍼_포인터]를 업데이트한다.
+		this->data_ = p;
+		this->size_ += size_string + sizeof(COUNT_T);
 
 		// return) 
-		return base_t(data_, buf_old - p);
+		return base_t(this->data_, buf_old - p);
 #else
 		#if defined(__cpp_lib_format)
 			//static_assert(false, "include <format> before including 'CGDK.buffer'");
@@ -486,10 +503,10 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - size_string) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		T* p = data_-size_string;
+		auto p = reinterpret_cast<T*>(this->data_ - size_string);
 	
 		// 3) [원본_버퍼_포인터]에 문자열을 [문자열 길이] 만큼 복사한다.
 		if(p!=_string)
@@ -498,8 +515,8 @@ public:
 		}
 
 		// 4) [원본_버퍼_포인터]와 [원본_버퍼_길이]를 옮긴다.
-		data_ = p;
-		size_ += size_string;
+		this->data_ = p;
+		this->size_ += size_string;
 
 		// return) 
 		return base_t(p, size_string);
@@ -508,17 +525,17 @@ public:
 	constexpr base_t			_prepend_text_encoding(std::basic_string_view<TY> _string)
 	{
 		// check) _string이 nullptr이면 안된다.
-		CGDK_ASSERT(_string!=nullptr, throw std::invalid_argument("_string is nullptr [0]"));
+		CGDK_ASSERT(_string != nullptr, throw std::invalid_argument("_string is nullptr [0]"));
 
 		// 1) [문자열_길이]를 구한다.
 		const auto length_string = std::char_traits<T>::length(_string);
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - size_string) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		T* p = data_ - size_string;
+		auto p = reinterpret_cast<T*>(this->data_ - size_string);
 	
 		// 3) [원본_버퍼_포인터]에 문자열을 [문자열 길이] 만큼 복사한다.
 		if(size_string != 0 && p != _string)
@@ -527,42 +544,37 @@ public:
 		}
 
 		// 4) [원본_버퍼_포인터]와 [원본_버퍼_길이]를 옮긴다.
-		data_ = p;
-		size_ += size_string;
+		this->data_ = p;
+		this->size_ += size_string;
 
 		// return) 
 		return base_t(p, size_string);
 	}
+
 	template <class T, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_prepend_text_format(const T* _format, TREST&&... _rest)
 	{
 #if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
 		// check) _string이 nullptr이면 안된다.
-		CGDK_ASSERT(_format!=nullptr, throw std::invalid_argument("_format is nullptr! [0]"));
+		CGDK_ASSERT(_format != nullptr, throw std::invalid_argument("_format is nullptr! [0]"));
 
-	#if defined(FMT_FORMAT_H_)
-		auto temp_buffer = fmt::format(_format, std::forward<TREST>(_rest)...);
+		auto temp_buffer = _fmt_format_string(std::basic_string_view<T>(_format), std::forward<TREST>(_rest)...);
 		const auto str_start = temp_buffer.data();
 		const auto size_string = (temp_buffer.size() + 1) * sizeof(T);
-	#else
-		auto temp_buffer = std::format(_format, std::forward<TREST>(_rest)...);
-		const auto str_start = temp_buffer.data();
-		const auto size_string = (temp_buffer.size() + 1) * sizeof(T);
-	#endif
 
 		// 6) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		auto p = data_ - size_string;
+		auto p = this->data_ - size_string;
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK(p >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK(p >= this->get_lower_bound());
 
 		// 7) [문자열]을 추가한다.
 		memcpy(p, str_start, size_string);
 
 		// 9) [원본_버퍼_포인터]와 [원본_버퍼_길이]를 옮긴다.
-		data_ = p;
-		size_ += size_string;
+		this->data_ = p;
+		this->size_ += size_string;
 
 		// return) 
 		return base_t(p, size_string);
@@ -582,34 +594,34 @@ public:
 		CGDK_ASSERT(_buffer != nullptr, throw std::invalid_argument("_buffer is nullptr [1]"));
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_-_size) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - _size) >= this->get_lower_bound());
 
 		// 1) store data_
-		auto buf_old = data_;
+		auto buf_old = this->data_;
 
 		// 2) [원본_버퍼_포인터]의 크기를 _size만큼 줄인다.
-		auto p = data() -_size;
+		auto p = buf_old -_size;
 	
 		// check) _size가 0이면 끝낸다.
 		if(_size == 0) return base_t(p,0);
 
 		// 3) [원본_버퍼_포인터]에 [데이터]를 [데이터_크기]만큼 복사한다.
-		if(_buffer != nullptr && _buffer!=p)
+		if(_buffer != nullptr && _buffer != p)
 		{
 			memcpy(p, _buffer, _size);
 		}
 
 		// 4) update data_ and size_
-		data_  = p;
-		size_ += _size;
+		this->data_  = p;
+		this->size_ += _size;
 
 		// return) 
-		return base_t(data_, buf_old - data_);
+		return base_t(this->data_, buf_old - this->data_);
 	}
 	constexpr self_t			_prepend_buffer(const base_t& _buffer)
 	{
 		// 1) store data_
-		auto buf_old = data_;
+		auto buf_old = this->data_;
 
 		// 1) [데이터_갯수]만큼 데이터들을 통채로 복사한다.
 		_prepend_bytes(_buffer.size(), _buffer.data());
@@ -618,33 +630,33 @@ public:
 		_prepend_general<COUNT_T>(static_cast<COUNT_T>(_buffer.size()));
 
 		// return) 
-		return self_t{ base_t{ data_, static_cast<size_type>(buf_old - data_) } };
+		return self_t{ base_t{ this->data_, static_cast<size_type>(buf_old - this->data_) } };
 	}
 	template <class T>
 	constexpr base_t			_prepend_initializer_list(const std::initializer_list<T>& _list)
 	{
-		auto p = data_;
+		auto p = this->data_;
 
 		for(auto& iter:_list)
 		{
 			_prepend<T>(iter);
 		}
 		
-		return base_t(p, data_ - p);
+		return base_t(p, this->data_ - p);
 	}
 	template <class T>
 	constexpr base_t			_prepend_tuple(const std::tuple<T>& _data)
 	{
-		auto p = data_;
+		auto p = this->data_;
 		_prepend<T>(std::get<0>(_data)); 
-		return base_t(data_, p - data_);
+		return base_t(this->data_, p - this->data_);
 	}
 	template <class TFIRST, class TSECOND, class... TREST>
 	constexpr base_t			_prepend_tuple(const std::tuple<TFIRST, TSECOND, TREST...>& _tupple)
 	{
-		auto p = data_;
+		auto p = this->data_;
 		_prepend_tuple((const std::tuple<TSECOND, TREST...>&)_tupple); _prepend<TFIRST>(std::get<0>(_tupple));
-		return base_t(data_, p - data_);
+		return base_t(this->data_, p - this->data_);
 	}
 	template <class T>
 	constexpr void				_prepend_multi_(T&& _data)
@@ -660,23 +672,23 @@ public:
 	template<class... T>
 	constexpr base_t			_prepend_multi(T&&... _multi)
 	{ 
-		auto p = data_;
+		auto p = this->data_;
 		_prepend_multi_<T...>(std::forward<T>(_multi)...);
-		return base_t(data_, p - data_);
+		return base_t(this->data_, p - this->data_);
 	}
 	template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_prepend_string(std::basic_string_view<T> _string)
 	{
 		// 1) ...
-		const auto buf_old = data_;
+		const auto buf_old = this->data_;
 
 		// 2) String길이를 구한다.(NULL길이까지 포함하므로 +1한다.)
 		const auto length_string = _string.length();
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - size_string - sizeof(COUNT_T)) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string - sizeof(COUNT_T)) >= this->get_lower_bound());
 
 		// 3) NULL으르 제일 먼저 넣는다.
 		_prepend_general<T>(0);
@@ -688,7 +700,7 @@ public:
 		_prepend_general<COUNT_T>(static_cast<COUNT_T>(length_string + 1));
 
 		// return) String의 제일 처음 위치를 리턴함!!
-		return base_t(data_, buf_old - data_);
+		return base_t(this->data_, buf_old - this->data_);
 	}
 	template <class T, class TY>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
@@ -702,10 +714,10 @@ public:
 		const auto size_string = (length_string + 1) * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - size_string - sizeof(COUNT_T)) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string - sizeof(COUNT_T)) >= this->get_lower_bound());
 
 		// 2) ...
-		T* p = reinterpret_cast<T*>(data_ - sizeof(T));
+		auto p = reinterpret_cast<T*>(this->data_ - sizeof(T));
 
 		// 3) append NULL
 		*reinterpret_cast<COUNT_T*>(p) = 0;
@@ -723,8 +735,8 @@ public:
 		*reinterpret_cast<COUNT_T*>(reinterpret_cast<char*>(p) - sizeof(COUNT_T)) = length_string + 1;
 
 		// 7) update data_ and size_
-		data_ = p;
-		size_ += size_string + sizeof(COUNT_T);
+		this->data_ = p;
+		this->size_ += size_string + sizeof(COUNT_T);
 
 		// return) String의 제일 처음 위치를 리턴함!!
 		return	base_t(data_, size_string + sizeof(COUNT_T));
@@ -741,10 +753,10 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - size_string) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		auto p = data() - size_string;
+		auto p = this->data_ - size_string;
 
 		// 3) [원본_버퍼_포인터]에 문자열을 [문자열 길이] 만큼 복사한다.
 		if (p != _string)
@@ -753,11 +765,11 @@ public:
 		}
 
 		// 4) update data_ and size_
-		data_ = p;
-		size_ += size_string;
+		this->data_ = p;
+		this->size_ += size_string;
 
 		// return) 
-		return	base_t(p, p - data_);
+		return base_t(p, p - this->data_);
 	}
 	template <class T, class TY>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
@@ -771,10 +783,10 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((data_ - size_string) >= get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		auto p = data() - size_string;
+		auto p = this->data_ - size_string;
 
 		// 3) [원본_버퍼_포인터]에 문자열을 [문자열 길이] 만큼 복사한다.
 		if (size_string != 0 && p != _string)
@@ -783,34 +795,34 @@ public:
 		}
 
 		// 4) update data_ and size_
-		data_ = p;
-		size_ += size_string;
+		this->data_ = p;
+		this->size_ += size_string;
 
 		// return) 
-		return	base_t(p, p - data_);
+		return base_t(p, p - this->data_);
 	}
 	template <class T>
 	constexpr std::enable_if_t<is_memcopy_able<typename T::value_type>::value, base_t>
 								_prepend_container_array(const T& _container)
 	{
 		// 1) store data_
-		auto p = data();
+		auto p = this->data_;
 
 		// 2) [데이터]들을 바로 memcopy한다.
-		_prepend_bytes(_container.size() * sizeof(typename T::value_type), &_container.front());
+		this->_prepend_bytes(_container.size() * sizeof(typename T::value_type), &_container.front());
 
 		// 3) [데이터_갯수]를 써넣는다.
-		_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// return) 
-		return	base_t(data_, p-data_);
+		return base_t(this->data_, p - this->data_);
 	}
 	template <class T>
 	constexpr std::enable_if_t<!is_memcopy_able<typename T::value_type>::value, base_t>
 								_prepend_container_array(const T& _container)
 	{
 		// 1) store data_
-		auto p = data();
+		auto p = this->data_;
 
 		// 2) Begin/End Iterator
 		auto iter = _container.rbegin();
@@ -819,21 +831,21 @@ public:
 		// 3) [데이터]들을 써넣는다.
 		for (; iter != iter_end; ++iter)
 		{
-			_prepend<typename T::value_type>(*iter);
+			this->_prepend<typename T::value_type>(*iter);
 		}
 
 		// 4) [데이터_갯수]를 써넣는다.
-		_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// return) 
-		return	base_t(data_, p - data_);
+		return base_t(this->data_, p - this->data_);
 	}
 	template<class RI>
 	constexpr std::enable_if_t<is_iterator<RI>::value, base_t>
 								_prepend_iterator(RI _reverse_first, RI _reverse_last)
 	{
 		// 1) store data_
-		auto p = data();
+		auto p = this->data_;
 
 		// declare)
 		COUNT_T iter_count = 0;
@@ -841,14 +853,14 @@ public:
 		// 1) 데이터들을 저장한다.
 		for (; _reverse_first != _reverse_last; ++_reverse_first, ++iter_count)
 		{
-			_prepend<typename RI::value_type>(*_reverse_first);
+			this->_prepend<typename RI::value_type>(*_reverse_first);
 		}
 
 		// 2) 크기를 써넣을 위치 예약
-		_prepend_general<COUNT_T>(iter_count);
+		this->_prepend_general<COUNT_T>(iter_count);
 
 		// return) 
-		return base_t(data_, p - data_);
+		return base_t(this->data_, p - this->data_);
 	}
 	// append) 
 	template <class T>
@@ -859,40 +871,40 @@ public:
 	template <class T>
 	constexpr appd_tr<T>		_append(const object_ptr<std::remove_const_t<T>>& _data)
 	{
-		return APPD_t<self_t,T>::_do_append(*this, *_data);
+		return this->APPD_t<self_t,T>::_do_append(*this, *_data);
 	}
 	template <class T>
 	constexpr base_t			_append_initializer_list(const std::initializer_list<T>& _list)
 	{
-		auto p = data_;
+		auto p = this->data_;
 		for(auto& iter:_list)
 		{
 			_append<T>(iter);
 		}
-		return base_t(p, data_ - p);
+		return base_t(p, this->data_ - p);
 	}
 	constexpr base_t			_append_skip(std::size_t _length)
-			{
-				// 1) [원본_버퍼_끝_포인터]를 구한다.
-				auto p = data() + size_;
+	{
+		// 1) [원본_버퍼_끝_포인터]를 구한다.
+		auto p = this->data_ + this->size_;
 
-				// check) lower bound
-				_CGD_BUFFER_BOUND_CHECK((p + _length) <= get_upper_bound());
+		// check) lower bound
+		_CGD_BUFFER_BOUND_CHECK((p + _length) <= this->get_upper_bound());
 
-				// 2) [원본_버퍼_길이]를 _length만큼 늘린다. 
-				size_ += _length;
+		// 2) [원본_버퍼_길이]를 _length만큼 늘린다. 
+		this->size_ += _length;
 
-				// return) [원본_버퍼_끝_포인터]값을 리턴한다.
-				return base_t(p, _length);
-			}
+		// return) [원본_버퍼_끝_포인터]값을 리턴한다.
+		return base_t(p, _length);
+	}
 	template <class T>
 	constexpr T&				_append_emplace()
 	{
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + sizeof(T)) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + sizeof(T)) <= this->get_upper_bound());
 
 		// 1) [원본_버퍼_끝_포인터]를 구한다.
-		auto p = reinterpret_cast<T*>(data() + size_);
+		auto p = reinterpret_cast<T*>(this->data_ + this->size_);
 
 		// 2) [원본_버퍼_끝_포인터]에 생성자를 호출한다.
 	#pragma push_macro("new")
@@ -901,7 +913,7 @@ public:
 	#pragma pop_macro("new")
 
 		// 3) [원본_버퍼_길이]를 _length만큼 늘린다. 
-		size_ += sizeof(T);
+		this->size_ += sizeof(T);
 
 		// return) [원본_버퍼_끝_포인터]값을 리턴한다.
 		return *p;
@@ -913,16 +925,16 @@ public:
 		//static_assert(is_general_serializable_v<T>, "T is not basic type, so it may not work properly. use ENABLE_STRUCT_SERIALIZABLE");
 
 		// 1) [원본_버퍼_끝_포인터]를 구한다.
-		auto p = reinterpret_cast<T*>(data() + size_);
+		auto p = reinterpret_cast<T*>(this->data_ + this->size_);
 	
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((p + 1) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((p + 1) <= this->get_upper_bound());
 
 		// 2) [원본_버퍼_끝_포인터]에 값(_data)를 써넣는다.
 		*p = _data;
 	
 		// 3) [원본_버퍼_길이]를 sizeof(T)만큼 늘린다. 
-		size_ += sizeof(T);
+		this->size_ += sizeof(T);
 	
 		// return) [원본_버퍼_끝_값]을 리턴한다.
 		return *p;
@@ -935,22 +947,22 @@ public:
 		CGDK_ASSERT(_data != nullptr && _count != 0, throw std::invalid_argument("_data is nullptr or _count is 0 [1]"));
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + sizeof(T) * _count) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + sizeof(T) * _count) <= this->get_upper_bound());
 
 		// 1) [원본_버퍼_포인터]를 저장해 놓는다.
-		auto len_old = size_;
+		auto len_old = this->size_;
 
 		// 2) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
 
 		// 3) [데이터]들을 추가한다.
-		for(std::size_t i=0;i<_count;++i)
+		for(std::size_t i=0; i<_count; ++i)
 		{
-			_append<T>(_data[i]);
+			this->_append<T>(_data[i]);
 		}
 
 		// return)
-		return base_t(data_ + len_old, size_ - len_old);
+		return base_t(this->data_ + len_old, this->size_ - len_old);
 	}
 	template <class T>
 	constexpr std::enable_if_t<is_memcopy_able<T>::value, base_t>
@@ -960,16 +972,16 @@ public:
 		CGDK_ASSERT(_data != nullptr && _count != 0, throw std::invalid_argument("_data is nullptr or _count is 0 [1]"));
 	
 		// 1) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
 
 		// 2) [데이터]들을 통채로 복사한다.
-		return _append_bytes(_count * sizeof(T), _data);
+		return this->_append_bytes(_count * sizeof(T), _data);
 	}
 	template <class T, std::size_t N>
 	constexpr std::enable_if_t<!is_memcopy_able<T>::value, base_t>
 								_append_array(const T* _data)
 	{
-		return _append_array<T>(_data, N);
+		return this->_append_array<T>(_data, N);
 	}
 	template <class T, std::size_t N>
 	constexpr std::enable_if_t<is_memcopy_able<T>::value, base_t>
@@ -979,17 +991,17 @@ public:
 		static_assert(N != 0, "size of array '_data' is 0");
 
 		// 1) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(N));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(N));
 
 		// 2) [데이터]들을 통채로 복사한다.
-		return _append_bytes(N * sizeof(T), _data);
+		return this->_append_bytes(N * sizeof(T), _data);
 	}
 	template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_append_string(std::basic_string_view<T> _string)
 	{
 		// 1) [목표_포인터]를 구한다.
-		const auto buf_dest = data_ + size_;
+		const auto buf_dest = this->data_ + this->size_;
 
 		// 2) get values
 		const auto length_string = _string.size();	// strnlen(, _buffer_size)
@@ -997,7 +1009,7 @@ public:
 		const auto added_length = sizeof(COUNT_T) + sizeof(T) + bytes_copy;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= this->get_upper_bound());
 
 		// declare) 
 		auto buf_now = buf_dest;
@@ -1017,7 +1029,7 @@ public:
 		*reinterpret_cast<T*>(buf_now) = 0;
 
 		// 6) [버퍼_길이]를 업데이트한다.
-		size_ += added_length;
+		this->size_ += added_length;
 
 		// return)
 		return	base_t(buf_dest, added_length);
@@ -1027,7 +1039,7 @@ public:
 								_append_string_encoding(std::basic_string_view<TY> _string)
 	{
 		// 1) [목표_포인터]를 구한다.
-		const auto buf_dest = data_ + size_;
+		const auto buf_dest = this->data_ + this->size_;
 
 		// 2) get values
 		const auto length_string = _string.size();	// strnlen(, _buffer_size)
@@ -1035,7 +1047,7 @@ public:
 		const auto added_length = sizeof(COUNT_T) + sizeof(T) + bytes_copy;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= this->get_upper_bound());
 
 		// declare) 
 		auto buf_now = buf_dest;
@@ -1055,10 +1067,10 @@ public:
 		*reinterpret_cast<T*>(buf_now) = 0;
 
 		// 6) [버퍼_길이]를 업데이트한다.
-		size_ += added_length;
+		this->size_ += added_length;
 
 		// return)
-		return	base_t(buf_dest, added_length);
+		return base_t(buf_dest, added_length);
 	}
 	template <class T, std::size_t N>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
@@ -1070,10 +1082,10 @@ public:
 		const auto added_length = sizeof(COUNT_T) + bytes_copy;
 
 		// 1) 문자열을 복사할 위치를 구한다.
-		auto buf_dest = data_ + size_;
+		auto buf_dest = this->data_ + this->size_;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= this->get_upper_bound());
 
 		// declare) 
 		auto buf_now = buf_dest;
@@ -1093,10 +1105,10 @@ public:
 		*reinterpret_cast<T*>(buf_now) = 0;
 
 		// 6) [버퍼_길이]를 업데이트한다.
-		size_ += added_length;
+		this->size_ += added_length;
 
 		// return) 리턴
-		return	base_t(buf_dest, added_length);
+		return base_t(buf_dest, added_length);
 	}
 	template <class T, std::size_t N, class TY>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
@@ -1108,7 +1120,7 @@ public:
 		const auto added_length = sizeof(COUNT_T) + bytes_copy;
 
 		// 1) 문자열을 복사할 위치를 구한다.
-		auto buf_dest = data_ + size_;
+		auto buf_dest = this->data_ + this->size_;
 
 		// check) upper bound
 		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= get_upper_bound());
@@ -1123,7 +1135,7 @@ public:
 		// 4) [문자열]을 [원본_버퍼_포인터] 위치에 복사한다.
 		if (bytes_copy != 0)
 		{
-			encode_string(reinterpret_cast<T*>(buf_now), _string);
+			this->encode_string(reinterpret_cast<T*>(buf_now), _string);
 			buf_now += bytes_copy;
 		}
 
@@ -1131,35 +1143,26 @@ public:
 		*reinterpret_cast<T*>(buf_now) = 0;
 
 		// 6) [버퍼_길이]를 업데이트한다.
-		size_ += added_length;
+		this->size_ += added_length;
 
 		// return) 리턴
-		return	base_t(buf_dest, added_length);
+		return base_t(buf_dest, added_length);
 	}
 	template <class T, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_append_string_format(std::basic_string_view<T> _format, TREST&&... _rest)
 	{
 #if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
-		//// 1) get max length
-		//const std::size_t max_length = _buffer_string_size_saturate((reinterpret_cast<const T*>(bound_upper) - reinterpret_cast<const T*>(buf_dest + sizeof(COUNT_T))));
-
 		// 1) get formatted string
-	#if defined(FMT_FORMAT_H_)
-		auto temp_buffer = fmt::format(_format, std::forward<TREST>(_rest)...);
+		auto temp_buffer = _fmt_format_string(_format, std::forward<TREST>(_rest)...);
 		const auto length_string = temp_buffer.size() + 1;
 		const auto size_string = length_string * sizeof(T);
-	#else
-		auto temp_buffer = std::format(_format, std::forward<TREST>(_rest)...);
-		const auto length_string = temp_buffer.size() + 1;
-		const auto size_string = length_string * sizeof(T);
-	#endif
 
 		// 2) get [dest]
-		const auto buf_dest = data() + size_;
+		const auto buf_dest = this->data_ + this->size_;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + sizeof(COUNT_T) + size_string) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((buf_dest + sizeof(COUNT_T) + size_string) <= this->get_upper_bound());
 
 		// 4) store [string_length]
 		*reinterpret_cast<COUNT_T*>(buf_dest) = static_cast<COUNT_T>(length_string);
@@ -1171,7 +1174,7 @@ public:
 		const auto added_length = size_string + sizeof(COUNT_T);
 
 		// 7) update [size_]
-		size_ += added_length;
+		this->size_ += added_length;
 
 		// return)
 		return base_t(buf_dest, added_length);
@@ -1199,19 +1202,19 @@ public:
 		auto size_string = _string.size() * sizeof(T);
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + size_string) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
 
 		// 2) 
-		auto buf_pos = data() + size_;
+		auto buf_pos = this->data_ + this->size_;
 
 		// 2) [문자열]을 복사한다.
 		memcpy(buf_pos, _string.data(), size_string);
 
 		// 3) [문자열_길이]만큼 더한다.
-		size_ += size_string;
+		this->size_ += size_string;
 
 		// return) 
-		return	base_t(buf_pos, size_string);
+		return base_t(buf_pos, size_string);
 	}
 	template <class T, class TY>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
@@ -1221,10 +1224,10 @@ public:
 		auto size_string = _string.size() * sizeof(T);
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + size_string) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
 
 		// 2) 
-		auto buf_pos = data() + size_;
+		auto buf_pos = this->data_ + this->size_;
 
 		// 3) [문자열]을 복사한다
 		if (size_string != 0)
@@ -1233,34 +1236,34 @@ public:
 		}
 
 		// 4) [문자열_길이]만큼 더한다.
-		size_ += size_string;
+		this->size_ += size_string;
 
 		// return) 
-		return	base_t(buf_pos, size_string);
+		return base_t(buf_pos, size_string);
 	}
 
 	template <class T, std::size_t N>
 	constexpr base_t			_append_text(const T(&_text)[N])
-			{
-				// declare) 
-				const auto length_string = std::char_traits<T>::length(_text);
-				const auto size_string = length_string * sizeof(T);
+	{
+		// declare) 
+		const auto length_string = std::char_traits<T>::length(_text);
+		const auto size_string = length_string * sizeof(T);
 
-				// check) upper bound
-				_CGD_BUFFER_BOUND_CHECK((data_ + size_ + size_string) <= get_upper_bound());
+		// check) upper bound
+		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
 
-				// declare)
-				auto buf_dest = data() + size_;
+		// declare)
+		auto buf_dest = this->data_ + this->size_;
 
-				// 1) [문자열]을 복사하고 [문자열_길이]만큼 더한다.
-				memcpy(buf_dest, _text, size_string);
+		// 1) [문자열]을 복사하고 [문자열_길이]만큼 더한다.
+		memcpy(buf_dest, _text, size_string);
 
-				// 2) [문자열_길이]만큼 더한다.
-				size_ += size_string;
+		// 2) [문자열_길이]만큼 더한다.
+		this->size_ += size_string;
 
-				// return) 
-				return	base_t(buf_dest, size_string);
-			}
+		// return) 
+		return base_t(buf_dest, size_string);
+	}
 	template <class T, std::size_t N, class TY>
 	constexpr base_t			_append_text_encoding(const TY(&_text)[N])
 	{
@@ -1269,10 +1272,10 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + size_string) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
 
 		// declare)
-		const auto buf_dest = data() + size_;
+		const auto buf_dest = this->data_ + this->size_;
 
 		// 1) [문자열]을 복사하고 [문자열_길이]만큼 더한다.
 		if (size_string != 0)
@@ -1281,10 +1284,10 @@ public:
 		}
 
 		// 2) [문자열_길이]만큼 더한다.
-		size_ += size_string;
+		this->size_ += size_string;
 
 		// return) 
-		return	base_t(buf_dest, size_string);
+		return base_t(buf_dest, size_string);
 	}
 	template <class T, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
@@ -1295,21 +1298,15 @@ public:
 		//const std::size_t max_length = _buffer_string_size_saturate((reinterpret_cast<const T*>(bound_upper) - reinterpret_cast<const T*>(buf_dest + sizeof(COUNT_T))));
 
 		// 1) get formatted string
-	#if defined(FMT_FORMAT_H_)
-		auto temp_buffer = fmt::format(_format, std::forward<TREST>(_rest)...);
+		auto temp_buffer = _fmt_format_string(std::basic_string_view<T>(_format), std::forward<TREST>(_rest)...);
 		const auto length_string = temp_buffer.size();
 		const auto size_string = length_string * sizeof(T);
-	#else
-		auto temp_buffer = std::format(_format, std::forward<TREST>(_rest)...);
-		const auto length_string = temp_buffer.size();
-		const auto size_string = length_string * sizeof(T);
-	#endif
 
 		// 2) get [dest]
-		const auto buf_dest = data() + size_;
+		const auto buf_dest = this->data_ + this->size_;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + size_string) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((buf_dest + size_string) <= this->get_upper_bound());
 
 		// 5) copy string to buffer
 		::memcpy(buf_dest, temp_buffer.data(), size_string);
@@ -1318,7 +1315,7 @@ public:
 		const auto added_length = size_string;
 
 		// 7) update [size_]
-		size_ += added_length;
+		this->size_ += added_length;
 
 		// return)
 		return base_t(buf_dest, added_length);
@@ -1332,11 +1329,12 @@ public:
 		#endif
 #endif
 	}
+
+#if defined(FMT_FORMAT_H_)
 	template <class T, class TFIRST, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								_append_text_format(const T* _format, TFIRST&& _first, TREST&&... _rest)
+		_append_text_format(const T* _format, TFIRST&& _first, TREST&&... _rest)
 	{
-	#if defined(FMT_FORMAT_H_)
 		// declare) 
 		fmt::basic_memory_buffer<T> temp_buffer;
 
@@ -1348,18 +1346,63 @@ public:
 			return base_t();
 
 		// return) 
-		return _append_text(std::basic_string_view<T>(temp_buffer.data(), temp_buffer.size()));
-	#elif defined(__cpp_lib_format) && defined(_FORMAT_)
+		return this->_append_text(std::basic_string_view<T>(temp_buffer.data(), temp_buffer.size()));
+	}
+
+#elif defined(__cpp_lib_format) && defined(_FORMAT_)
+	#if defined(__GNUC__)
+	template <class T, class TFIRST, class... TREST>
+	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
+		_append_text_format(const T* _format, TFIRST&& _first, TREST&&... _rest)
+	{
+		// declare)
+		auto buf_dest = this->data_ + this->size_;
+
 		// 1) Generate trace Message
-		auto temp_buffer = std::format(_format, std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...);
+		auto result = std::format_to_n(buf_dest, get_remained_size() - 1, std::_Fmt_string < T, TFIRST, TREST...>(std::forward<const T*>(_format)), std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...);
+
+		// 2) [문자열_길이]를 구한다.
+		auto size_string = result.out - buf_dest;
+
+		// 3) [문자열_길이]만큼 더한다.
+		this->size_ += size_string;
+
+		// return) 
+		return base_t(buf_dest, size_string);
+	}
+	#else
+	template <class TFIRST, class... TREST>
+	base_t _append_text_format(const char* _format, TFIRST&& _first, TREST&&... _rest)
+	{
+		// 1) Generate trace Message
+		auto temp_buffer = std::vformat(_format, std::make_format_args(std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...));;
 
 		// check)
 		if (temp_buffer.size() <= 0)
 			return base_t();
 
 		// return) 
-		return _append_text(std::basic_string_view<T>(temp_buffer.data(), temp_buffer.size()));
-	#else
+		return this->_append_text(std::string_view(temp_buffer.data(), temp_buffer.size()));
+	}
+	template <class TFIRST, class... TREST>
+	base_t _append_text_format(const wchar_t* _format, TFIRST&& _first, TREST&&... _rest)
+	{
+		// 1) Generate trace Message
+		auto temp_buffer = std::vformat(_format, std::make_wformat_args(std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...));;
+
+		// check)
+		if (temp_buffer.size() <= 0)
+			return base_t();
+
+		// return) 
+		return this->_append_text(std::wstring_view(temp_buffer.data(), temp_buffer.size()));
+	}
+	#endif
+#else
+	template <class T, class TFIRST, class... TREST>
+	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
+		_append_text_format(const T * _format, TFIRST && _first, TREST&&... _rest)
+	{
 		#if defined(__cpp_lib_format)
 			//static_assert(false, "include <format> before including 'CGDK.buffer'");
 			throw std::exception("include <format> before including 'CGDK.buffer'");
@@ -1367,21 +1410,21 @@ public:
 			//static_assert(false, "'std::format' is not supported");
 			throw std::exception("'std::format' is not supported");
 		#endif
-	#endif
 	}
+#endif
 	constexpr base_t			_append_bytes(std::size_t _size, const void* _buffer)
 	{
 		// check) _buffer이 nullptr이면 안된다.
 		CGDK_ASSERT(_buffer != nullptr || (_buffer == nullptr && _size == 0), throw std::invalid_argument("_buffer is nullptr [1]"));
 
 		// check) upper bound 
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + _size) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + _size) <= this->get_upper_bound());
 
 		// 1) [원본_버퍼_끝_포인터]를 얻는다.
-		const auto buf_dest = data() + size_;
+		const auto buf_dest = this->data_ + this->size_;
 	
 		// check) _size가 0이면 끝낸다.
-		if(_size==0) return base_t(buf_dest, 0);
+		if(_size == 0) return base_t(buf_dest, 0);
 	
 		// 2) [원본_버퍼_끝_포인터]에 [데이터]를 [데이터_크기]만큼 복사한다.
 		if(_buffer!=nullptr && _buffer != buf_dest)
@@ -1390,7 +1433,7 @@ public:
 		}
 	
 		// 3) [원본_버퍼_길이]에 [데이터_길이]만큼 더한다.
-		size_ += _size;
+		this->size_ += _size;
 	
 		// return) 
 		return base_t(buf_dest, _size);
@@ -1398,93 +1441,93 @@ public:
 	constexpr self_t			_append_buffer(const base_t& _buffer)
 	{
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + sizeof(base_t::size_type) + _buffer.size()) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + sizeof(base_t::size_type) + _buffer.size()) <= this->get_upper_bound());
 
 		// check) _data이 nullptr이면 안된다.
 		CGDK_ASSERT(_buffer.data() != nullptr || _buffer.size() == 0, throw std::invalid_argument("_data is nullptr [1]"));
 
 		// 1) [원본_버퍼_포인터]를 저장해 놓는다.
-		auto len_old = size_;
+		auto len_old = this->size_;
 
 		// 2) 데이터를 써넣는다.
 		if(_buffer.data() != nullptr && _buffer.size() != 0)
 		{
 			// - [데이터_갯수]를 써넣는다.
-			_append_general<base_t::size_type>(_buffer.size());
+			this->_append_general<base_t::size_type>(_buffer.size());
 
 			// - [데이터]들을 통채로 복사한다.
-			_append_bytes(_buffer.size(), _buffer.data());
+			this->_append_bytes(_buffer.size(), _buffer.data());
 		}
 		else
 		{
 			// 2) [데이터_갯수]를 0으로 써넣는다.
-			_append_general<base_t::size_type>(0);
+			this->_append_general<base_t::size_type>(0);
 		}
 
 		// return) 
-		return self_t{ base_t{data_ + len_old, size_ - len_old} };
+		return self_t{ base_t{this->data_ + len_old, this->size_ - len_old} };
 	}
 	template<class T>
 	constexpr base_t			_append_tuple(const std::tuple<T>& _tupple)
 	{
-		auto len_old = size_;
-		_append<std::decay_t<T>>(std::get<0>(_tupple));
-		return base_t(data_ + len_old, size_ - len_old);
+		auto len_old = this->size_;
+		this->_append<std::decay_t<T>>(std::get<0>(_tupple));
+		return base_t(this->data_ + len_old, this->size_ - len_old);
 	}
 	template<class TFIRST, class TSECOND, class... TREST>
 	constexpr base_t			_append_tuple(const std::tuple<TFIRST, TSECOND, TREST...>& _tupple)
 	{ 
-		auto len_old = size_;
-		_append<std::decay_t<TFIRST>>(std::get<0>(_tupple));
-		_append_tuple<TSECOND, TREST...>((const std::tuple<TSECOND, TREST...>&)_tupple);
-		return base_t(data_ + len_old, size_ - len_old);
+		auto len_old = this->size_;
+		this->_append<std::decay_t<TFIRST>>(std::get<0>(_tupple));
+		this->_append_tuple<TSECOND, TREST...>((const std::tuple<TSECOND, TREST...>&)_tupple);
+		return base_t(this->data_ + len_old, this->size_ - len_old);
 	}
 	template<class T>
 	constexpr void				_append_multi_(T&& _tupple)
 	{
-		_append<std::decay_t<T>>(std::forward<T>(_tupple));
+		this->_append<std::decay_t<T>>(std::forward<T>(_tupple));
 	}
 	template<class TFIRST, class TSECOND, class... TREST>
 	constexpr void				_append_multi_(TFIRST&& _first, TSECOND&& _second, TREST&&... _rest)
 	{ 
-		_append<std::decay_t<TFIRST>>(_first);
-		_append_multi_<TSECOND, TREST...>(std::forward<TSECOND>(_second), std::forward<TREST>(_rest)...);
+		this->_append<std::decay_t<TFIRST>>(_first);
+		this->_append_multi_<TSECOND, TREST...>(std::forward<TSECOND>(_second), std::forward<TREST>(_rest)...);
 	}
 	template<class... T>
 	constexpr base_t			_append_multi(T&&... _multi)
 	{ 
 		auto len_old = size_;
-		_append_multi_<T...>(std::forward<T>(_multi)...);
+		this->_append_multi_<T...>(std::forward<T>(_multi)...);
 		return base_t(data_ + len_old, size_ - len_old);
 	}
 
 	template <class T>
-	constexpr auto				_append_text_integer(char _value)				{ return _append_text_integer<T>(static_cast<int64_t>(_value));}
+	constexpr auto				_append_text_integer(char _value) { return this->_append_text_integer<T>(static_cast<int64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(int8_t _value)				{ return _append_text_integer<T>(static_cast<int64_t>(_value));}
+	constexpr auto				_append_text_integer(int8_t _value) { return this->_append_text_integer<T>(static_cast<int64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(uint8_t _value)			{ return _append_text_integer<T>(static_cast<uint64_t>(_value));}
+	constexpr auto				_append_text_integer(uint8_t _value) { return this->_append_text_integer<T>(static_cast<uint64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(int16_t _value)			{ return _append_text_integer<T>(static_cast<int64_t>(_value));}
+	constexpr auto				_append_text_integer(int16_t _value) { return this->_append_text_integer<T>(static_cast<int64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(uint16_t _value)			{ return _append_text_integer<T>(static_cast<uint64_t>(_value));}
+	constexpr auto				_append_text_integer(uint16_t _value) { return this->_append_text_integer<T>(static_cast<uint64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(int32_t _value)			{ return _append_text_integer<T>(static_cast<int64_t>(_value));}
+	constexpr auto				_append_text_integer(int32_t _value) { return this->_append_text_integer<T>(static_cast<int64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(uint32_t _value)			{ return _append_text_integer<T>(static_cast<uint64_t>(_value));}
+	constexpr auto				_append_text_integer(uint32_t _value) { return this->_append_text_integer<T>(static_cast<uint64_t>(_value));}
 #if defined(_MSC_VER)
 	template <class T>
-	constexpr auto				_append_text_integer(long _value)				{ return _append_text_integer<T>(static_cast<int64_t>(_value));}
+	constexpr auto				_append_text_integer(long _value) { return this->_append_text_integer<T>(static_cast<int64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(unsigned long _value)		{ return _append_text_integer<T>(static_cast<uint64_t>(_value));}
+	constexpr auto				_append_text_integer(unsigned long _value) { return this->_append_text_integer<T>(static_cast<uint64_t>(_value));}
 #else
 	template <class T>
-	constexpr auto				_append_text_integer(long long _value)			{ return _append_text_integer<T>(static_cast<int64_t>(_value));}
+	constexpr auto				_append_text_integer(long long _value) { return this->_append_text_integer<T>(static_cast<int64_t>(_value));}
 	template <class T>
-	constexpr auto				_append_text_integer(unsigned long long _value){ return _append_text_integer<T>(static_cast<uint64_t>(_value));}
+	constexpr auto				_append_text_integer(unsigned long long _value) { return this->_append_text_integer<T>(static_cast<uint64_t>(_value));}
 #endif
 	template <class T>
-	constexpr std::basic_string_view<T> _append_text_integer(uint64_t _value)
+	constexpr base_t			_append_text_integer(uint64_t _value)
 	{
 		// declare) 
 		T temp_buf[32];
@@ -1505,13 +1548,13 @@ public:
 		}
 
 		// 2) copy
-		auto buf_dest = data() + size_;
+		auto buf_dest = this->data_ + this->size_;
 
 		// declare)
-		std::basic_string_view<T> result(buf_dest, pos_now - temp_buf);
+		base_t result(buf_dest, (pos_now - temp_buf) * sizeof(T));
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + result.size()) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((buf_dest + result.size()) <= this->get_upper_bound());
 
 		// 3) reverse copy
 		for (--pos_now; pos_now >= temp_buf; ++buf_dest, --pos_now)
@@ -1520,13 +1563,13 @@ public:
 		}
 
 		// 4) set size_
-		size_ += result.size() * sizeof(T);
+		this->size_ += result.size() * sizeof(T);
 
 		// return) 
-		return	result;
+		return result;
 	}
 	template <class T>
-	constexpr std::basic_string_view<T> _append_text_integer(int64_t _value)
+	constexpr base_t			_append_text_integer(int64_t _value)
 	{
 		// declare) 
 		T temp_buf[32];
@@ -1564,13 +1607,13 @@ public:
 		}
 
 		// 2) copy
-		auto buf_dest = data() + size_;
+		auto buf_dest = this->data_ + this->size_;
 
 		// declare)
-		std::basic_string_view<T> result(buf_dest, pos_now - temp_buf);
+		base_t result(buf_dest, (pos_now - temp_buf) * sizeof(T));
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + result.size()) <= get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK((buf_dest + result.size()) <= this->get_upper_bound());
 
 		// 3) reverse copy
 		for (--pos_now; pos_now >= temp_buf; ++buf_dest, --pos_now)
@@ -1579,17 +1622,54 @@ public:
 		}
 
 		// 4) set size_
-		size_ += result.size() * sizeof(T);
+		this->size_ += result.size() * sizeof(T);
 
 		// return) 
-		return	result;
+		return result;
 	}
 	template <class T>
-	constexpr std::basic_string_view<T>	_append_text_float(double _value)
+	constexpr base_t			_append_text_float(double _value)
 	{
 		auto temp = _float_to_string<T>(_value);
 		return _append_text(static_cast<std::basic_string_view<T>>(temp));
 	}
+
+	template <class T = char>
+	constexpr base_t			_append_text_binary(const char* _buffer, std::size_t _length)
+	{
+		// check) _buffer이 nullptr이면 안된다.
+		CGDK_ASSERT(_buffer != nullptr || (_buffer == nullptr && _length == 0), throw std::invalid_argument("_buffer is nullptr [1]"));
+
+		// 1) calculate size to write
+		auto size_added = _length * sizeof(T) * 2;
+
+		// check) upper bound 
+		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + size_added) <= this->get_upper_bound());
+
+		// 1) [원본_버퍼_끝_포인터]를 얻는다.
+		auto buf_dest = reinterpret_cast<T*>(this->data_ + this->size_);
+	
+		// check) _length가 0이면 끝낸다.
+		if(_length == 0) return base_t(buf_dest, 0);
+	
+		// 2) [원본_버퍼_끝_포인터]에 [데이터]를 [데이터_크기]만큼 복사한다.
+		auto buf_src = reinterpret_cast<const uint8_t*>(_buffer);
+		auto buf_src_end = buf_src + _length;
+
+		while(buf_src != buf_src_end)
+		{
+			auto temp = *buf_src++;
+			*buf_dest++ = __hex_to_ascii(temp >> 4);
+			*buf_dest++ = __hex_to_ascii(temp & 0x0f);
+		}
+	
+		// 3) [원본_버퍼_길이]에 [데이터_길이]만큼 더한다.
+		this->size_ += size_added;
+	
+		// return) 
+		return base_t(buf_dest, size_added);
+	}
+
 	template<class T>
 	constexpr base_t			_append_container_associative(const T& _container)
 	{
@@ -1605,13 +1685,13 @@ public:
 		for (auto iter = _container.begin(); iter != _container.end(); ++iter)
 		{
 			// _ key를 써넣는다.
-			_append<typename T::key_type>(iter->first);
+			this->_append<typename T::key_type>(iter->first);
 			// - Value를 써넣는다.
-			_append<typename T::mapped_type>(iter->second);
+			this->_append<typename T::mapped_type>(iter->second);
 		}
 
 		// return) 
-		return base_t(data_ + l, size_ - l);
+		return base_t(this->data_ + l, this->size_ - l);
 	}
 	template<class T>
 	constexpr base_t			_prepend_container_associative(const T& _container)
@@ -1619,7 +1699,7 @@ public:
 		// 주의) extract시 value->key순으로 extract되므로 prepaend시에는 key->value순으로 prepend해줘야 한다.
 
 		// declare) 
-		auto p = data_;
+		auto p = this->data_;
 
 		// 1) Begin/End Iterator
 		auto iter = _container.begin();
@@ -1629,16 +1709,16 @@ public:
 		for(; iter!=iterEnd; ++iter)
 		{
 			// - Value를 써넣는다.
-			_prepend<typename T::mapped_type>(iter->second);
+			this->_prepend<typename T::mapped_type>(iter->second);
 			// _ key를 써넣는다.
-			_prepend<typename T::key_type>(iter->first);
+			this->_prepend<typename T::key_type>(iter->first);
 		}
 
 		// 3) [데이터_갯수]를 써넣는다.
-		_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// return) 
-		return base_t(data_, p - data_);
+		return base_t(this->data_, p - this->data_);
 	}
 
 	template<class I>
@@ -1646,7 +1726,7 @@ public:
 								_append_iterator(I _first, I _last)
 	{
 		// 1) store data_
-		auto l = size_;
+		auto l = this->size_;
 
 		// 2) [데이터_갯수]를 써넣는다.
 		auto buf_count = _append_skip(sizeof(COUNT_T));
@@ -1664,17 +1744,17 @@ public:
 		buf_count.template front<COUNT_T>() = iter_count;
 
 		// return) 
-		return base_t(data_ + l, size_ - l);
+		return base_t(this->data_ + l, this->size_ - l);
 	}
 	template <class T>
 	constexpr std::enable_if_t<!is_memcopy_able<typename T::value_type>::value, base_t>
 								_append_container_array(const T& _container)
 	{
 		// 1) [원본_버퍼_길이]을 얻어놓는다.
-		auto l = size_;
+		auto l = this->size_;
 
 		// 2) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// 3) [데이터]들을 써넣는다.
 		auto iter = _container.begin();
@@ -1682,42 +1762,42 @@ public:
 
 		for (; iter != iterEnd; ++iter)
 		{
-			_append<typename T::value_type>(*iter);
+			this->_append<typename T::value_type>(*iter);
 		}
 
 		// return)
-		return base_t(data_ + l, size_ - l);
+		return base_t(this->data_ + l, this->size_ - l);
 	}
 	template <class T>
 	constexpr std::enable_if_t<is_memcopy_able<typename T::value_type>::value, base_t>
 								_append_container_array(const T& _container)
 	{
 		// 1) [원본_버퍼_길이]을 얻어놓는다.
-		auto l = size_;
+		auto l = this->size_;
 
 		// declare)
 		auto count = _container.size();
 
 		// 1) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(count));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
 		// 3) [데이터]들을 써넣는다.
 		if (count != 0)
 		{
-			_append_bytes(count * sizeof(typename T::value_type), &_container.front());
+			this->_append_bytes(count * sizeof(typename T::value_type), &_container.front());
 		}
 
 		// return)
-		return base_t(data_ + l, size_ - l);
+		return base_t(this->data_ + l, this->size_ - l);
 	}
 	template <class T>
 	constexpr base_t			_append_container_own_ptr_list(const T& _container)
 	{
 		// 1) [원본_버퍼_길이]을 얻어놓는다.
-		auto l = size_;
+		auto l = this->size_;
 
 		// 2) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// 3) [데이터]들을 써넣는다.
 		auto iter = _container.begin();
@@ -1727,11 +1807,11 @@ public:
 		{
 			if(iter->empty()==false)
 			{
-				_append<typename T::value_type>(*iter);
+				this->_append<typename T::value_type>(*iter);
 			}
 			else
 			{
-				_append<COUNT_T>(COUNT_T(0)-1);
+				this->_append<COUNT_T>(COUNT_T(0)-1);
 			}
 		}
 
@@ -1742,10 +1822,10 @@ public:
 	constexpr base_t			_append_container_object_ptr_list(const T& _container)
 	{
 		// 1) [원본_버퍼_길이]을 얻어놓는다.
-		auto l = size_;
+		auto l = this->size_;
 
 		// 2) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// 3) [데이터]들을 써넣는다.
 		auto iter = _container.begin();
@@ -1755,25 +1835,25 @@ public:
 		{
 			if(iter->empty()==false)
 			{
-				_append<typename T::value_type>(*iter);
+				this->_append<typename T::value_type>(*iter);
 			}
 			else
 			{
-				_append<COUNT_T>(COUNT_T(0)-1);
+				this->_append<COUNT_T>(COUNT_T(0)-1);
 			}
 		}
 
 		// return)
-		return base_t(data_ + l, size_ - l);
+		return base_t(this->data_ + l, this->size_ - l);
 	}
 	template <class T>
 	constexpr base_t			_append_container_list(const T& _container)
 	{
 		// 1) [원본_버퍼_길이]을 얻어놓는다.
-		auto l = size_;
+		auto l = this->size_;
 
 		// 2) [데이터_갯수]를 써넣는다.
-		_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_append_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// 3) [데이터]들을 써넣는다.
 		auto iter = _container.begin();
@@ -1781,17 +1861,17 @@ public:
 
 		for(; iter!=iterEnd; ++iter)
 		{
-			_append<typename T::value_type>(*iter);
+			this->_append<typename T::value_type>(*iter);
 		}
 
 		// return)
-		return base_t(data_ + l, size_ - l);
+		return base_t(this->data_ + l, this->size_ - l);
 	}
 	template <class T>
 	constexpr base_t			_prepend_container_list(const T& _container)
 	{
 		// declare) 
-		auto p = data_;
+		auto p = this->data_;
 
 		// 1) Begin/End Iterator
 		auto iter = _container.rbegin();
@@ -1800,14 +1880,14 @@ public:
 		// 2) [데이터]들을 써넣는다.
 		for(; iter != iter_end; ++iter)
 		{
-			_prepend<typename T::value_type>(*iter);
+			this->_prepend<typename T::value_type>(*iter);
 		}
 
 		// 3) [데이터_갯수]를 써넣는다.
-		_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
+		this->_prepend_general<COUNT_T>(static_cast<COUNT_T>(_container.size()));
 
 		// return) 
-		return	base_t(data_, p - data_);
+		return base_t(this->data_, p - this->data_);
 	}
 
 public:
@@ -1821,15 +1901,15 @@ public:
 	constexpr bool				_is_buffer_overflow() const
 								{
 									// check) 
-									if(get_upper_bound() == nullptr)
+									if(this->get_upper_bound() == nullptr)
 										return false;
 
 									// check) Check Lower Bound
-									if(data_ > get_lower_bound())
+									if(this->data_ > this->get_lower_bound())
 										return false;
 
 									// check) Check Upper Bound
-									if((data_ + size_) <= get_upper_bound())
+									if((this->data_ + this->size_) <= this->get_upper_bound())
 										return false;
 
 									// return) Success!
@@ -1844,17 +1924,17 @@ protected:
 	constexpr void				_check_bound(const _buffer_view<char>& _rhs) const
 								{
 									// check) 
-									CGDK_ASSERT(_rhs.get_front_ptr() >= get_lower_bound()); 
+									CGDK_ASSERT(_rhs.get_front_ptr() >= this->get_lower_bound());
 
 									// check) 
-									if(_rhs.get_front_ptr() < get_lower_bound())
+									if(_rhs.get_front_ptr() < this->get_lower_bound())
 										throw std::length_error("buffer overflow. out of lower bound'");
 
 									// check) 
-									CGDK_ASSERT(_rhs.get_back_ptr() <= get_upper_bound());
+									CGDK_ASSERT(_rhs.get_back_ptr() <= this->get_upper_bound());
 
 									// check) 
-									if (_rhs.get_back_ptr() > get_upper_bound())
+									if (_rhs.get_back_ptr() > this->get_upper_bound())
 										throw std::length_error("buffer overflow. out of upper bound'");
 								}
 	// 11) source
@@ -1871,6 +1951,25 @@ template <class U>
 constexpr CGDK::_basic_buffer<U> operator ^ (const CGDK::_basic_buffer<U>& _lhs, CGDK::_buffer_view<U> _buffer)
 {
 	return CGDK::_basic_buffer<U>{ _buffer, _lhs.get_bound() };
+}
+
+
+template <class T, class V, std::size_t N>
+constexpr _basic_buffer<T> to_basic_buffer(V(&_memory)[N])
+{
+	return _basic_buffer<T>{ typename _basic_buffer<T>::base_t{ _memory, 0 }, buffer_bound{ _memory, _memory + N }};
+}
+
+template <class T, class V, std::size_t N>
+constexpr _basic_buffer<T> to_basic_buffer(T(&_memory)[N], std::size_t _size)
+{
+	return _basic_buffer<T>{ typename _basic_buffer<T>::base_t{ _memory, _size }, buffer_bound{ _memory, _memory + N }};
+}
+
+template <class T, class V>
+constexpr _basic_buffer<T> to_basic_buffer(std::basic_string_view<V> _string)
+{
+	return _basic_buffer<T>{ typename _basic_buffer<T>::base_t{ reinterpret_cast<T*>(const_cast<V*>(_string.data())), (_string.size() * sizeof(V)) / sizeof(T) }};
 }
 
 

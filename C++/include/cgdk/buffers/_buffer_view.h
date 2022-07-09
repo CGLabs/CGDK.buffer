@@ -37,21 +37,16 @@ public:
 	constexpr _buffer_view(_element_void_t<element_t>* _ptr, size_type _size = 0) noexcept : base_t{ _size, reinterpret_cast<element_t*>(_ptr) } {}
 	constexpr _buffer_view(const self_t& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
 	constexpr _buffer_view(self_t&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
-
 	template <class T>
 	constexpr _buffer_view(const _buffer_view<T>& _buffer) noexcept : base_t{ _buffer.size(), const_cast<std::remove_const_t<T>*>(_buffer.data()) } {}
 	template <class T>
 	constexpr _buffer_view(_buffer_view<T>&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
-
 	constexpr _buffer_view(const base_t& _buffer) noexcept : base_t{ _buffer.size_, _buffer.data_ } {}
 	template <class T>
 	constexpr _buffer_view(const buffer_base<T>& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
 	constexpr _buffer_view(base_t&& _buffer) noexcept : base_t{ _buffer.size_, _buffer.data_ } {}
 	template <class T>
 	constexpr _buffer_view(buffer_base<T>&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
-
-	template <class T>
-	constexpr _buffer_view(std::basic_string_view<T> _string) noexcept : base_t{ _string.length(), reinterpret_cast<ELEM_T*>(const_cast<T*>(_string.data())) } {}
 
 // public) 
 public:
@@ -101,7 +96,6 @@ public:
 			template <std::size_t ISIZE>
 	constexpr auto				extract()								{ return _extract_bytes(ISIZE);}
 	constexpr auto				extract(CGDK::size _length)				{ return _extract_bytes(_length.amount);}
-	constexpr auto				extract(CGDK::skip _length)				{ return _extract_bytes(_length.amount);}
 	constexpr auto				extract(size_type _size, void* _buffer)	{ return _extract_bytes(_size, _buffer);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, extr_tr<T>>
@@ -152,16 +146,16 @@ public:
 								front_to(T& _dest, int64_t _offset = 0) const { _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_dest, _offset);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, peek_tr<T>>
-								front(POS& _pos) const					{ return _front<T>(_pos.offset);}
+								front(offset& _pos) const				{ return _front<T>(_pos.amount);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, T>
-								front(POS& _pos) const					{ return _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_pos.offset);}
+								front(offset& _pos) const				{ return _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_pos.amount);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, void>
-								front_to(T& _dest, POS& _pos) const		{ _front<T>(_dest, _pos.offset);}
+								front_to(T& _dest, offset& _pos) const	{ _front<T>(_dest, _pos.amount);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, void>
-								front_to(T& _dest, POS& _pos) const		{ _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_dest, _pos.offset);}
+								front_to(T& _dest, offset& _pos) const	{ _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_dest, _pos.amount);}
 			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
 								front_text(T _terminal = 0, int64_t _offset = 0) { return _front(_text<T>(_terminal, _offset));}
@@ -174,7 +168,7 @@ public:
 			template <class T>
 	constexpr peek_tr<T>		back(int64_t _offset = 0) const			{ return _back<T>(_offset);}
 			template <class T>
-	constexpr peek_tr<T>		back(POS& _pos) const					{ return _back<T>(_pos.offset);}
+	constexpr peek_tr<T>		back(offset& _pos) const				{ return _back<T>(_pos.amount);}
 
 	// 7) begin/end														  
 	constexpr auto				begin() const							{ return _begin();}
@@ -193,38 +187,42 @@ public:
 
 	// 8) Operator Overloading
 			// [operator] +/-
-	constexpr self_t			operator + (CGDK::offset _rhs) const
+	constexpr self_t			operator+ (CGDK::offset _rhs) const
 			{
-				if (_rhs.amount > this->size_)
+				if (_rhs.amount > static_cast<int64_t>(this->size_))
 					throw std::length_error("out of range. operator '+' (_rhs > size_)'");
 
-				return self_t{ this->data_ + _rhs.amount, this->size_ - _rhs.amount };
+				return self_t{ this->data_ + _rhs.amount, this->size_ - static_cast<decltype(this->size_)>(_rhs.amount)};
 			}
-	constexpr self_t			operator - (CGDK::size _rhs) const
+	constexpr self_t			operator- (CGDK::size _rhs) const
 			{
-				if (_rhs.amount > this->size_)
+				if (_rhs.amount > static_cast<int64_t>(this->size_))
 					throw std::length_error("out of range. operator '-' (_rhs > size_)");
 
 				return self_t{ this->data_, this->size_ - _rhs.amount };
 			}
 			// [operator] =
-	constexpr self_t&			operator = (const self_t& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
+	constexpr self_t&			operator= (const self_t& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
 			template<class T>
-	constexpr self_t&			operator = (const _buffer_view<T>& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
-	constexpr self_t&			operator = (self_t&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
+	constexpr self_t&			operator= (const _buffer_view<T>& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
+	constexpr self_t&			operator= (self_t&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
 			template<class T>
-	constexpr self_t&			operator = (_buffer_view<T>&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
+	constexpr self_t&			operator= (_buffer_view<T>&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
 			// [operator] =				   
-	constexpr self_t&			operator = (const base_t& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
+	constexpr self_t&			operator= (const base_t& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
 			template<class T>
-	constexpr self_t&			operator=(const buffer_base<T>& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
-	constexpr self_t&			operator=(base_t&& _rhs) noexcept		{ this->data_ =_rhs.data_; this->size_ =_rhs.size_; return *this;}
+	constexpr self_t&			operator= (const buffer_base<T>& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+	constexpr self_t&			operator= (base_t&& _rhs) noexcept { this->data_ =_rhs.data_; this->size_ =_rhs.size_; return *this;}
 			template<class T>
-	constexpr self_t&			operator = (buffer_base<T>&& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+	constexpr self_t&			operator= (buffer_base<T>&& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+			template <class T>
+	constexpr self_t&			operator= (std::basic_string_view<T> _string) noexcept { this->data_ = reinterpret_cast<ELEM_T*>(_string.data()); this->size_ = _string.size() * sizeof(T); return *this; }
+			template <class T, std::size_t N>
+	constexpr self_t&			operator= (T(&_memory)[N]) noexcept { this->data_ = reinterpret_cast<ELEM_T*>(_memory); this->size_ = N * sizeof(T); return *this; }
 			// [operator] +=/-=
-	constexpr self_t&			operator += (CGDK::offset _rhs)
+	constexpr self_t&			operator+= (CGDK::offset _rhs)
 			{
-				if (_rhs.amount > this->size_)
+				if (_rhs.amount > static_cast<int64_t>(this->size_))
 					throw std::length_error("out of range. operator '+=' (_rhs > size_)");
 		
 				this->data_ += _rhs.amount;
@@ -232,9 +230,9 @@ public:
 
 				return *this;
 			}
-	constexpr self_t&			operator -= (CGDK::size _rhs)
+	constexpr self_t&			operator-= (CGDK::size _rhs)
 			{
-				if (_rhs.amount > this->size_)
+				if (_rhs.amount > static_cast<int64_t>(this->size_))
 					throw std::length_error("out of rangne. operator '-=' (_rhs > size_)");
 		
 				this->size_ -= _rhs.amount;
@@ -245,15 +243,15 @@ public:
 			template<class T>
 	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs)	{ this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
 			template<class T>
-	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs)		{ this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
 			template<class T>
-	constexpr self_t&			operator^=(const buffer_base<T>& _rhs)	{ this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+	constexpr self_t&			operator^=(const buffer_base<T>& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
 			template<class T>
-	constexpr self_t&			operator^=(buffer_base<T>&& _rhs)		{ this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
-	constexpr self_t&			operator^=(size_type _rhs)				{ this->size_ = _rhs; return *this;}
+	constexpr self_t&			operator^=(buffer_base<T>&& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+	constexpr self_t&			operator^=(size_type _rhs) { this->size_ = _rhs; return *this;}
 			// [operator] >> - extract
 			template <class T>
-	constexpr self_t&			operator>>(T& _rhs)						{ _rhs = _extract<T>(); return *this;}
+	constexpr self_t&			operator>>(T& _rhs) { _rhs = _extract<T>(); return *this;}
 			// [operator] Conversion
 			template <class T>
 	constexpr					operator std::basic_string_view<T>() const noexcept { return std::basic_string_view<T>(reinterpret_cast<T*>(const_cast<char*>(this->data_)), (this->size_ * sizeof(element_t))/sizeof(T));}
@@ -261,9 +259,9 @@ public:
 public:
 	// extract) 
 			template <class T>
-	constexpr extr_tr<T>		_extract()								{ return EXTR_t<self_t,T>::_do_extract(*this);}
+	constexpr extr_tr<T>		_extract() { return EXTR_t<self_t,T>::_do_extract(*this);}
 			template <class T>
-	constexpr void				_extract(T& _dest)						{ EXTR_t<self_t,T>::_do_extract(_dest, *this);}
+	constexpr void				_extract(T& _dest) { EXTR_t<self_t,T>::_do_extract(_dest, *this);}
 	constexpr self_t			_extract_bytes(size_type _length)
 			{
 				// check) _length가 0이하면 안된다.
@@ -284,7 +282,7 @@ public:
 			}
 
 			template <class T>
-	constexpr std::basic_string<T> _extract_string()					{ return std::basic_string<T>(_extract_string_view<T>()); }
+	constexpr std::basic_string<T> _extract_string() { return std::basic_string<T>(_extract_string_view<T>()); }
 			template <class T>
 	constexpr void				_extract_string(std::basic_string<T>& _dest) { _dest = _extract_string_view<T>(); }
 			template <class T>
@@ -297,7 +295,7 @@ public:
 				CGDK_ASSERT(_length_in_words >= 0, throw std::invalid_argument("_length_in_words is invalid [0]"));
 
 				// 1) [데이터_크기]를 얻어온다.(COUNT_T[문자열_길이]+length(String))
-				auto length_string = _get_front_string_length<T>();
+				auto length_string = this->_get_front_string_length<T>();
 
 				// check) length가 0보다 작으면 그냥 리턴한다.
 				if (length_string == COUNT_T(-1))
@@ -331,14 +329,14 @@ public:
 				this->size_ -= size_string;
 
 				// return) [문자열_길이]를 리턴한다.
-				return	length_string;
+				return length_string;
 			}
 
 			template<class T>
 	constexpr std::enable_if_t<!is_own_ptr_serialziable<T>::value, void> 
 								_extract_tuple(std::tuple<T>& _dest)
 			{
-				std::get<0>(_dest) = _extract<std::remove_reference_t<std::remove_cv_t<T>>>();
+				std::get<0>(_dest) = this->_extract<std::remove_reference_t<std::remove_cv_t<T>>>();
 			}
 			template<class T>
 	constexpr std::enable_if_t<is_own_ptr_serialziable<T>::value, void>
@@ -351,27 +349,27 @@ public:
 	constexpr std::enable_if_t<!is_own_ptr_serialziable<TFIRST>::value, void> 
 								_extract_tuple(std::tuple<TFIRST, TSECOND, TREST...>& _dest)
 			{
-				std::get<0>(_dest) = _extract< std::remove_reference_t<std::remove_cv_t<TFIRST>>>();
-				_extract_tuple((std::tuple<TSECOND, TREST...>&)_dest);
+				std::get<0>(_dest) = this->_extract< std::remove_reference_t<std::remove_cv_t<TFIRST>>>();
+				this->_extract_tuple((std::tuple<TSECOND, TREST...>&)_dest);
 			}
 			template<class TFIRST, class TSECOND, class... TREST>
 	constexpr std::enable_if_t<is_own_ptr_serialziable<TFIRST>::value, void>
 								_extract_tuple(std::tuple<TFIRST, TSECOND, TREST...>& _dest)
 			{
 				std::get<0>(_dest)->serialize_in(*this);
-				_extract_tuple((std::tuple<TSECOND, TREST...>&)_dest);
+				this->_extract_tuple((std::tuple<TSECOND, TREST...>&)_dest);
 			}
 
 			template<class T>
 	constexpr void				_extract_multi(T& _dest)
 			{
-				_dest = _extract<T>();
+				_dest = this->_extract<T>();
 			}
 			template<class TFIRST, class TSECOND, class... TREST>
 	constexpr void				_extract_multi(TFIRST& _first, TSECOND& _second, TREST&... _rest)
 			{
-				_first = _extract<std::remove_reference_t<std::remove_cv_t<TFIRST>>>();
-				_extract_multi(_second, _rest...);
+				_first = this->_extract<std::remove_reference_t<std::remove_cv_t<TFIRST>>>();
+				this->_extract_multi(_second, _rest...);
 			}
 
 	constexpr std::string_view	_extract_web_modify()
@@ -504,7 +502,7 @@ public:
 			self_t				_extract_bytes(size_type _size, void* _buffer)
 			{
 				self_t _dest;
-				_extract_bytes(_dest, _size, _buffer);
+				this->_extract_bytes(_dest, _size, _buffer);
 				return _dest;
 			}
 			void				_extract_bytes(self_t& _dest, size_type _size, void* _buffer)
@@ -581,7 +579,7 @@ public:
 								_extract_string_view(std::basic_string_view<T>& _dest)
 			{
 				// 1) [데이터_크기]를 얻어온다.(COUNT_T[문자열_길이]+length(String))
-				COUNT_T	str_length = _get_front_string_length<T>();
+				COUNT_T	str_length = this->_get_front_string_length<T>();
 
 				// check) length가 0보다 작으면 그냥 리턴한다.
 				if (str_length == COUNT_T(-1))
@@ -593,7 +591,7 @@ public:
 				}
 
 				// 2) 문자열의 제일 앞 포인터를 얻어둔다.
-				auto str_string = data<T>(sizeof(COUNT_T));
+				auto str_string = this->data<T>(sizeof(COUNT_T));
 
 				// 2) sizeOfData 구하기
 				auto size_data = static_cast<COUNT_T>(str_length * sizeof(T) + sizeof(COUNT_T));
@@ -613,7 +611,7 @@ public:
 								_extract_text(T _wchar_terminal)
 			{
 				std::basic_string_view<T> dest;
-				_extract_text<T>(dest, _wchar_terminal);
+				this->_extract_text<T>(dest, _wchar_terminal);
 				return dest;
 			}
 			template <class T>
@@ -650,7 +648,7 @@ public:
 								_extract_text(T _wchar_terminal,  T _wchar_change)
 			{
 				std::basic_string_view<T> dest;
-				_extract_text<T>(dest, _wchar_terminal, _wchar_change);
+				this->_extract_text<T>(dest, _wchar_terminal, _wchar_change);
 				return dest;
 			}
 			template <class T>
@@ -690,14 +688,14 @@ public:
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
 								_extract_text(size_type _length)
 			{
-				return _extract_bytes(_length * sizeof(T));
+				return this->_extract_bytes(_length * sizeof(T));
 			}
 
 			template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, void>
 								_extract_text(std::basic_string_view<T>& _dest, size_type _length)
 			{
-				_extract_bytes(_dest, _length * sizeof(T));
+				this->_extract_bytes(_dest, _length * sizeof(T));
 			}
 
 	// subtract) 
@@ -755,7 +753,7 @@ public:
 				_CGD_BUFFER_BOUND_CHECK(_offset + sizeof(T) <= this->size_);
 
 				// 1) [원본_버퍼_처음_포인터]+[_offset]을 얻는다.
-				auto p = data<T>(_offset);
+				auto p = this->data<T>(_offset);
 
 				// 2) Offset을 Sizeof(T)증가시킨다.
 				_offset += static_cast<int64_t>(sizeof(T));
@@ -773,7 +771,7 @@ public:
 				_CGD_BUFFER_BOUND_CHECK(_offset + sizeof(T) <= this->size_);
 
 				// 1) [원본_버퍼_처음_포인터]+[_offset]을 얻는다.
-				_dest = *data<_buffer_return_t<traits, T>>(_offset);
+				_dest = *this->data<_buffer_return_t<traits, T>>(_offset);
 
 				// 2) Offset을 Sizeof(T)증가시킨다.
 				_offset += static_cast<int64_t>(sizeof(T));
@@ -797,7 +795,7 @@ public:
 								_front_text_by_length(size_t _length, int64_t _offset) const
 			{
 				std::string_view dest;
-				_front_text_by_length<T>(dest, _length, _offset);
+				this->_front_text_by_length<T>(dest, _length, _offset);
 				return dest;
 			}
 			template <class T>
@@ -816,7 +814,7 @@ public:
 				_CGD_BUFFER_BOUND_CHECK(_offset + length <= this->size_);
 
 				// 1) [원본_버퍼_처음_포인터]+[_offset]을 얻는다.
-				_dest = std::string_view(data<T>(_offset), _length);
+				_dest = std::string_view(this->data<T>(_offset), _length);
 
 				// 2) Offset을 Sizeof(T)증가시킨다.
 				_offset += static_cast<int64_t>(length);
@@ -860,7 +858,7 @@ public:
 				_offset = static_cast<int64_t>(pos_end);
 
 				// return) [문자열_시작_포인터]을 리턴한다.
-				return data<T>(pos_begin);
+				return this->data<T>(pos_begin);
 			}
 			template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string<T>>
@@ -914,7 +912,7 @@ public:
 	constexpr std::string_view	_front_web(int64_t& _offset) const
 			{
 				std::string_view dest;
-				_front_web(dest, _offset);
+				this->_front_web(dest, _offset);
 				return dest;
 			}
 
@@ -955,7 +953,7 @@ public:
 								_front_string_view(int64_t& _offset) const
 			{
 				std::basic_string_view<T> dest;
-				_front_string_view<T>(dest, _offset);
+				this->_front_string_view<T>(dest, _offset);
 				return dest;
 			}
 
@@ -1001,7 +999,7 @@ public:
 	constexpr T					_front_own_ptr_container_associative(int64_t& _offset) const
 			{
 				T dest;
-				_front_own_ptr_container_associative<T>(dest, _offset);
+				this->_front_own_ptr_container_associative<T>(dest, _offset);
 				return dest;
 			}
 			template<class T>
@@ -1042,7 +1040,7 @@ public:
 	constexpr T					_front_object_ptr_container_associative(int64_t& _offset) const
 			{
 				T dest;
-				_front_object_ptr_container_associative<T>(dest, _offset);
+				this->_front_object_ptr_container_associative<T>(dest, _offset);
 				return dest;
 			}
 			template<class T>
@@ -1082,7 +1080,7 @@ public:
 	constexpr T					_front_container_associative(int64_t& _offset) const
 			{
 				T dest;
-				_front_container_associative<T>(dest, _offset);
+				this->_front_container_associative<T>(dest, _offset);
 				return dest;
 			}
 			template<class T>
@@ -1123,7 +1121,7 @@ public:
 	constexpr T					_extract_own_ptr_container_associative()
 			{
 				T dest;
-				_extract_own_ptr_container_associative<T>(dest);
+				this->_extract_own_ptr_container_associative<T>(dest);
 				return dest;
 			}
 			template<class T>
@@ -1159,7 +1157,7 @@ public:
 	constexpr T					_extract_object_ptr_container_associative()
 			{
 				T dest;
-				_extract_object_ptr_container_associative<T>(dest);
+				this->_extract_object_ptr_container_associative<T>(dest);
 				return dest;
 			}
 			template<class T>
@@ -1190,7 +1188,7 @@ public:
 	constexpr T					_extract_container_associative()
 			{
 				T dest;
-				_extract_container_associative<T>(dest);
+				this->_extract_container_associative<T>(dest);
 				return dest;
 			}
 			template<class T>
@@ -1221,7 +1219,7 @@ public:
 	constexpr std::array<T, X>	_extract_array()
 			{
 				std::array<T, X> dest{};
-				_extract_array<T, X>(dest);
+				this->_extract_array<T, X>(dest);
 				return dest;
 			}
 			template<class T, size_type X>
@@ -1248,7 +1246,7 @@ public:
 	constexpr T					_extract_own_ptr_set()
 			{
 				T dest;
-				_extract_own_ptr_set<T>(dest);
+				this->_extract_own_ptr_set<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1258,7 +1256,7 @@ public:
 				_dest.clear();
 
 				// 1) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data == COUNT_T(-1))
@@ -1274,7 +1272,7 @@ public:
 	constexpr T					_extract_object_ptr_set()
 			{
 				T dest;
-				_extract_object_ptr_set<T>(dest);
+				this->_extract_object_ptr_set<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1284,7 +1282,7 @@ public:
 				_dest.clear();
 
 				// 2) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data == COUNT_T(-1))
@@ -1310,7 +1308,7 @@ public:
 				_dest.clear();
 
 				// 1) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data == COUNT_T(-1))
@@ -1326,7 +1324,7 @@ public:
 	constexpr T					_extract_container_own_ptr_list()
 			{
 				T dest;
-				_extract_container_own_ptr_list<T>(dest);
+				this->_extract_container_own_ptr_list<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1336,7 +1334,7 @@ public:
 				_dest.clear();
 
 				// 1) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data == COUNT_T(-1))
@@ -1352,7 +1350,7 @@ public:
 	constexpr T					_extract_container_object_ptr_list()
 			{
 				T dest;
-				_extract_container_object_ptr_list<T>(dest);
+				this->_extract_container_object_ptr_list<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1362,7 +1360,7 @@ public:
 				_dest.clear();
 
 				// 1) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data == COUNT_T(-1))
@@ -1378,7 +1376,7 @@ public:
 	constexpr T					_extract_container_list()
 			{
 				T dest;
-				_extract_container_list<T>(dest);
+				this->_extract_container_list<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1388,13 +1386,11 @@ public:
 				_dest.clear();
 
 				// 2) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data == COUNT_T(-1))
-				{
 					return;
-				}
 
 				// 3) [데이터_갯수]만큼 읽어 들여 저장한다.
 				for (; size_data > 0; size_data--)
@@ -1406,7 +1402,7 @@ public:
 	constexpr T					_extract_container_own_ptr_array()
 			{
 				T dest;
-				_extract_container_own_ptr_array<T>(dest);
+				this->_extract_container_own_ptr_array<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1416,13 +1412,11 @@ public:
 				_dest.clear();
 
 				// 2) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data <= 0)
-				{
 					return;
-				}
 
 				// 3) [데이터_갯수]만큼 vector를 Reserve한다.
 				_dest.reserve(size_data);
@@ -1437,7 +1431,7 @@ public:
 	constexpr T					_extract_container_object_ptr_array()
 			{
 				T dest;
-				_extract_container_object_ptr_array<T>(dest);
+				this->_extract_container_object_ptr_array<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1447,7 +1441,7 @@ public:
 				_dest.clear();
 
 				// 2) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data <= 0)
@@ -1468,7 +1462,7 @@ public:
 								_extract_container_array()
 			{
 				T dest;
-				_extract_container_array<T>(dest);
+				this->_extract_container_array<T>(dest);
 				return dest;
 			}
 			template <class T>
@@ -1479,7 +1473,7 @@ public:
 				_dest.clear();
 
 				// 2) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				auto size_data = this->_extract<COUNT_T>();
 
 				// check) size_data가 0보다 작으면 그냥 리턴한다.
 				if (size_data <= 0)
@@ -1508,22 +1502,58 @@ public:
 	constexpr std::enable_if_t<is_memcopy_able<typename T::value_type>::value, void>
 								_extract_container_array(T& _dest)
 			{
-				// 1) 
+				// 1) clear container
 				_dest.clear();
 
-				// 1) [데이터_갯수]를 얻어낸다.
-				auto size_data = _extract<COUNT_T>();
+				// 2) extract [data_size]
+				auto size_data = this->_extract<COUNT_T>();
 
-				// check) size_data가 0보다 작으면 그냥 리턴한다.
+				// check) return if size_data is zero or less tnan zero
 				if (size_data <= 0)
 					return;
 
-				// 2) [데이터_갯수]만큼 vector를 Resize를 한다.
+				// 3) resize as [data_count]
 				_dest.resize(size_data);
 
-				// 3) [데이터_갯수]만큼 통째로 복사
-				_extract_bytes(size_data * sizeof(typename T::value_type), &_dest.front());
+				// 4) extract bytes 
+				this->_extract_bytes(size_data * sizeof(typename T::value_type), &_dest.front());
 			}
+
+			template <class T>
+	constexpr std::enable_if_t<is_memcopy_able<typename T::value_type>::value, T>
+								_extract_container_span()
+			{
+				T dest;
+				_extract_container_span<T>(dest);
+				return dest;
+			}
+			template <class T>
+	constexpr std::enable_if_t<is_memcopy_able<typename T::value_type>::value, void>
+								_extract_container_span(T& _dest)
+			{
+				// check) [원본_버퍼_크기]보다 _length가 커야 한다.
+				_CGD_BUFFER_BOUND_CHECK(this->size_ >= sizeof(COUNT_T));
+
+				// 2) extract [data_size]
+				typename T::size_type size_data = *reinterpret_cast<COUNT_T*>(this->data_);
+
+				// 3) get size
+				auto size_bytes = sizeof(COUNT_T) + sizeof(typename T::value_type) * size_data;
+
+				// check) [원본_버퍼_크기]보다 _length가 커야 한다.
+				_CGD_BUFFER_BOUND_CHECK(this->size_ >= size_bytes);
+
+				// 3) get pos
+				auto p = reinterpret_cast<typename T::value_type*>(this->data_ + sizeof(COUNT_T));
+
+				// 3) set
+				_dest = T{p, size_data};
+
+				// 4) update data_ and size_
+				this->data_ += size_bytes;
+				this->size_ -= size_bytes;
+			}
+
 	constexpr self_t			_extract_buffer_view();
 	constexpr void				_extract_buffer_view(_buffer_view<ELEM_T>& _dest);
 			template<class BUFFER_T>
@@ -1535,7 +1565,7 @@ public:
 	constexpr T					_front_own_ptr_set(int64_t& _offset) const
 			{
 				T dest;
-				_front_own_ptr_set<T>(dest, _offset);
+				this->_front_own_ptr_set<T>(dest, _offset);
 				return dest;
 			}
 			template <class T>
@@ -1644,7 +1674,7 @@ public:
 	constexpr T					_front_container_own_ptr_list(int64_t& _offset) const
 			{
 				T dest;
-				_front_container_own_ptr_list<T>(dest, _offset);
+				this->_front_container_own_ptr_list<T>(dest, _offset);
 				return dest;
 			}
 			template <class T>
@@ -1680,7 +1710,7 @@ public:
 	constexpr T					_front_container_object_ptr_list(int64_t& _offset) const
 			{
 				T dest;
-				_front_container_object_ptr_list<T>(dest, _offset);
+				this->_front_container_object_ptr_list<T>(dest, _offset);
 				return dest;
 			}
 			template <class T>
@@ -1716,7 +1746,7 @@ public:
 	constexpr T					_front_container_list(int64_t& _offset) const
 			{
 				T dest;
-				_front_container_list<T>(dest, _offset);
+				this->_front_container_list<T>(dest, _offset);
 				return dest;
 			}
 			template <class T>
@@ -1752,7 +1782,7 @@ public:
 	constexpr T					_front_own_ptr_vector(int64_t& _offset) const
 			{
 				T dest;
-				_front_own_ptr_vector<T>(dest, _offset);
+				this->_front_own_ptr_vector<T>(dest, _offset);
 				return dest;
 			}
 			template <class T>
@@ -1791,7 +1821,7 @@ public:
 	constexpr T					_front_object_ptr_vector(int64_t& _offset) const
 			{
 				T dest;
-				_front_object_ptr_vector<T>(dest, _offset);
+				this->_front_object_ptr_vector<T>(dest, _offset);
 				return dest;
 			}
 			template <class S, class T>
@@ -1832,7 +1862,7 @@ public:
 								_front_container_array(int64_t& _offset) const
 			{
 				T dest;
-				_front_container_array<T>(dest, _offset);
+				this->_front_container_array<T>(dest, _offset);
 				return dest;
 			}
 			template <class T>
@@ -1879,7 +1909,7 @@ public:
 								_front_container_array(int64_t& _offset) const
 			{
 				T dest;
-				_front_container_array<T>(dest, _offset);
+				this->_front_container_array<T>(dest, _offset);
 				return dest;
 			}
 			template <class T>
@@ -1907,7 +1937,7 @@ public:
 				_dest.resize(size_data);
 
 				// 4) [데이터_갯수]만큼 통째로 읽어들인다.
-				_copy_buffer(offset, buffer_base<char>{ static_cast<size_type>(size_data) * sizeof(typename T::value_type), reinterpret_cast<char*>(&_dest.front()) });
+				this->_copy_buffer<char>(offset, buffer_base<char>{ static_cast<size_type>(size_data) * sizeof(typename T::value_type), reinterpret_cast<char*>(&_dest.front()) });
 
 				// 5) Offset을 업데이트한다.
 				_offset = offset + size_data * sizeof(typename T::value_type);
@@ -2017,9 +2047,27 @@ public:
 };
 
 template <class T>
-constexpr CGDK::_buffer_view<T> operator ^ (const CGDK::_buffer_view<T>& _lhs, std::size_t _size) noexcept
+constexpr _buffer_view<T> operator ^ (const _buffer_view<T>& _lhs, std::size_t _size) noexcept
 {
-	return CGDK::_buffer_view<T> { _lhs.data(), _size };
+	return _buffer_view<T> { _lhs.data(), _size };
+}
+
+template <class T>
+constexpr _buffer_view<T> to_buffer_view(std::basic_string_view<T> _string)
+{
+	return _buffer_view<T>(const_cast<T*>(_string.data()), _string.size() );
+}
+
+template <class T, std::size_t N>
+constexpr _buffer_view<T> to_buffer_view(T(&_memory)[N])
+{
+	return _buffer_view<T>{ typename _buffer_view<T>::base_t{ _memory }};
+}
+
+template <class T, std::size_t N>
+constexpr _buffer_view<T> to_buffer_view(T(&_memory)[N], std::size_t _size)
+{
+	return _buffer_view<T>{ typename _buffer_view<T>::base_t{ _memory, _size }};
 }
 
 

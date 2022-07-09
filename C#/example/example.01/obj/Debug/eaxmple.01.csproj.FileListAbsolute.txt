@@ -1,0 +1,2 @@
+D:\project\CGDK.buffer.C#\example\example.01\obj\Debug\eaxmple.01.csproj.AssemblyReference.cache
+D:\project\CGDK.buffer.C#\example\example.01\obj\Debug\eaxmple.01.csproj.CoreCompileInputs.cache

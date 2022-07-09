@@ -26,7 +26,7 @@ public:
 			Imemory(const _buffer_view<char>& _buffer) noexcept : _buffer_view<char>(_buffer) {}
 	virtual	~Imemory() noexcept {}
 
-			auto data() const noexcept {  return this->data_;}
+			auto data() const noexcept { return this->data_;}
 			auto size() const noexcept { return this->size_; }
 
 	auto	get_lower_bound() const noexcept { return data_;};

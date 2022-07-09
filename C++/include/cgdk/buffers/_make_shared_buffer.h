@@ -14,6 +14,10 @@
 
 #pragma once
 
+#if !defined(_CGDK)
+	#include <malloc.h>
+#endif
+
 namespace CGDK
 {
 #if !defined(_CGDK)

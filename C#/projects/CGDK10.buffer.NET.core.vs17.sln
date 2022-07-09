@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.NET.core", "buffer.NET.core\CGDK.buffer.NET.core.csproj", "{2782B330-F947-46BE-9A2A-3D211819C5E8}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		buffer\buffer.projitems*{2782b330-f947-46be-9a2a-3d211819c5e8}*SharedItemsImports = 5
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Debug|x64.ActiveCfg = Debug|x64
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Debug|x64.Build.0 = Debug|x64
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Release|x64.ActiveCfg = Release|x64
+		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {093E6EB1-99E0-4B36-A36F-7265F8DB1232}
+	EndGlobalSection
+EndGlobal

@@ -50,8 +50,6 @@ public:
 	constexpr _shared_buffer(_shared_buffer<T>&& _move) noexcept : base_t(_move), psource(std::move(_move.psource)) {}
 	constexpr _shared_buffer(const base_t& _buffer) noexcept : base_t(_buffer) {}
 	constexpr _shared_buffer(base_t&& _buffer) noexcept : base_t(std::move(_buffer)) {}
-	template <class T>
-	constexpr _shared_buffer(std::basic_string_view<T> _string) noexcept : base_t{ _string } {}
 
 protected:
 #if defined(_CGDK)
@@ -67,17 +65,18 @@ public:
 		#if defined(_CGDK)
 			void				reserve(std::size_t _size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) { if ((this->data_ + _size) <= base_t::get_upper_bound()) return; _change_source(_mem_alloc(_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING));}
 			void				resize(std::size_t _new_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) { reserve(_new_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); this->size_ = _new_size; }
-			_shared_buffer		clone(CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const		{ _shared_buffer a; a = _mem_alloc(this->size_ CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); a._append_bytes(this->size_, this->data_); return a;}
+			_shared_buffer		clone(CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const { _shared_buffer a; a = _mem_alloc(this->size_ CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); a._append_bytes(this->size_, this->data_); return a;}
 			_shared_buffer		clone(size_t _buffer_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const { if (_buffer_size < this->size_) _buffer_size = this->size_; _shared_buffer a; a = _mem_alloc(_buffer_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); a._append_bytes(this->size_, this->data_); return a;}
 		#else
-			void				reserve(std::size_t _size)									{ if ((this->data_ + _size) <= base_t::get_upper_bound()) return; _change_source(std::make_shared<memory_t>()); }
-			void				resize(std::size_t _new_size)								{ reserve(_new_size); this->size_ = _new_size; }
-			_shared_buffer		clone() const												{ _shared_buffer a = _alloc_shared_buffer(this->size_); a._append_bytes(this->size_, this->data_); return a;}
-			_shared_buffer		clone(size_t _buffer_size) const							{ if(_buffer_size < this->size_) _buffer_size = this->size_; _shared_buffer a = _alloc_shared_buffer(_buffer_size); a._append_bytes(this->size_, this->data_); return a;}
+			void				reserve(std::size_t _size) { if ((this->data_ + _size) <= base_t::get_upper_bound()) return; _change_source(std::make_shared<memory_t>()); }
+			void				resize(std::size_t _new_size) { reserve(_new_size); this->size_ = _new_size; }
+			_shared_buffer		clone() const { _shared_buffer a = _alloc_shared_buffer(this->size_); a._append_bytes(this->size_, this->data_); return a;}
+			_shared_buffer		clone(size_t _buffer_size) const { if(_buffer_size < this->size_) _buffer_size = this->size_; _shared_buffer a = _alloc_shared_buffer(_buffer_size); a._append_bytes(this->size_, this->data_); return a;}
 		#endif
-	constexpr void				clear() noexcept											{ base_t::clear(); psource.reset();}
-	constexpr void				swap(_shared_buffer& _rhs) noexcept							{ base_t::swap(_rhs); object_ptr_t p = std::move(_rhs.psource); _rhs.psource = std::move(psource); psource = std::move(p);}
-	constexpr void				swap(base_t& _rhs) noexcept									{ base_t::swap(_rhs);}
+			void				shrink_to_fit()	 { if(this->size_ == this->remained_size()) return; *this = this->clone(); }
+	constexpr void				clear() noexcept { base_t::clear(); psource.reset();}
+	constexpr void				swap(_shared_buffer& _rhs) noexcept { base_t::swap(_rhs); object_ptr_t p = std::move(_rhs.psource); _rhs.psource = std::move(psource); psource = std::move(p);}
+	constexpr void				swap(base_t& _rhs) noexcept { base_t::swap(_rhs);}
 	template <class T>
 			_shared_buffer		split_head(const _buffer_view<T>& _source);
 	template <class T>
@@ -86,111 +85,113 @@ public:
 	// 2) extract/subtract
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, extr_tr<T>>
-								extract()													{ return base_t::template extract<T>();}
+								extract() { return base_t::template extract<T>();}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, void>
-								extract_to(T& _dest)										{ base_t::template extract_to<T>(_dest);}
+								extract_to(T& _dest) { base_t::template extract_to<T>(_dest);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, T>
-								extract()													{ return base_t::template extract<T>();}
+								extract() { return base_t::template extract<T>();}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, void>
-								extract_to(T& _dest)										{ base_t::template extract_to<T>(_dest);}
+								extract_to(T& _dest) { base_t::template extract_to<T>(_dest);}
 			template <std::size_t ISIZE>
-	constexpr auto				extract()													{ return self_t { base_t::template extract<ISIZE>(), psource }; }
-	constexpr auto				extract(CGDK::size _length)									{ return self_t { base_t::extract(_length), psource }; }
-	constexpr auto				extract(CGDK::skip _length)									{ return self_t { base_t::extract(_length.amount), psource }; }
+	constexpr auto				extract() { return self_t { base_t::template extract<ISIZE>(), psource }; }
+	constexpr auto				extract(CGDK::size _length) { return self_t { base_t::extract(_length), psource }; }
 
 	// 3) reference																							  
-			void				set_source(Imemory* _pbuffer) noexcept						{ _set_source(_pbuffer);}
-			void				set_source(const object_ptr_t& _source) noexcept			{ _set_source(_source);}
-			void				set_source(object_ptr_t&& _source) noexcept					{ _set_source(std::move(_source));}
-			object_ptr_t	get_source() const noexcept										{ return psource;}
+			void				set_source(Imemory* _pbuffer) noexcept { _set_source(_pbuffer);}
+			void				set_source(const object_ptr_t& _source) noexcept { _set_source(_source);}
+			void				set_source(object_ptr_t&& _source) noexcept { _set_source(std::move(_source));}
+			object_ptr_t		get_source() const noexcept { return psource;}
 
 	// 4) operator overloading																  
 			// [operator] +/-
-	constexpr self_t			operator ~  () const										{ return self_t { ~(*(base_t*)this), psource }; }
-	constexpr self_t			operator +  (CGDK::offset _rhs) const						{ return self_t { base_t::operator+(_rhs), psource }; }
-	constexpr self_t			operator -  (CGDK::offset _rhs) const						{ return self_t { base_t::operator-(_rhs), psource }; }
-	constexpr self_t			operator +  (CGDK::size _rhs) const							{ return self_t { base_t::operator+(_rhs), psource }; }
-	constexpr self_t			operator -  (CGDK::size _rhs) const							{ return self_t { base_t::operator-(_rhs), psource }; }
+	constexpr self_t			operator ~  () const { return self_t { ~(*(base_t*)this), psource }; }
+	constexpr self_t			operator +  (CGDK::offset _rhs) const { return self_t { base_t::operator+(_rhs), psource }; }
+	constexpr self_t			operator -  (CGDK::offset _rhs) const { return self_t { base_t::operator-(_rhs), psource }; }
+	constexpr self_t			operator +  (CGDK::size _rhs) const { return self_t { base_t::operator+(_rhs), psource }; }
+	constexpr self_t			operator -  (CGDK::size _rhs) const { return self_t { base_t::operator-(_rhs), psource }; }
 			// [operator] +=/-=			 
-	constexpr self_t&			operator += (CGDK::offset _rhs)								{ base_t::operator+=(_rhs);	return *this; }
-	constexpr self_t&			operator -= (CGDK::offset _rhs)								{ base_t::operator-=(_rhs);	return *this; }
-	constexpr self_t&			operator += (CGDK::size _rhs)								{ base_t::operator+=(_rhs);	return *this; }
-	constexpr self_t&			operator -= (CGDK::size _rhs)								{ base_t::operator-=(_rhs);	return *this; }
+	constexpr self_t&			operator += (CGDK::offset _rhs) { base_t::operator+=(_rhs);	return *this; }
+	constexpr self_t&			operator -= (CGDK::offset _rhs) { base_t::operator-=(_rhs);	return *this; }
+	constexpr self_t&			operator += (CGDK::size _rhs) { base_t::operator+=(_rhs); return *this; }
+	constexpr self_t&			operator -= (CGDK::size _rhs) { base_t::operator-=(_rhs); return *this; }
 			template <class T>			    
-	constexpr self_t&			operator += (const _buffer_view<T>& _rhs)					{ base_t::_append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t&			operator += (const _buffer_view<T>& _rhs) { base_t::_append_bytes(_rhs.size(), _rhs.data()); return *this;}
 			template <class T>
-	constexpr self_t&			operator += (_buffer_view<T>&& _rhs)						{ base_t::_append_bytes(_rhs.size(), _rhs.data()); return *this;}
-			template <class T>
-	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
-								operator += (const T& _rhs)									{ for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data()); } return *this; }
+	constexpr self_t&			operator += (_buffer_view<T>&& _rhs) { base_t::_append_bytes(_rhs.size(), _rhs.data()); return *this;}
 			template <class T>
 	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
-								operator += (T&& _rhs)										{ for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data()); } return *this; }
+								operator += (const T& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data()); } return *this; }
+			template <class T>
+	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
+								operator += (T&& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data()); } return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<_buffer_view<typename T::element_t>, T>, self_t&>
-								operator += (const std::array<T, N>& _rhs)					{ for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data());} return *this; }
+								operator += (const std::array<T, N>& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data());} return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<_buffer_view<typename T::element_t>, T>, self_t&>
-								operator += (std::array<T, N>&& _rhs)						{ for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data());} return *this; }
+								operator += (std::array<T, N>&& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data());} return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<_buffer_view<typename T::element_t>, T>, self_t&>
-								operator += (const _buffer_view<T>(&_rhs)[N] )				{ const T* iter = _rhs; const T* iter_end = _rhs + N; for(;iter != iter_end; ++iter) { if (iter->empty()) continue; _append_bytes(iter->size(), iter->data());	} return *this;	}
-	constexpr self_t&			operator += (const self_t& _rhs)							{ this->_append_bytes(_rhs.size(), _rhs.data()); return *this;}
-	constexpr self_t&			operator += (self_t&& _rhs)									{ this->_append_bytes(_rhs.size(), _rhs.data()); return *this;}
-	constexpr self_t&			operator -= (std::size_t _rhs)								{ this->data_ -= _rhs; this->size_ += _rhs; return *this;}
+								operator += (const _buffer_view<T>(&_rhs)[N] ) { const T* iter = _rhs; const T* iter_end = _rhs + N; for(;iter != iter_end; ++iter) { if (iter->empty()) continue; _append_bytes(iter->size(), iter->data());	} return *this;	}
+	constexpr self_t&			operator += (const self_t& _rhs) { this->_append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t&			operator += (self_t&& _rhs) { this->_append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t&			operator -= (std::size_t _rhs) { this->data_ -= _rhs; this->size_ += _rhs; return *this;}
 			// [operator] =
 			template <class T>			    
-	constexpr self_t&			operator =  (const _buffer_view<T>& _rhs) noexcept			{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator =  (const _buffer_view<T>& _rhs) noexcept { base_t::operator=(_rhs); return *this;}
 			template <class T>			    
-	constexpr self_t&			operator =  (_buffer_view<T>&& _rhs) noexcept				{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator =  (_buffer_view<T>&& _rhs) noexcept { base_t::operator=(_rhs); return *this;}
 			template<class T>			    
-	constexpr self_t&			operator =  (const buffer_base<T>& _rhs)					{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator =  (const buffer_base<T>& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>			    
-	constexpr self_t&			operator =  (buffer_base<T>&& _rhs)							{ base_t::operator=(_rhs); return *this;}
-	constexpr self_t&			operator =  (const _shared_buffer& _rhs) noexcept			{ psource = _rhs.get_source(); base_t::operator=(_rhs); return *this;}
-	constexpr self_t&			operator =  (_shared_buffer&& _rhs) noexcept				{ psource = std::move(_rhs.psource); base_t::operator=(_rhs); return *this;}
-			self_t&				operator =  (Imemory* _rhs) noexcept						{ base_t::operator=(to_base_t<BASE_T>::casting(_rhs)); psource = _rhs; return *this;}
-			self_t&				operator =  (const object_ptr_t& _rhs) noexcept				{ base_t::operator=(to_base_t<BASE_T>::casting(_rhs)); psource = _rhs; return *this; }
-			self_t&				operator =  (object_ptr_t&& _rhs) noexcept					{ base_t::operator=(to_base_t<BASE_T>::casting(_rhs.get())); psource = std::move(_rhs); return *this; }
+	constexpr self_t&			operator =  (buffer_base<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator =  (const _shared_buffer& _rhs) noexcept { psource = _rhs.get_source(); base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator =  (_shared_buffer&& _rhs) noexcept { psource = std::move(_rhs.psource); base_t::operator=(_rhs); return *this;}
+			self_t&				operator =  (Imemory* _rhs) noexcept { base_t::operator=(to_base_t<BASE_T>::casting(_rhs)); psource = _rhs; return *this;}
+			self_t&				operator =  (const object_ptr_t& _rhs) noexcept { base_t::operator=(to_base_t<BASE_T>::casting(_rhs)); psource = _rhs; return *this; }
+			self_t&				operator =  (object_ptr_t&& _rhs) noexcept { base_t::operator=(to_base_t<BASE_T>::casting(_rhs.get())); psource = std::move(_rhs); return *this; }
 
 			// [operator] ^=
 			template<class T>
-	constexpr self_t&			operator ^= (const _buffer_view<T>& _rhs)					{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator ^= (const _buffer_view<T>& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator ^= (_buffer_view<T>&& _rhs)						{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator ^= (_buffer_view<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator ^= (const buffer_base<T>& _rhs)					{ base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator ^= (const buffer_base<T>& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator ^= (buffer_base<T>&& _rhs)							{ base_t::operator=(_rhs); return *this;}
-	constexpr self_t&			operator ^= (std::size_t _rhs)								{ base_t::set_size(_rhs); return *this;}
+	constexpr self_t&			operator ^= (buffer_base<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator ^= (std::size_t _rhs) { base_t::set_size(_rhs); return *this;}
 			// [operator] >> - extract
 			template <class T>
-			self_t&				operator>>(T& _rhs)											{ _rhs = this->template _extract<T>(); return *this;}
+			self_t&				operator>>(T& _rhs) { _rhs = this->template _extract<T>(); return *this;}
+			// [operator] << - append																			  
+			template <class T>																					  
+			self_t&				operator<<(const T& _rhs) { APPD_t<self_t, T>::_do_append(*this, _rhs); return *this;}
 			// [operator] compare
 			template <class T>
-	constexpr bool				operator==(const _shared_buffer& _rhs) const noexcept		{ return this->data_ == _rhs.data() && this->size_ == _rhs.size();}
+	constexpr bool				operator==(const _shared_buffer& _rhs) const noexcept { return this->data_ == _rhs.data() && this->size_ == _rhs.size();}
 			template <class T>
-	constexpr bool				operator==(const _buffer_view<T>& _rhs) const noexcept		{ return this->data_ == _rhs.data() && this->size_ == _rhs.size();}
+	constexpr bool				operator==(const _buffer_view<T>& _rhs) const noexcept { return this->data_ == _rhs.data() && this->size_ == _rhs.size();}
 			template <class T>
-	constexpr bool				operator!=(const _shared_buffer& _rhs) const noexcept		{ return this->data_ != _rhs.data() || this->size_ != _rhs.size();}
+	constexpr bool				operator!=(const _shared_buffer& _rhs) const noexcept { return this->data_ != _rhs.data() || this->size_ != _rhs.size();}
 			template <class T>
-	constexpr bool				operator!=(const _buffer_view<T>& _rhs) const noexcept		{ return this->data_ != _rhs.data() || this->size_ != _rhs.size();}
+	constexpr bool				operator!=(const _buffer_view<T>& _rhs) const noexcept { return this->data_ != _rhs.data() || this->size_ != _rhs.size();}
 
 public:
 	// 5) begin/end) 
-	constexpr self_t			_begin(int64_t _offset) const noexcept						{ return self_t(base_t::_begin(_offset), psource);}
-	constexpr self_t			_end(int64_t _offset) const noexcept						{ return self_t(base_t::_end(_offset), psource);}
+	constexpr self_t			_begin(int64_t _offset) const noexcept { return self_t(base_t::_begin(_offset), psource);}
+	constexpr self_t			_end(int64_t _offset) const noexcept { return self_t(base_t::_end(_offset), psource);}
 
 	// 6) extarct
 			template<class BUFFER_T>
 	constexpr _shared_buffer<BUFFER_T> _extract_shared_buffer();
 protected:
-	constexpr void				_change_source(object_ptr_t&& _pmem_new) noexcept			{ if(this->size_ > 0) { ::memcpy(_pmem_new->data_, this->data_, this->size_);} this->data_ = _pmem_new->data_; _set_source(std::move(_pmem_new));}
-	constexpr void				_set_source(Imemory* _pmem_new) noexcept					{ psource = _pmem_new; base_t::_set_bound(_pmem_new->get_bound());}
-	constexpr void				_set_source(object_ptr_t&& _pmem_new) noexcept				{ psource = std::move(_pmem_new); base_t::_set_bound(psource->get_bound());}
+	constexpr void				_change_source(object_ptr_t&& _pmem_new) noexcept { if(this->size_ > 0) { ::memcpy(_pmem_new->data(), this->data_, this->size_);} this->data_ = _pmem_new->data(); _set_source(std::move(_pmem_new));}
+	constexpr void				_set_source(Imemory* _pmem_new) noexcept { psource = _pmem_new; base_t::_set_bound(_pmem_new->get_bound());}
+	constexpr void				_set_source(object_ptr_t&& _pmem_new) noexcept { psource = std::move(_pmem_new); base_t::_set_bound(psource->get_bound());}
 
 private:
 			object_ptr_t		psource;

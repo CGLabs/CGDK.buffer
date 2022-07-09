@@ -19,11 +19,11 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <string>
 #if defined(_WIN32)
 	#include <conio.h>
 #endif
 #include <iostream>
-#include <string>
 
 // 2) CGDK.buffer header file
 #include "cgdk/shared_buffer"
@@ -155,7 +155,7 @@ int main()
 	//    make_shared_buffer<T>(...);
 	//
 	//    'DEFINE_BUFFER_SERIALIZE'를 사용하면 make_shared_buffer를 사용해
-	//    한번에 버퍼를 할당해 직렬화한 버퍼를 바로 생성할 수 있다.
+	//    버퍼를 할당한후 데이터를 직렬화한 버퍼를 한번에 생성할 수 있다.
 	//
 	//    즉, get_size_of() + alloc_shared_buffer() + append() 가 합쳐진
 	//    것이다.
@@ -165,7 +165,7 @@ int main()
 		// - goo형 변수 s1
 		goo s1{ 1, eMESSAGE_TYPE::A, "test string", 12, {10,20,30} };
 
-		// *1) make_shared_buffer를 사용해 바로 직렬화한 버퍼를 얻는다.
+		// *1) make_shared_buffer를 사용해 바로 직렬화한 버퍼를 생성한얻는다.
 		auto bar = make_shared_buffer(s1);
 
 		// - bar의 size_값을 출력한다. 

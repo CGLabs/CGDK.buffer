@@ -13,3 +13,5 @@
 #include <cgdk/buffer>
 
 #include "definitions.h"
+
+const int _TEST_COUNT = 1000000;

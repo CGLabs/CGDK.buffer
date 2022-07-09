@@ -19,11 +19,11 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <string>
 #if defined(_WIN32)
 	#include <conio.h>
 #endif
 #include <iostream>
-#include <string>
 
 // 2) CGDK.buffer header file
 #include "cgdk/shared_buffer"

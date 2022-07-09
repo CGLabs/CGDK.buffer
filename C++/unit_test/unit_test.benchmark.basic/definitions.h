@@ -1,35 +1,47 @@
 #pragma once
 
 // Common Data)
-extern	int													array_int[8];
-extern	char*												array_string_char[8];
-extern	wchar_t*											array_string_wchar_t[8];
-extern	std::string											array_std_string_stdstring[8];
-extern	std::wstring										array_std_string_stdwstring[8];
+extern int															array_int[8];
+extern const char*													array_string_char[8];
+extern const char8_t*												array_string_char8_t[8];
+extern const wchar_t*												array_string_wchar_t[8];
+extern std::string													array_std_string[8];
+extern std::wstring													array_std_wstring[8];
+	   
+extern std::vector<int>												std_vector_int;
+extern std::vector<std::string>										std_vector_std_string;
+extern std::vector<std::wstring>									std_vector_std_wstring;
+	   
+extern std::vector<std::vector<int>>								std_vector_std_vector_int;
+	   
+extern std::list<int>												std_list_int;
+extern std::list<std::string>										std_list_std_string;
+extern std::list<std::vector<int>>									std_list_std_vector_int;
+	   
+extern std::set<int>												std_set_int;
+extern std::set<std::string>										std_set_std_string;
+	   
+extern std::map<int, int>											std_map_int_int;
+extern std::map<std::string, int>									std_map_std_string_int;
+extern std::map<std::string, std::vector<int>>						std_map_std_string_std_vector_int;
+extern std::map<std::wstring, std::vector<int>>						std_map_std_wstring_std_vector_int;
+extern std::map<std::string, std::vector<const char*>>				std_map_std_vector_string;
+	   
+extern std::unordered_map<int, int>									std_unordered_map_int_int;
+extern std::unordered_map<std::string, int>							std_unordered_map_std_string_int;
+extern std::unordered_map<std::string, std::vector<int>>			std_unordered_map_std_string_std_vector_int;
+extern std::unordered_map<std::string, std::vector<const char*>>	std_unordered_map_std_vector_std_string;
 
-extern	std::vector<int>									vector_int;
-extern	std::vector<std::string>							vector_std_string;
-extern	std::vector<std::vector<int>>						vector_vector_int;
+struct FOO
+{
+	ENABLE_STRUCT_SERIALIZABLE
 
-extern	std::list<int>										list_int;
-extern	std::list<std::string>								list_std_string;
-extern	std::list<std::vector<int>>							list_vector_int;
-
-extern	std::set<int>										set_int;
-extern	std::set<std::string>								set_std_string;
-
-extern	std::map<int, int>									map_std_int_int;
-extern	std::map<std::string, int>							map_std_string_int;
-extern	std::map<std::string, std::vector<int>>				map_std_string_vector_int;
-extern	std::map<std::wstring, std::vector<int>>			map_std_wstring_vector_int;
-extern	std::map<std::string, std::vector<char*>>			map_std_vector_string;
-
-#if _MSC_VER>=1700
-extern	std::unordered_map<int, int>						unordered_map_std_int_int;
-extern	std::unordered_map<std::string, int>				unordered_map_std_string_int;
-extern	std::unordered_map<std::string, std::vector<int>>	unordered_map_std_string_vector_int;
-extern	std::unordered_map<std::string, std::vector<char*>>	unordered_map_std_vector_string;
-#endif
+	int							v1;
+	std::string					v2;
+	std::list<int>				v3;
+	uint64_t					v4;
+	std::map<std::string, int>	v5;
+};
 
 template<class T>
 bool compare_array_string(T* lhs[], T* rhs[], int _Count)
@@ -45,17 +57,17 @@ bool compare_array_string(T* lhs[], T* rhs[], int _Count)
 	return	true;
 }
 
-inline bool compare_map_std_vector_string(const std::map<std::string, std::vector<char*>>& lhs, const std::map<std::string, std::vector<char*>>& rhs)
+inline bool compare_map_std_vector_string(const std::map<std::string, std::vector<const char*>>& lhs, const std::map<std::string, std::vector<const char*>>& rhs)
 {
-	auto	iterX		 = lhs.begin();
-	auto	iterXEnd	 = lhs.end();
-	auto	iterY		 = rhs.begin();
+	auto iterX	  = lhs.begin();
+	auto iterXEnd = lhs.end();
+	auto iterY	  = rhs.begin();
 
 	for(; iterX!=iterXEnd; ++iterX, ++iterY)
 	{
-		auto	iterA		 = iterX->second.begin();
-		auto	iterAEnd	 = iterX->second.end();
-		auto	iterB		 = iterY->second.begin();
+		auto iterA	  = iterX->second.begin();
+		auto iterAEnd = iterX->second.end();
+		auto iterB	  = iterY->second.begin();
 
 		for(; iterA!=iterAEnd; ++iterA, ++iterB)
 		{
@@ -69,7 +81,7 @@ inline bool compare_map_std_vector_string(const std::map<std::string, std::vecto
 			return	false;
 	}
 
-	return	iterY==rhs.end();
+	return iterY == rhs.end();
 }
 
-void InitContainers();
+void init_containers();

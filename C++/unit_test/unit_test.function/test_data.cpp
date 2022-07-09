@@ -32,31 +32,6 @@ const char* array_string_char[8] =
 	"Test What ever",
 	"1234"
 };
-std::string_view array_string_std_string_view[8] =
-{
-	"Please Let test this",
-	"이것 좀 테스트하게 해주세요.",
-	"这件事 试验",
-	"これを試ためさせてください",
-	"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
-	"Please 这件事 試ためさせてください 합시다.",
-	"Test What ever",
-	"1234"
-};
-std::string array_string_std_string[8] =
-{
-	"Please Let test this",
-	"이것 좀 테스트하게 해주세요.",
-	"这件事 试验",
-	"これを試ためさせてください",
-	"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
-	"Please 这件事 試ためさせてください 합시다.",
-	"Test What ever",
-	"1234"
-};
-
-
-// declare) Test String
 const wchar_t* array_string_wchar_t[8] =
 {
 	L"Please Let test this",
@@ -68,30 +43,17 @@ const wchar_t* array_string_wchar_t[8] =
 	L"Test What ever",
 	L"1234"
 };
-std::wstring_view array_string_std_wstring_view[8] =
+const char8_t* array_string_char8_t[8] =
 {
-	L"Please Let test this",
-	L"이것 좀 테스트하게 해주세요.",
-	L"这件事 试验",
-	L"これを試ためさせてください",
-	L"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
-	L"Please 这件事 試ためさせてください 합시다.",
-	L"Test What ever",
-	L"1234"
+	u8"Please Let test this",
+	u8"이것 좀 테스트하게 해주세요.",
+	u8"这件事 试验",
+	u8"これを試ためさせてください",
+	u8"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	u8"Please 这件事 試ためさせてください 합시다.",
+	u8"Test What ever",
+	u8"1234"
 };
-std::wstring array_string_std_wstring[8] =
-{
-	L"Please Let test this",
-	L"이것 좀 테스트하게 해주세요.",
-	L"这件事 试验",
-	L"これを試ためさせてください",
-	L"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
-	L"Please 这件事 試ためさせてください 합시다.",
-	L"Test What ever",
-	L"1234"
-};
-
-
 const char16_t* array_string_char16_t[8] =
 {
 	u"Please Let test this",
@@ -103,7 +65,53 @@ const char16_t* array_string_char16_t[8] =
 	u"Test What ever",
 	u"1234"
 };
-std::u16string_view array_string_std_u16string_view[8] =
+const char32_t* array_string_char32_t[8] =
+{
+	U"Please Let test this",
+	U"이것 좀 테스트하게 해주세요.",
+	U"这件事 试验",
+	U"これを試ためさせてください",
+	U"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	U"Please 这件事 試ためさせてください 합시다.",
+	U"Test What ever",
+	U"1234"
+};
+
+
+std::string_view array_std_string_view[8] =
+{
+	"Please Let test this",
+	"이것 좀 테스트하게 해주세요.",
+	"这件事 试验",
+	"これを試ためさせてください",
+	"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	"Please 这件事 試ためさせてください 합시다.",
+	"Test What ever",
+	"1234"
+};
+std::wstring_view array_std_wstring_view[8] =
+{
+	L"Please Let test this",
+	L"이것 좀 테스트하게 해주세요.",
+	L"这件事 试验",
+	L"これを試ためさせてください",
+	L"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	L"Please 这件事 試ためさせてください 합시다.",
+	L"Test What ever",
+	L"1234"
+};
+std::u8string_view array_std_u8string_view[8] =
+{
+	u8"Please Let test this",
+	u8"이것 좀 테스트하게 해주세요.",
+	u8"这件事 试验",
+	u8"これを試ためさせてください",
+	u8"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	u8"Please 这件事 試ためさせてください 합시다.",
+	u8"Test What ever",
+	u8"1234"
+};
+std::u16string_view array_std_u16string_view[8] =
 {
 	u"Please Let test this",
 	u"이것 좀 테스트하게 해주세요.",
@@ -114,7 +122,42 @@ std::u16string_view array_string_std_u16string_view[8] =
 	u"Test What ever",
 	u"1234"
 };
-std::u16string array_string_std_u16string[8] =
+std::u32string_view array_std_u32string_view[8] =
+{
+	U"Please Let test this",
+	U"이것 좀 테스트하게 해주세요.",
+	U"这件事 试验",
+	U"これを試ためさせてください",
+	U"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	U"Please 这件事 試ためさせてください 합시다.",
+	U"Test What ever",
+	U"1234"
+};
+
+std::string array_std_string[8] =
+{
+	"Please Let test this",
+	"이것 좀 테스트하게 해주세요.",
+	"这件事 试验",
+	"これを試ためさせてください",
+	"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	"Please 这件事 試ためさせてください 합시다.",
+	"Test What ever",
+	"1234"
+};
+std::wstring array_std_wstring[8] =
+{
+	L"Please Let test this",
+	L"이것 좀 테스트하게 해주세요.",
+	L"这件事 试验",
+	L"これを試ためさせてください",
+	L"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
+	L"Please 这件事 試ためさせてください 합시다.",
+	L"Test What ever",
+	L"1234"
+};
+
+std::u16string array_std_u16string[8] =
 {
 	u"Please Let test this",
 	u"이것 좀 테스트하게 해주세요.",
@@ -126,30 +169,7 @@ std::u16string array_string_std_u16string[8] =
 	u"1234"
 };
 
-
-std::u32string_view array_string_char32_t[8] =
-{
-	U"Please Let test this",
-	U"이것 좀 테스트하게 해주세요.",
-	U"这件事 试验",
-	U"これを試ためさせてください",
-	U"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
-	U"Please 这件事 試ためさせてください 합시다.",
-	U"Test What ever",
-	U"1234"
-};
-std::u32string_view array_string_std_u32string_view[8] =
-{
-	U"Please Let test this",
-	U"이것 좀 테스트하게 해주세요.",
-	U"这件事 试验",
-	U"これを試ためさせてください",
-	U"1234567!@#$%%^&}¢‡¥”w¯¥„ÈÉÞ´µ½²ÂÄÂÁ¾¿ÀÁÂ",
-	U"Please 这件事 試ためさせてください 합시다.",
-	U"Test What ever",
-	U"1234"
-};
-std::u32string array_string_std_u32string[8] =
+std::u32string array_std_u32string[8] =
 {
 	U"Please Let test this",
 	U"이것 좀 테스트하게 해주세요.",
@@ -162,7 +182,7 @@ std::u32string array_string_std_u32string[8] =
 };
 
 // Declare ) vector<ing>
-std::vector<int> vector_int
+std::vector<int> std_vector_int
 {
 	0,
 	2,
@@ -184,7 +204,7 @@ std::vector<std::string> std_vector_std_string
 };
 
 // Declare ) vector<string>
-std::vector<std::vector<int>> std_vector_vector_int
+std::vector<std::vector<int>> std_vector_std_vector_int
 {
 	{0, 0, 3},
 	{3, 2, 64},
@@ -217,7 +237,7 @@ std::list<std::string> std_list_std_string
 };
 
 // Declare ) list<string>
-std::list<std::vector<int>>	std_list_vector_int
+std::list<std::vector<int>>	std_list_std_vector_int
 {
 	{0, 0, 3},
 	{3, 2, 64},
@@ -281,6 +301,17 @@ std::map<std::string, std::vector<int>>	std_map_std_string_std_vector_int
 	{"fifteen",	{5,1,82,4}},
 	{"five",	{7,1,22,4}},
 	{"eleven",	{10,21,12,34}}
+};
+
+// Declare ) map<string, ing>
+std::map<std::wstring, std::vector<int>> std_map_std_wstring_std_vector_int
+{
+	{L"zero",	{0,1,2,4}},
+	{L"two",	{3,1,22,4}},
+	{L"tree",	{4,1,12,4}},
+	{L"fifteen",{5,1,82,4}},
+	{L"five",	{7,1,22,4}},
+	{L"eleven",	{10,21,12,34}}
 };
 
 // Declare ) map<string, ing>

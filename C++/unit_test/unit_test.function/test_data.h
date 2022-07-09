@@ -19,37 +19,52 @@
 #define VALUE_16 2.0
 extern size_t pos_general[];
 
+extern int																array_int[8];
 
+extern const char*														array_string_char[8];
+extern const wchar_t*													array_string_wchar_t[8];
+extern const char8_t*													array_string_char8_t[8];
+extern const char16_t*													array_string_char16_t[8];
+extern const char32_t*													array_string_char32_t[8];
 
-extern int	array_int[8];
-extern const char* array_string_char[8];
-extern std::string_view array_string_std_string_view[8];
-extern std::string array_string_std_string[8];
-extern const wchar_t* array_string_wchar_t[8];
-extern std::wstring_view array_string_std_wstring_view[8];
-extern std::wstring array_string_std_wstring[8];
-extern const char16_t* array_string_char16_t[8];
-extern std::u16string_view array_string_std_u16string_view[8];
-extern std::u16string array_string_std_u16string[8];
-extern std::u32string_view array_string_char32_t[8];
-extern std::u32string_view array_string_std_u32string_view[8];
-extern std::u32string array_string_std_u32string[8];
-extern std::vector<int> vector_int;
-extern std::vector<std::string> std_vector_std_string;
-extern std::vector<std::vector<int>> std_vector_vector_int;
-extern std::list<int> std_list_int;
-extern std::list<std::string> std_list_std_string;
-extern std::list<std::vector<int>>	std_list_vector_int;
-extern std::set<int> std_set_int;
-extern std::set<std::string> std_set_std_string;
-extern std::map<int, int> std_map_int_int;
-extern std::map<std::string, int> std_map_std_string_int;
-extern std::map<std::string, std::vector<int>>	std_map_std_string_std_vector_int;
-extern std::map<std::string, std::vector<std::string_view>> std_map_std_vector_std_string_view;
-extern std::unordered_map<int, int> std_unordered_map_int_int;
-extern std::unordered_map<std::string, int> std_unordered_map_std_string_int;
-extern std::unordered_map<std::string, std::vector<int>> std_unordered_map_std_string_std_vector_int;
-extern std::unordered_map<std::string, std::vector<std::string_view>> std_unordered_map_std_vector_std_string_view;
+extern std::string														array_std_string[8];
+extern std::wstring														array_std_wstring[8];
+extern std::u8string													array_std_u8string[8];
+extern std::u16string													array_std_u16string[8];
+extern std::u32string													array_std_u32string[8];
+
+extern std::string_view													array_std_string_view[8];
+extern std::wstring_view												array_std_wstring_view[8];
+extern std::u8string_view												array_std_u8string_view[8];
+extern std::u16string_view												array_std_u16string_view[8];
+extern std::u32string_view												array_std_u32string_view[8];
+
+extern std::vector<int>													std_vector_int;
+extern std::vector<std::string>											std_vector_std_string;
+extern std::vector<std::wstring>										std_vector_std_wstring;
+
+extern std::vector<std::vector<int>>									std_vector_std_vector_int;
+
+extern std::list<int>													std_list_int;
+extern std::list<std::string>											std_list_std_string;
+extern std::list<std::vector<int>>										std_list_std_vector_int;
+
+extern std::set<int>													std_set_int;
+extern std::set<std::string>											std_set_std_string;
+
+extern std::map<int, int>												std_map_int_int;
+extern std::map<std::string, int>										std_map_std_string_int;
+extern std::map<std::string, std::vector<int>>							std_map_std_string_std_vector_int;
+extern std::map<std::wstring, std::vector<int>>							std_map_std_wstring_std_vector_int;
+extern std::map<std::string, std::vector<const char*>>					std_map_std_vector_string;
+extern std::map<std::string, std::vector<std::string_view>>				std_map_std_vector_std_string_view;
+
+extern std::unordered_map<int, int>										std_unordered_map_int_int;
+extern std::unordered_map<std::string, int>								std_unordered_map_std_string_int;
+extern std::unordered_map<std::string, std::vector<int>>				std_unordered_map_std_string_std_vector_int;
+extern std::unordered_map<std::string, std::vector<const char*>>		std_unordered_map_std_vector_std_string;
+extern std::unordered_map<std::string, std::vector<std::string_view>>	std_unordered_map_std_vector_std_string_view;
+
 
 template<class S, class T, std::size_t N>
 void function_string_append(S& _buf_dest, const T(&_source)[N])
@@ -86,7 +101,7 @@ template<class S, class T, std::size_t N>
 void function_string_front(S& _buffer, const T(&_source)[N])
 {
 	// declare)
-	CGDK::POS temp_pos;
+	CGDK::offset temp_pos;
 
 	for (std::size_t i = 0; i < N; ++i)
 	{
@@ -102,9 +117,22 @@ void function_string_front(S& _buffer, const T(&_source)[N])
 		EXPECT_TRUE(str_value == _source[i]);
 	}
 
-	EXPECT_TRUE(static_cast<int64_t>(_buffer.size()) == temp_pos.offset);
+	EXPECT_TRUE(static_cast<int64_t>(_buffer.size()) == temp_pos.amount);
 }
 
+template<class T>
+bool compare_array_string(T* lhs[], T* rhs[], int _Count)
+{
+	for (int i = 0; i < _Count; ++i)
+	{
+		if (std::char_traits<T>::compare(lhs[i], rhs[i], 0) != 0)
+		{
+			return	false;
+		}
+	}
+
+	return	true;
+}
 template<class T, std::size_t N1, std::size_t N2>
 bool compare_array_string(const std::array<std::basic_string_view<T>, N1>& _lhs, const T* (&_rhs)[N2])
 {
@@ -123,6 +151,33 @@ bool compare_array_string(const std::array<std::basic_string_view<T>, N1>& _lhs,
 	return true;
 }
 
+template<class T>
+inline bool compare_map_std_vector_string(const std::map<std::string, std::vector<const T*>>& lhs, const std::map<std::string, std::vector<const T*>>& rhs)
+{
+	auto iterX = lhs.begin();
+	auto iterXEnd = lhs.end();
+	auto iterY = rhs.begin();
+
+	for (; iterX != iterXEnd; ++iterX, ++iterY)
+	{
+		auto iterA = iterX->second.begin();
+		auto iterAEnd = iterX->second.end();
+		auto iterB = iterY->second.begin();
+
+		for (; iterA != iterAEnd; ++iterA, ++iterB)
+		{
+			if (std::char_traits<char>::compare(*iterA, *iterB, 0) != 0)
+			{
+				return false;
+			}
+		}
+
+		if (iterB != iterY->second.end())
+			return false;
+	}
+
+	return iterY == rhs.end();
+}
 template <class T>
 inline bool compare_map_std_vector_string(const std::map<std::string, std::vector<std::basic_string_view<T>>>& _lhs, const std::map<std::string, std::vector<std::basic_string_view<T>>>& _rhs)
 {
@@ -338,74 +393,74 @@ void function_front_with_pos_general(T _buffer)
 {
 	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_general[16]);
 
-	CGDK::POS pos_now;
+	CGDK::offset pos_now;
 
 	auto& value00  = _buffer.template front<char&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[0]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[0]));
 	EXPECT_TRUE(value00 == VALUE_00);
 
 	auto& value01  = _buffer.template front<unsigned char&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[1]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[1]));
 	EXPECT_TRUE(value01 == VALUE_01);
 
 	auto& value02  = _buffer.template front<wchar_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[2]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[2]));
 	EXPECT_TRUE(value02 == VALUE_02);
 
 	auto& value03  = _buffer.template front<char16_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[3]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[3]));
 	EXPECT_TRUE(value03 == VALUE_03);
 
 	auto& value04  = _buffer.template front<char32_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[4]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[4]));
 	EXPECT_TRUE(value04 == VALUE_04);
 
 	auto& value05  = _buffer.template front<int16_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[5]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[5]));
 	EXPECT_TRUE(value05 == VALUE_05);
 
 	auto& value06  = _buffer.template front<uint16_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[6]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[6]));
 	EXPECT_TRUE(value06 == VALUE_06);
 
 	auto& value07  = _buffer.template front<int32_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[7]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[7]));
 	EXPECT_TRUE(value07 == VALUE_07);
 
 	auto& value08  = _buffer.template front<uint32_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[8]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[8]));
 	EXPECT_TRUE(value08 == VALUE_08);
 
 	auto& value09 = _buffer.template front<int64_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[9]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[9]));
 	EXPECT_TRUE(value09 == VALUE_09);
 
 	auto& value10 = _buffer.template front<uint64_t&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[10]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[10]));
 	EXPECT_TRUE(value10 == VALUE_10);
 
 	auto& value11 = _buffer.template front<long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[11]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[11]));
 	EXPECT_TRUE(value11 == VALUE_11);
 
 	auto& value12 = _buffer.template front<unsigned long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[12]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[12]));
 	EXPECT_TRUE(value12 == VALUE_12);
 
 	auto& value13 = _buffer.template front<long long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[13]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[13]));
 	EXPECT_TRUE(value13 == VALUE_13);
 
 	auto& value14 = _buffer.template front<unsigned long long&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[14]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[14]));
 	EXPECT_TRUE(value14 == VALUE_14);
 
 	auto& value15 = _buffer.template front<float&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[15]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[15]));
 	EXPECT_TRUE(value15 == VALUE_15);
 
 	auto& value16 = _buffer.template front<double&>(pos_now);
-	EXPECT_TRUE(pos_now.offset == static_cast<int64_t>(pos_general[16]));
+	EXPECT_TRUE(pos_now.amount == static_cast<int64_t>(pos_general[16]));
 	EXPECT_TRUE(value16 == VALUE_16);
 
 	EXPECT_TRUE(static_cast<size_t>(_buffer.size()) == pos_general[16]);
