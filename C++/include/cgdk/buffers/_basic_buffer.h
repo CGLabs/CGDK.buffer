@@ -31,7 +31,15 @@ namespace CGDK
 		template <class T, class... TREST>
 		constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
 		{
+		#if defined(__linux__)
+			// check) GCC don't support {fmt} yet~ include {fmt} manually
+			assert(_size % 4 == 0);
+
+			// retrun) failre
+			return std::basic_string<T>();
+		#else
 			return std::format(_format, std::forward<TREST>(_rest)...);
+		#endif
 		}
 	#else
 		template <class... TREST>
@@ -80,11 +88,11 @@ public:
 	constexpr void				resize(std::size_t _new_size) { if (data() + _new_size > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'resize(size_t)'"); size_ = _new_size;}
 	constexpr std::size_t		capacity() const noexcept { return (bound.upper != nullptr) ? (reinterpret_cast<const char*>(bound.upper) - data_) : 0;}
 	constexpr std::size_t		remained_size() const noexcept { return get_remained_size();}
-	constexpr void				clear() noexcept { base_t::clear(); bound.reset();}
+	constexpr void				clear() noexcept { this->base_t::clear(); bound.reset();}
 			template <class T>
 			void				copy_from(const _buffer_view<T>& _source) { if (this->data_ + _source.size() > get_upper_bound()) throw std::length_error("buffer overflow. out of upper bound 'copy(_source)'"); memcpy(data(), _source.data(), _source.size()); size_ = _source.size();}
-	constexpr void				swap(_basic_buffer& _rhs) noexcept { base_t::swap(_rhs); auto p = _rhs.get_bound(); _rhs._set_bound(bound); bound = p; }
-	constexpr void				swap(base_t& _rhs) { if (_rhs.data() < get_lower_bound() || (_rhs.data() + _rhs.size()) > get_upper_bound()) { assert(false); throw std::out_of_range("_rhs data_ is must in bound of this shared_buffer"); } base_t::swap(_rhs); }
+	constexpr void				swap(_basic_buffer& _rhs) noexcept { this->base_t::swap(_rhs); auto p = _rhs.get_bound(); _rhs._set_bound(bound); bound = p; }
+	constexpr void				swap(base_t& _rhs) { if (_rhs.data() < get_lower_bound() || (_rhs.data() + _rhs.size()) > get_upper_bound()) { assert(false); throw std::out_of_range("_rhs data_ is must in bound of this shared_buffer"); } this->base_t::swap(_rhs); }
 			self_t				split_head(const base_t& _source)
 			{
 				_CGD_BUFFER_BOUND_CHECK(size_ >= _source.size());
@@ -175,7 +183,7 @@ public:
 								append_text(const T(&_text)[N]) { return _append_text(_text);}
 			template <class T, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _append_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
+								append_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _append_text_format(_format.data(), std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T, std::size_t N, class F, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								append_text(const T(&_format)[N] , F&& _first, TREST&&... _rest) { return _append_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
@@ -192,19 +200,19 @@ public:
 	// 4) extract/subtract
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, extr_tr<T>>
-								extract() { return base_t::template extract<T>();}
+								extract() { return this->base_t::template extract<T>();}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, void>
-								extract_to(T& _dest) { base_t::template extract_to<T>(_dest);}
+								extract_to(T& _dest) { this->base_t::template extract_to<T>(_dest);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, T>
-								extract() { return base_t::template extract<T>();}
+								extract() { return this->base_t::template extract<T>();}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, void>
-								extract_to(T& _dest) { base_t::template extract_to<T>(_dest);}
+								extract_to(T& _dest) { this->base_t::template extract_to<T>(_dest);}
 			template <std::size_t ISIZE>
-	constexpr auto				extract() { return self_t(base_t::extract(CGDK::size(ISIZE)), bound);}
-	constexpr auto				extract(CGDK::size _length) { return self_t(base_t::extract(_length), bound);}
+	constexpr auto				extract() { return self_t(this->base_t::extract(CGDK::size(ISIZE)), bound);}
+	constexpr auto				extract(CGDK::size _length) { return self_t(this->base_t::extract(_length), bound);}
 
 	// 5) reference
 			template <class T = char>
@@ -217,8 +225,8 @@ public:
 	// 6) operator overloading																					  
 			// [operator] +/-		
 	constexpr self_t			operator ~ () const { auto data_value = this->data_ + this->size_; return self_t{ base_t { data_value, static_cast<size_type>(static_cast<const element_t*>(this->bound.upper) - data_value) }, this->bound }; }
-	constexpr self_t			operator+(offset _rhs) const { return self_t{ base_t::operator+(_rhs), bound };}
-	constexpr self_t			operator-(offset _rhs) const
+	constexpr self_t			operator + (offset _rhs) const { return self_t{ this->base_t::operator+(_rhs), bound };}
+	constexpr self_t			operator - (offset _rhs) const
 			{
 				// check) upper bound
 				_CGD_BUFFER_BOUND_CHECK(this->data_ - _rhs.amount >= get_lower_bound());
@@ -234,9 +242,9 @@ public:
 				// return) 
 				return self_t(base_t{ this->data_, this->size_ + _rhs.amount }, bound);
 			}
-	constexpr self_t			operator-(CGDK::size _rhs) const { return self_t{ base_t::operator-(_rhs), bound }; }
+	constexpr self_t			operator-(CGDK::size _rhs) const { return self_t{ this->base_t::operator-(_rhs), bound }; }
 			// [operator] +=/-=
-	constexpr self_t&			operator+=(offset _rhs) { base_t::operator+=(_rhs); return *this; }
+	constexpr self_t&			operator+=(offset _rhs) { this->base_t::operator+=(_rhs); return *this; }
 	constexpr self_t&			operator-=(offset _rhs)
 			{
 				// check) upper bound
@@ -258,46 +266,46 @@ public:
 				// return) 
 				return *this;
 			}
-	constexpr self_t			operator-=(CGDK::size _rhs) { base_t::operator-=(_rhs); return *this; }
+	constexpr self_t			operator-=(CGDK::size _rhs) { this->base_t::operator-=(_rhs); return *this; }
 	constexpr self_t&			operator+=(const base_t& _rhs) { _append_bytes(_rhs.size(), _rhs.data()); return *this;}
 	constexpr self_t&			operator+=(base_t&& _rhs) { _append_bytes(_rhs.size(), _rhs.data()); return *this;}
 			template <class T>
 	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
-								operator+=(const T& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
+								operator+=(const T& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data()); } return *this; }
 			template <class T>
 	constexpr std::enable_if_t<is_linear_container_with_buffer<T>::value, self_t&>
-								operator+=(T&& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data()); } return *this; }
+								operator+=(T&& _rhs) { for (auto& iter : _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data()); } return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
-								operator+=(const std::array<T, N>& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
+								operator+=(const std::array<T, N>& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data());} return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
-								operator+=(std::array<T, N>&& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size_, iter.data());} return *this; }
+								operator+=(std::array<T, N>&& _rhs) { for(auto& iter: _rhs) { if (iter.empty()) continue; _append_bytes(iter.size(), iter.data());} return *this; }
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<std::is_base_of_v<base_t, T>, self_t&>
 								operator+=(const base_t(&_rhs)[N] ) { const T* iter = _rhs; const T* iter_end = _rhs + N; for(;iter != iter_end; ++iter) { if (iter->empty()) continue; _append_bytes(iter->size_, iter->data_); } return *this;	}
-	constexpr self_t&			operator+=(const self_t& _rhs) { _append_bytes(_rhs.size_, _rhs.data()); return *this;}
-	constexpr self_t&			operator+=(self_t&& _rhs) { _append_bytes(_rhs.size_, _rhs.data()); return *this;}
+	constexpr self_t&			operator+=(const self_t& _rhs) { _append_bytes(_rhs.size(), _rhs.data()); return *this;}
+	constexpr self_t&			operator+=(self_t&& _rhs) { _append_bytes(_rhs.size(), _rhs.data()); return *this;}
 			// [operator] =
-	constexpr self_t&			operator= (const base_t& _rhs) noexcept { _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
-	constexpr self_t&			operator= (base_t&& _rhs) noexcept { _check_bound(_rhs); base_t::operator=(_rhs); return *this; }
-	constexpr self_t&			operator= (const self_t& _rhs) noexcept { base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
-	constexpr self_t&			operator= (self_t&& _rhs) noexcept { base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
+	constexpr self_t&			operator= (const base_t& _rhs) noexcept { _check_bound(_rhs); this->base_t::operator=(_rhs); return *this; }
+	constexpr self_t&			operator= (base_t&& _rhs) noexcept { _check_bound(_rhs); this->base_t::operator=(_rhs); return *this; }
+	constexpr self_t&			operator= (const self_t& _rhs) noexcept { this->base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
+	constexpr self_t&			operator= (self_t&& _rhs) noexcept { this->base_t::operator=(_rhs); bound = _rhs.bound; return *this; }
 	template <class T>
-	constexpr self_t&			operator= (std::basic_string_view<T> _string) noexcept { base_t::operator=(_string); bound = buffer_bound{_string.data(), _string.data() + _string.size()}; return *this; }
+	constexpr self_t&			operator= (std::basic_string_view<T> _string) noexcept { this->base_t::operator=(_string); bound = buffer_bound{_string.data(), _string.data() + _string.size()}; return *this; }
 	template <class T, std::size_t N>
-	constexpr self_t&			operator= (T(&_memory)[N]) noexcept { base_t::operator=(_memory);  bound = buffer_bound{_memory, _memory + N}; return *this;}
+	constexpr self_t&			operator= (T(&_memory)[N]) noexcept { this->base_t::operator=(_memory);  bound = buffer_bound{_memory, _memory + N}; return *this;}
 
 			// [operator] ^=
 			template<class T>
-	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs) { base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs) { this->base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs) { this->base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator^=(const buffer_base<T>& _rhs) { base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(const buffer_base<T>& _rhs) { this->base_t::operator=(_rhs); return *this;}
 			template<class T>
-	constexpr self_t&			operator^=(buffer_base<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
-	constexpr self_t&			operator^=(std::size_t _rhs) { base_t::set_size(_rhs); return *this;}
+	constexpr self_t&			operator^=(buffer_base<T>&& _rhs) { this->base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator^=(std::size_t _rhs) { this->base_t::set_size(_rhs); return *this;}
 			// [operator >> - extract
 			template <class T>
 			self_t&				operator>>(T& _rhs) { _rhs = _extract<T>(); return *this;}
@@ -1032,7 +1040,7 @@ public:
 		this->size_ += added_length;
 
 		// return)
-		return	base_t(buf_dest, added_length);
+		return base_t(buf_dest, added_length);
 	}
 	template <class T, class TY>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
@@ -1892,8 +1900,8 @@ public:
 
 public:
 	// 10) begin/end)
-	constexpr self_t			_begin(int _offset) const noexcept { return self_t(base_t::_begin(_offset), bound);}
-	constexpr self_t			_end(int _offset) const noexcept { return self_t(base_t::_end(_offset), bound);}
+	constexpr self_t			_begin(int _offset) const noexcept { return self_t(this->base_t::_begin(_offset), bound);}
+	constexpr self_t			_end(int _offset) const noexcept { return self_t(this->base_t::_end(_offset), bound);}
 
 	// 11) append/extarct
 	constexpr self_t			_extract_buffer();

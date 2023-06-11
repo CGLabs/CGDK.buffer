@@ -42,8 +42,8 @@ public:
 // constructor/destructor) 
 public:
 	constexpr _shared_buffer() noexcept {}
-	constexpr _shared_buffer(const _shared_buffer& _copy) noexcept : base_t(_copy), psource(_copy.psource) {}
-	constexpr _shared_buffer(_shared_buffer&& _move) noexcept : base_t(_move), psource(std::move(_move.psource)) {}
+	constexpr _shared_buffer(const self_t& _copy) noexcept : base_t(_copy), psource(_copy.psource) {}
+	constexpr _shared_buffer(self_t&& _move) noexcept : base_t(static_cast<base_t&>(_move)), psource(std::move(_move.psource)) {}
 			template<class T>
 	constexpr _shared_buffer(const _shared_buffer<T>& _copy) noexcept : base_t(_copy), psource(_copy.psource) {}
 			template<class T>
@@ -65,22 +65,22 @@ public:
 		#if defined(_CGDK)
 			void				reserve(std::size_t _size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) { if ((this->data_ + _size) <= base_t::get_upper_bound()) return; _change_source(_mem_alloc(_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING));}
 			void				resize(std::size_t _new_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) { reserve(_new_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); this->size_ = _new_size; }
-			_shared_buffer		clone(CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const { _shared_buffer a; a = _mem_alloc(this->size_ CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); a._append_bytes(this->size_, this->data_); return a;}
-			_shared_buffer		clone(size_t _buffer_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const { if (_buffer_size < this->size_) _buffer_size = this->size_; _shared_buffer a; a = _mem_alloc(_buffer_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); a._append_bytes(this->size_, this->data_); return a;}
+			self_t				clone(CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const { self_t a; a = _mem_alloc(this->size_ CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); a._append_bytes(this->size_, this->data_); return a;}
+			self_t				clone(size_t _buffer_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_WITH_DEFAULT) const { if (_buffer_size < this->size_) _buffer_size = this->size_; self_t a; a = _mem_alloc(_buffer_size CGNEW_DEBUG_INFO_COMMA CGNEW_DEBUG_INFO_PARAMETERS_PASSING); a._append_bytes(this->size_, this->data_); return a;}
 		#else
 			void				reserve(std::size_t _size) { if ((this->data_ + _size) <= base_t::get_upper_bound()) return; _change_source(std::make_shared<memory_t>()); }
 			void				resize(std::size_t _new_size) { reserve(_new_size); this->size_ = _new_size; }
-			_shared_buffer		clone() const { _shared_buffer a = _alloc_shared_buffer(this->size_); a._append_bytes(this->size_, this->data_); return a;}
-			_shared_buffer		clone(size_t _buffer_size) const { if(_buffer_size < this->size_) _buffer_size = this->size_; _shared_buffer a = _alloc_shared_buffer(_buffer_size); a._append_bytes(this->size_, this->data_); return a;}
+			self_t				clone() const { self_t a = _alloc_shared_buffer(this->size_); a._append_bytes(this->size_, this->data_); return a;}
+			self_t				clone(size_t _buffer_size) const { if(_buffer_size < this->size_) _buffer_size = this->size_; self_t a = _alloc_shared_buffer(_buffer_size); a._append_bytes(this->size_, this->data_); return a;}
 		#endif
 			void				shrink_to_fit()	 { if(this->size_ == this->remained_size()) return; *this = this->clone(); }
-	constexpr void				clear() noexcept { base_t::clear(); psource.reset();}
-	constexpr void				swap(_shared_buffer& _rhs) noexcept { base_t::swap(_rhs); object_ptr_t p = std::move(_rhs.psource); _rhs.psource = std::move(psource); psource = std::move(p);}
-	constexpr void				swap(base_t& _rhs) noexcept { base_t::swap(_rhs);}
+			void				clear() noexcept { base_t::clear(); psource.reset();}
+			void				swap(self_t& _rhs) noexcept { base_t::swap(_rhs); object_ptr_t p = std::move(_rhs.psource); _rhs.psource = std::move(psource); psource = std::move(p);}
+			void				swap(base_t& _rhs) noexcept { base_t::swap(_rhs);}
 	template <class T>
-			_shared_buffer		split_head(const _buffer_view<T>& _source);
+			self_t				split_head(const _buffer_view<T>& _source);
 	template <class T>
-			_shared_buffer		split_tail(const _buffer_view<T>& _source);
+			self_t				split_tail(const _buffer_view<T>& _source);
 
 	// 2) extract/subtract
 			template <class T>
@@ -104,6 +104,7 @@ public:
 			void				set_source(const object_ptr_t& _source) noexcept { _set_source(_source);}
 			void				set_source(object_ptr_t&& _source) noexcept { _set_source(std::move(_source));}
 			object_ptr_t		get_source() const noexcept { return psource;}
+			object_ptr_t&&		move_out_source() noexcept { return std::move(psource); }
 
 	// 4) operator overloading																  
 			// [operator] +/-
@@ -148,8 +149,8 @@ public:
 	constexpr self_t&			operator =  (const buffer_base<T>& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>			    
 	constexpr self_t&			operator =  (buffer_base<T>&& _rhs) { base_t::operator=(_rhs); return *this;}
-	constexpr self_t&			operator =  (const _shared_buffer& _rhs) noexcept { psource = _rhs.get_source(); base_t::operator=(_rhs); return *this;}
-	constexpr self_t&			operator =  (_shared_buffer&& _rhs) noexcept { psource = std::move(_rhs.psource); base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator =  (const self_t& _rhs) noexcept { psource = _rhs.get_source(); base_t::operator=(_rhs); return *this;}
+	constexpr self_t&			operator =  (self_t&& _rhs) noexcept { psource = std::move(_rhs.psource); base_t::operator=(_rhs); return *this;}
 			self_t&				operator =  (Imemory* _rhs) noexcept { base_t::operator=(to_base_t<BASE_T>::casting(_rhs)); psource = _rhs; return *this;}
 			self_t&				operator =  (const object_ptr_t& _rhs) noexcept { base_t::operator=(to_base_t<BASE_T>::casting(_rhs)); psource = _rhs; return *this; }
 			self_t&				operator =  (object_ptr_t&& _rhs) noexcept { base_t::operator=(to_base_t<BASE_T>::casting(_rhs.get())); psource = std::move(_rhs); return *this; }
@@ -172,11 +173,11 @@ public:
 			self_t&				operator<<(const T& _rhs) { APPD_t<self_t, T>::_do_append(*this, _rhs); return *this;}
 			// [operator] compare
 			template <class T>
-	constexpr bool				operator==(const _shared_buffer& _rhs) const noexcept { return this->data_ == _rhs.data() && this->size_ == _rhs.size();}
+	constexpr bool				operator==(const self_t& _rhs) const noexcept { return this->data_ == _rhs.data() && this->size_ == _rhs.size();}
 			template <class T>
 	constexpr bool				operator==(const _buffer_view<T>& _rhs) const noexcept { return this->data_ == _rhs.data() && this->size_ == _rhs.size();}
 			template <class T>
-	constexpr bool				operator!=(const _shared_buffer& _rhs) const noexcept { return this->data_ != _rhs.data() || this->size_ != _rhs.size();}
+	constexpr bool				operator!=(const self_t& _rhs) const noexcept { return this->data_ != _rhs.data() || this->size_ != _rhs.size();}
 			template <class T>
 	constexpr bool				operator!=(const _buffer_view<T>& _rhs) const noexcept { return this->data_ != _rhs.data() || this->size_ != _rhs.size();}
 
@@ -235,7 +236,7 @@ constexpr _shared_buffer<BUFFER_T> _shared_buffer<BASE_T>::_extract_shared_buffe
 }
 
 template <class T>
-constexpr CGDK::_shared_buffer<T> operator ^ (const CGDK::_shared_buffer<T>& _lhs, std::size_t _size)
+constexpr CGDK::_shared_buffer<T> operator ^ (const CGDK::_shared_buffer<T>& _lhs, size_t _size)
 {
 	CGDK::_shared_buffer<T> x = _lhs;
 	x.set_size(_size);
@@ -267,7 +268,7 @@ template <class T>
 _shared_buffer<ELEM_T> _shared_buffer<ELEM_T>::split_tail(const _buffer_view<T>& _source)
 {
 	_CGD_BUFFER_BOUND_CHECK(this->size_ >= _source.size());
-	memcpy(this->data_ + this->size_ - _source.size_, _source.data(), _source.size());
+	memcpy(this->data_ + this->size_ - _source.size(), _source.data(), _source.size());
 	this->size_ -= _source.size();
 	return *this ^ _buffer_view<T> {this->data_ + this->size_, _source.size()};
 }

@@ -26,7 +26,7 @@ class  buffer_base
 protected:
 			using traits	 = _buffer_traits_t<ELEMENT_T>;
 			using element_t	 = ELEMENT_T;
-			using size_type	 = std::size_t;
+			using size_type	 = size_t;
 
 // variable)
 public:

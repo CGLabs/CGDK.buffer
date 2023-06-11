@@ -106,7 +106,9 @@ constexpr std::size_t	_XX_MAX_STRING_SIZE = 65536;
 inline std::size_t _buffer_string_size_saturate(std::size_t _a) { return (_a < _XX_MAX_STRING_SIZE) ? _a : _XX_MAX_STRING_SIZE; }
 
 // 2) enable bound check
-#define _CGDK_ENABLE_BUFFER_BOUND_CHECK
+#if !defined(NDEBUG) && defined(_DEBUG)
+	//#define _CGDK_ENABLE_BUFFER_BOUND_CHECK
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -206,36 +208,36 @@ public:
 class offset : public skip
 {
 public:
-	offset() noexcept : skip(0) {}
-	offset(const offset& _offset) noexcept : skip(_offset.amount) {}
-	offset(int64_t _offset) noexcept : skip(_offset) {}
+	constexpr offset() noexcept : skip(0) {}
+	constexpr offset(const offset& _offset) noexcept : skip(_offset.amount) {}
+	constexpr offset(int64_t _offset) noexcept : skip(_offset) {}
 
 public:
-	bool	operator==(const offset& _rhs) const noexcept { return this->amount == _rhs.amount; }
-	bool	operator!=(const offset& _rhs) const noexcept { return this->amount != _rhs.amount; }
-	bool	operator>=(const offset& _rhs) const noexcept { return this->amount >= _rhs.amount; }
-	bool	operator> (const offset& _rhs) const noexcept { return this->amount >  _rhs.amount; }
-	bool	operator<=(const offset& _rhs) const noexcept { return this->amount <= _rhs.amount; }
-	bool	operator< (const offset& _rhs) const noexcept { return this->amount <  _rhs.amount; }
+	constexpr bool	operator==(const offset& _rhs) const noexcept { return this->amount == _rhs.amount; }
+	constexpr bool	operator!=(const offset& _rhs) const noexcept { return this->amount != _rhs.amount; }
+	constexpr bool	operator>=(const offset& _rhs) const noexcept { return this->amount >= _rhs.amount; }
+	constexpr bool	operator> (const offset& _rhs) const noexcept { return this->amount >  _rhs.amount; }
+	constexpr bool	operator<=(const offset& _rhs) const noexcept { return this->amount <= _rhs.amount; }
+	constexpr bool	operator< (const offset& _rhs) const noexcept { return this->amount <  _rhs.amount; }
 
-	bool	operator==(int64_t _rhs) const noexcept { return this->amount == _rhs; }
-	bool	operator!=(int64_t _rhs) const noexcept { return this->amount != _rhs; }
-	bool	operator>=(int64_t _rhs) const noexcept { return this->amount >= _rhs; }
-	bool	operator> (int64_t _rhs) const noexcept { return this->amount > _rhs; }
-	bool	operator<=(int64_t _rhs) const noexcept { return this->amount <= _rhs; }
-	bool	operator< (int64_t _rhs) const noexcept { return this->amount < _rhs; }
+	constexpr bool	operator==(int64_t _rhs) const noexcept { return this->amount == _rhs; }
+	constexpr bool	operator!=(int64_t _rhs) const noexcept { return this->amount != _rhs; }
+	constexpr bool	operator>=(int64_t _rhs) const noexcept { return this->amount >= _rhs; }
+	constexpr bool	operator> (int64_t _rhs) const noexcept { return this->amount > _rhs; }
+	constexpr bool	operator<=(int64_t _rhs) const noexcept { return this->amount <= _rhs; }
+	constexpr bool	operator< (int64_t _rhs) const noexcept { return this->amount < _rhs; }
 
-	offset& operator+=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
-	offset& operator+=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
-	offset& operator-=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
-	offset& operator-=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
-	offset& operator*=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
-	offset& operator*=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
-	offset& operator/=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
-	offset& operator/=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
+	constexpr offset& operator+=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
+	constexpr offset& operator+=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
+	constexpr offset& operator-=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
+	constexpr offset& operator-=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
+	constexpr offset& operator*=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
+	constexpr offset& operator*=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
+	constexpr offset& operator/=(const offset& _rhs) noexcept { this->amount += _rhs.amount; return *this; }
+	constexpr offset& operator/=(int64_t _rhs) noexcept { amount += _rhs; return *this; }
 
-	operator int64_t& () { return this->amount; }
-	operator const int64_t& () const { return this->amount; }
+	constexpr operator int64_t& () { return this->amount; }
+	constexpr operator const int64_t& () const { return this->amount; }
 };
 
 
@@ -276,7 +278,7 @@ template<class I>
 std::enable_if_t<is_iterator<I>::value, _ITERATOR<I,void>>
 ITERATOR(const I& _iter_begin, const I& _iter_end)
 {
-	return	_ITERATOR<I, void>(_iter_begin, _iter_end);
+	return _ITERATOR<I, void>(_iter_begin, _iter_end);
 }
 
 
@@ -297,38 +299,38 @@ public:
 	using	value_type = T;
 
 public:
-	text() noexcept {}
-	text(const text& _rhs) noexcept : p(_rhs.p) {}
-	text(std::basic_string_view<T> _str) noexcept : p(_str) {}
-	text(const std::basic_string<T>& _str) noexcept : p(_str) {}
+	constexpr text() noexcept {}
+	constexpr text(const text& _rhs) noexcept : p(_rhs.p) {}
+	constexpr text(std::basic_string_view<T> _str) noexcept : p(_str) {}
+	constexpr text(const std::basic_string<T>& _str) noexcept : p(_str) {}
 #if defined(__CGDK_STATIC_STRING)
 	template <std::size_t N>
-	text(CGDK::static_string<N> _str) noexcept : p(_str) {}
+	constexpr text(CGDK::static_string<N> _str) noexcept : p(_str) {}
 #endif
 	template <std::size_t N>
-	text(const T(&_str)[N]) noexcept : p{ _str, N } {}
-	text(const T* _str) noexcept : p(_str) {}
+	constexpr text(const T(&_str)[N]) noexcept : p{ _str, N } {}
+	constexpr text(const T* _str) noexcept : p(_str) {}
 
 public:
 	constexpr std::size_t	bytes() const noexcept { return p.size() * sizeof(T); }
 
 public:
-	text&	operator=(const text& _rhs) noexcept { p = _rhs.p; return *this; }
-	text&	operator=(const std::basic_string_view<T> _rhs) noexcept { p = _rhs; return *this; }
+	constexpr text&	operator=(const text& _rhs) noexcept { p = _rhs.p; return *this; }
+	constexpr text&	operator=(const std::basic_string_view<T> _rhs) noexcept { p = _rhs; return *this; }
 
-	bool	operator==(const text& _rhs) const noexcept						{ return p == _rhs.p; }
-	bool	operator==(const std::basic_string_view<T>& _rhs) const noexcept{ return p == _rhs.p; }
-	bool	operator!=(const text& _rhs) const noexcept						{ return p != _rhs.p; }
-	bool	operator!=(const std::basic_string_view<T>& _rhs) const noexcept{ return p != _rhs.p; }
-	bool	operator>=(const text& _rhs) const noexcept						{ return p >= _rhs.p; }
-	bool	operator>=(const std::basic_string_view<T>& _rhs) const noexcept{ return p >= _rhs.p; }
-	bool	operator> (const text& _rhs) const noexcept						{ return p >  _rhs.p; }
-	bool	operator> (const std::basic_string_view<T>& _rhs) const noexcept{ return p >  _rhs.p; }
-	bool	operator<=(const text& _rhs) const noexcept						{ return p <= _rhs.p; }
-	bool	operator<=(const std::basic_string_view<T>& _rhs) const noexcept{ return p <= _rhs.p; }
-	bool	operator< (const text& _rhs) const noexcept						{ return p <  _rhs.p; }
-	bool	operator< (const std::basic_string_view<T>& _rhs) const noexcept{ return p <  _rhs.p; }
-			operator std::basic_string_view<T>() const noexcept				{ return p; }
+	constexpr bool	operator==(const text& _rhs) const noexcept						{ return p == _rhs.p; }
+	constexpr bool	operator==(const std::basic_string_view<T>& _rhs) const noexcept{ return p == _rhs.p; }
+	constexpr bool	operator!=(const text& _rhs) const noexcept						{ return p != _rhs.p; }
+	constexpr bool	operator!=(const std::basic_string_view<T>& _rhs) const noexcept{ return p != _rhs.p; }
+	constexpr bool	operator>=(const text& _rhs) const noexcept						{ return p >= _rhs.p; }
+	constexpr bool	operator>=(const std::basic_string_view<T>& _rhs) const noexcept{ return p >= _rhs.p; }
+	constexpr bool	operator> (const text& _rhs) const noexcept						{ return p >  _rhs.p; }
+	constexpr bool	operator> (const std::basic_string_view<T>& _rhs) const noexcept{ return p >  _rhs.p; }
+	constexpr bool	operator<=(const text& _rhs) const noexcept						{ return p <= _rhs.p; }
+	constexpr bool	operator<=(const std::basic_string_view<T>& _rhs) const noexcept{ return p <= _rhs.p; }
+	constexpr bool	operator< (const text& _rhs) const noexcept						{ return p <  _rhs.p; }
+	constexpr bool	operator< (const std::basic_string_view<T>& _rhs) const noexcept{ return p <  _rhs.p; }
+	constexpr 		operator std::basic_string_view<T>() const noexcept				{ return p; }
 public:
 	std::basic_string_view<T>	p;
 };

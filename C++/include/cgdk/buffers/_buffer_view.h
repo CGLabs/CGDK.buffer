@@ -86,9 +86,9 @@ public:
 	// 3) exist/empty
 	constexpr void				resize(size_type _new_size)				{ if (_new_size > this->size_) throw std::length_error("resize operation of _buffer_view<T>' is allowed only for deminishing size 'resize(size_t)'. use operator '^' instead"); this->size_ = _new_size;}
 	constexpr void				swap(base_t& _rhs) noexcept				{ element_t* a = this->data_; this->data_ = _rhs.data_; _rhs.data_ = a; auto b = this->size_; this->size_ = _rhs.size_; _rhs.size_ = b; }
-	constexpr void				swap(self_t& _rhs) noexcept				{ element_t* a = this->data_; this->data_ = _rhs.data_; _rhs.data_ = a; auto b = this->size_; this->size_ = _rhs.size_; _rhs.size_ = b; }
+	constexpr void				swap(self_t& _rhs) noexcept				{ element_t* a = this->data_; this->data_ = _rhs.data(); _rhs.data(a); auto b = this->size_; this->size_ = _rhs.size(); _rhs.size(b); }
 	template <class T>
-	constexpr void				copy_from(const _buffer_view<T>& _source) { memcpy(this->data_, _source.data(), _source.size_); this->size_ = _source.size_; }
+	constexpr void				copy_from(const _buffer_view<T>& _source) { memcpy(this->data_, _source.data(), _source.size()); this->size_ = _source.size(); }
 	constexpr self_t			split_head(size_type _amount) noexcept	{ if (this->size_ < _amount) _amount = this->size_; self_t p{ this->data_, this->size_ - _amount }; this->data_ += _amount; this->size_ = _amount; return p; }
 	constexpr self_t			split_tail(size_type _amount) noexcept	{ if (this->size_ < _amount) _amount = this->size_; self_t p{ this->data_ + _amount, this->size_ - _amount }; this->size_ = _amount; return p; }
 

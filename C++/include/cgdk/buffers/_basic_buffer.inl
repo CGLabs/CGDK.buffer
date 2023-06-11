@@ -159,7 +159,7 @@ bool validate_message(const T* _buffers, std::size_t _count)
 	// 1) 전체 Message 길이를 구한다.
 	for (std::size_t i = 0; i < _count; ++i)
 	{
-		iTotalLength += _buffers[i].size_;
+		iTotalLength += _buffers[i].size();
 	}
 
 	// 2) buffer를 설정한다.
@@ -190,9 +190,9 @@ bool validate_message(const T* _buffers, std::size_t _count)
 		CGDK_ASSERT(iTotalLength >= 0);
 		if (iTotalLength < 0) return false;
 
-		while (message_size >= static_cast<int32_t>(temp_buf.size_))
+		while (message_size >= temp_buf.size<int32_t>())
 		{
-			message_size -= temp_buf.size_;
+			message_size -= temp_buf.size<int32_t>();
 
 			++idx_buffer;
 
@@ -205,8 +205,8 @@ bool validate_message(const T* _buffers, std::size_t _count)
 			temp_buf = _buffers[idx_buffer];
 		}
 
-		temp_buf.data_ += message_size;
-		temp_buf.size_ -= message_size;
+		temp_buf.add_data(message_size);
+		temp_buf.sub_size(message_size);
 	}
 
 	return true;
