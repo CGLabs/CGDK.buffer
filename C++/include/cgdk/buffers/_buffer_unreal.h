@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
 //*                              CGDK::buffer_view                            *
-//*                      Ver 2.0pre / Release 2015.01.05                      *
+//*                       ver 3.01 / release 2023.10.17                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -20,6 +20,8 @@
 // Includes
 //
 //-----------------------------------------------------------------------------
+#if defined(UE_BUILD_DEBUG) || defined(UE_BUILD_DEVELOPMENT) || defined(UE_BUILD_TEST) || defined(UE_BUILD_SHIPPING)
+
 // FString
 class CORE_API FString;
 
@@ -66,7 +68,6 @@ class TMapBase;
 // sorted map - TSortedMap, FAssetDataTagMap
 template<typename KeyType, typename ValueType, typename ArrayAllocator, typename SortPredicate>
 class TSortedMap;
-
 
 
 //-----------------------------------------------------------------------------
@@ -155,13 +156,13 @@ _buffer_view<typename B::element_t> _ue4_prepend_FStringView(S& _s, const TStrin
 	_CGD_BUFFER_BOUND_CHECK((_s.data() - size_string - sizeof(COUNT_T)) >= _s.get_lower_bound());
 
 	// 3) NULL으르 제일 먼저 넣는다.
-	_s._prepend_general<T>(0);
+	_s.template _prepend_general<T>(0);
 
 	// 4) [문자열]을 [문자열_길이]만큼 복사한다.
 	_s._prepend_bytes(size_string, _object.GetData());
 
 	// 5) [문자열_길이]를 써넣는다.
-	_s._prepend_general<COUNT_T>(static_cast<COUNT_T>(length_string + 1));
+	_s.template _prepend_general<COUNT_T>(static_cast<COUNT_T>(length_string + 1));
 
 	// return) String의 제일 처음 위치를 리턴함!!
 	return base_t(_s.data(), buf_old - _s.data());
@@ -211,7 +212,7 @@ template<class T, class S>
 inline T _ue4_extract_FStringView(S& _s)
 {
 	// 1) [데이터_크기]를 얻어온다.(COUNT_T[문자열_길이]+length(String))
-	COUNT_T	str_length = _s._get_front_string_length<typename T::ElementType>();
+	COUNT_T	str_length = _s.template _get_front_string_length<typename T::ElementType>();
 
 	// check) length가 0보다 작으면 그냥 리턴한다.
 	if (str_length == COUNT_T(-1))
@@ -221,7 +222,7 @@ inline T _ue4_extract_FStringView(S& _s)
 	}
 
 	// 2) 문자열의 제일 앞 포인터를 얻어둔다.
-	auto str_string = _s.data<typename T::ElementType>(sizeof(COUNT_T));
+	auto str_string = _s.template data<typename T::ElementType>(sizeof(COUNT_T));
 
 	// 2) sizeOfData 구하기
 	auto size_data = static_cast<COUNT_T>(str_length * sizeof(typename T::ElementType) + sizeof(COUNT_T));
@@ -242,27 +243,25 @@ inline size_t _ue4_size_of_FStringView(const FStringView& _object)
 //-----------------------------------------------------------------------------
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_FString_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const FString& _data) { return _ue4_prepend_FStringView<B>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, FString&& _data) { return _ue4_prepend_FStringView<B>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const FString& _data)	{ return _ue4_prepend_FStringView<B>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, FString&& _data)			{ return _ue4_prepend_FStringView<B>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_FString_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const FString& _data)	{ return _ue4_append_FStringView<B, S, TCHAR>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, FString&& _data) { return _ue4_append_FStringView<B, S, TCHAR>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const FString& _data)	{ return _ue4_append_FStringView<B, S, TCHAR>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, FString&& _data)			{ return _ue4_append_FStringView<B, S, TCHAR>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_FString_v<T>>>
 							{	public: using type = std::remove_const_t<T>;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_FStringView<type>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_FStringView<type>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_FString_v<T>>>
 							{	public:	using type = std::remove_const_t<T>;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_FStringView<type>(_s, tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_FStringView<type>(_s, tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_FString_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_FStringView(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_FStringView(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const FString& _object)					{ return _ue4_size_of_FStringView(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -270,29 +269,27 @@ template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_FStri
 //-----------------------------------------------------------------------------
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_FStringView_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const FStringView& _data) { return _ue4_prepend_FStringView<B>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, FStringView&& _data) { return _ue4_prepend_FStringView<B>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const FStringView& _data){ return _ue4_prepend_FStringView<B>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, FStringView&& _data)		{ return _ue4_prepend_FStringView<B>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_FStringView_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const FStringView& _data) { return _ue4_append_FStringView<B>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, FStringView&& _data) { return _ue4_append_FStringView<B>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const FStringView& _data){ return _ue4_append_FStringView<B>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, FStringView&& _data)		{ return _ue4_append_FStringView<B>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_FStringView_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_FStringView<type>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_FStringView<type>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_FStringView_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_FStringView<type>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_FStringView<type>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_FStringView_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_FStringView(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_FStringView(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const FStringView& _object)				{ return _ue4_size_of_FStringView(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -304,20 +301,23 @@ _ue4_prepend_TArray(S& _s, const TArray<TELEMENT>& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
-	// check) _count가 0이하면 안된다.
-	CGDK_ASSERT(_count >= 0, throw std::invalid_argument("_count is invalid [0]"));
+	// 1) get num
+	auto count = _object.Num();
+
+	// check) count가 0이하면 안된다.
+	CGDK_ASSERT(count >= 0, throw std::invalid_argument("Num() is invalid [0]"));
 
 	// 1)
 	auto buf_old = _object.data();
 
 	// 2) [데이터_갯수]만큼 데이터들을 통채로 복사한다.
-	_prepend_bytes(sizeof(T) * _count, _data);
+	_s.template _prepend_bytes(sizeof(TELEMENT) * _object.Size(), &_object[0]);
 
 	// 3) [데이터_갯수]를 써넣는다.
-	_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
+	_s.template _prepend<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// return) 
-	return RET_T(_object.data(), buf_old - _object.data());
+	return RET_T(_object.data(), count * sizeof(TELEMENT));
 }
 template <class S, class TELEMENT>
 constexpr std::enable_if_t<!is_memcopy_able<TELEMENT>::value, _buffer_view<typename S::element_t>>
@@ -327,15 +327,16 @@ _ue4_prepend_TArray(S& _s, const TArray<TELEMENT>& _object)
 
 	// 1)
 	auto buf_old = _object.data();
+	auto count = _object.Num();
 
 	// 2) [데이터_갯수]만큼 데이터들을 추가한다.
-	for (int i = static_cast<int>(_count - 1); i >= 0; --i)
+	for (int i = (count - 1); i >= 0; --i)
 	{
-		_prepend<T>(_data[i]);
+		_s.template _prepend<TELEMENT>(_object[i]);
 	}
 
 	// 3) [데이터_갯수]를 써넣는다.
-	_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
+	_s.template _prepend<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// return) 
 	return RET_T(_object.data(), buf_old - _object.data());
@@ -346,23 +347,26 @@ _ue4_append_TArray(S& _s, const TArray<TELEMENT>& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
+	// 1) get count
+	auto count = _object.Num();
+
 	// check) upper bound
-	_CGD_BUFFER_BOUND_CHECK((_object.data() + size_ + sizeof(T) * _count) <= get_upper_bound());
+	_CGD_BUFFER_BOUND_CHECK((_s.data() + _s.size_ + sizeof(TELEMENT) * count) <= _s.get_upper_bound());
 
 	// 1) [원본_버퍼_포인터]를 저장해 놓는다.
-	auto len_old = size_;
+	auto len_old = _s.size();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// 3) [데이터]들을 추가한다.
-	for (std::size_t i = 0; i < _count; ++i)
+	for (std::size_t i = 0; i < count; ++i)
 	{
-		_append<T>(_data[i]);
+		_s.template _append<TELEMENT>(_object[i]);
 	}
 
 	// return)
-	return RET_T(_object.data() + len_old, size_ - len_old);
+	return RET_T(_object.data() + len_old, _s.size() - len_old);
 }
 template <class S, class TELEMENT>
 constexpr std::enable_if_t<is_memcopy_able<TELEMENT>::value, _buffer_view<typename S::element_t>>
@@ -374,28 +378,28 @@ _ue4_append_TArray(S& _s, const TArray<TELEMENT>& _object)
 	auto count = _object.Num();
 
 	// 1) [데이터_갯수]를 써넣는다.
-	_s._append_general<COUNT_T>(static_cast<COUNT_T>(count));
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// 2) [데이터]들을 통채로 복사한다.
 	return _s._append_bytes(count * sizeof(TELEMENT), _object.GetData());
 }
 
 template<class S, class T, class TELEMENT>
-constexpr std::enable_if_t<!is_memcopy_able<typename TELEMENT>::value, T>
+constexpr std::enable_if_t<!is_memcopy_able<TELEMENT>::value, T>
 _ue4_extract_TArray(S& _s)
 {
 	// declare) 
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// 2) [데이터_갯수]만큼 읽어들인다.
 	if (size_data != COUNT_T(-1))
 	{
-		for (size_type i = 0; i < size_data; ++i)
+		for (COUNT_T i = 0; i < size_data; ++i)
 		{
-			result[i] = _s._extract<TELEMENT>();
+			result[i] = _s.template _extract<TELEMENT>();
 		}
 	}
 
@@ -404,14 +408,14 @@ _ue4_extract_TArray(S& _s)
 }
 
 template<class S, class T, class TELEMENT>
-constexpr std::enable_if_t<is_memcopy_able<typename TELEMENT>::value, T>
+constexpr std::enable_if_t<is_memcopy_able<TELEMENT>::value, T>
 _ue4_extract_TArray(S& _s)
 {
 	// declare) 
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// 2) reserve
 	result.Reserve(size_data);
@@ -443,33 +447,31 @@ size_t _ue4_size_of_TArray(const T& _object)
 template<class B, class T>
 							class serializer_prepend<B, T, std::enable_if_t<is_ue4_TArray_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const T& _data) { return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, T&& _data) { return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T>
 							class serializer_append<B, T, std::enable_if_t<is_ue4_TArray_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const T& _data) { return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, T&& _data) { return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T>
 							class serializer_extract<B, T, std::enable_if_t<is_ue4_TArray_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TArray<S, TX, typename TX::ElementType>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TArray<S, TX, typename TX::ElementType>(_s); }
 							};
 template<class B, class T>
 							class serializer_peek<B, T, std::enable_if_t<is_ue4_TArray_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TArray<S, TX, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TArray<S, TX, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>
 							class serializer_size_of<T, std::enable_if_t<is_ue4_TArray_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TArray(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TArray(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const T& _object)							{ return _ue4_size_of_TArray(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -481,17 +483,20 @@ _ue4_prepend_TStaticArray(S& _s, const TStaticArray<A1, A2, A3>& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
-	// check) _count가 0이하면 안된다.
-	CGDK_ASSERT(_count >= 0, throw std::invalid_argument("_count is invalid [0]"));
+	// 1) get count
+	auto count = _object.Num();
+
+	// check) count가 0이하면 안된다.
+	CGDK_ASSERT(count >= 0, throw std::invalid_argument("count is invalid [0]"));
 
 	// 1)
 	auto buf_old = _object.data();
 
 	// 2) [데이터_갯수]만큼 데이터들을 통채로 복사한다.
-	_prepend_bytes(sizeof(T) * _count, _data);
+	_s.template _prepend_bytes(sizeof(A1) * count, _object.GetData());
 
 	// 3) [데이터_갯수]를 써넣는다.
-	_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
+	_s.template _prepend<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// return) 
 	return RET_T(_object.data(), buf_old - _object.data());
@@ -502,17 +507,20 @@ _ue4_prepend_TStaticArray(S& _s, const TStaticArray<A1, A2, A3>& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
-	// 1)
+	// 1) get count
+	auto count = _object.Num();
+
+	// 2)
 	auto buf_old = _object.data();
 
-	// 2) [데이터_갯수]만큼 데이터들을 추가한다.
-	for (int i = static_cast<int>(_count - 1); i >= 0; --i)
+	// 3) [데이터_갯수]만큼 데이터들을 추가한다.
+	for (int i = static_cast<int>(count - 1); i >= 0; --i)
 	{
-		_prepend<T>(_data[i]);
+		_s.template _prepend<A1>(_object[i]);
 	}
 
-	// 3) [데이터_갯수]를 써넣는다.
-	_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
+	// 4) [데이터_갯수]를 써넣는다.
+	_s.template _prepend<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// return) 
 	return RET_T(_object.data(), buf_old - _object.data());
@@ -523,23 +531,26 @@ _ue4_append_TStaticArray(S& _s, const TStaticArray<A1, A2, A3>& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
+	// 1) get count
+	auto count = _object.Num();
+
 	// check) upper bound
-	_CGD_BUFFER_BOUND_CHECK((_object.data() + size_ + sizeof(T) * _count) <= get_upper_bound());
+	_CGD_BUFFER_BOUND_CHECK((_s.data() + _s.size() + sizeof(A1) * count) <= _s.get_upper_bound());
 
 	// 1) [원본_버퍼_포인터]를 저장해 놓는다.
-	auto len_old = size_;
+	auto len_old = _s.size();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// 3) [데이터]들을 추가한다.
-	for (std::size_t i = 0; i < _count; ++i)
+	for (auto i = 0; i < count; ++i)
 	{
-		_append<T>(_data[i]);
+		_s.template _append<A1>(_object[i]);
 	}
 
 	// return)
-	return RET_T(_object.data() + len_old, size_ - len_old);
+	return RET_T(_object.data() + len_old, _s.size() - len_old);
 }
 template <class S, class A1, uint32 A2, uint32 A3>
 constexpr std::enable_if_t<is_memcopy_able<A1>::value, _buffer_view<typename S::element_t>>
@@ -551,21 +562,21 @@ _ue4_append_TStaticArray(S& _s, const TStaticArray<A1, A2, A3>& _object)
 	auto count = _object.Num();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_s._append_general<COUNT_T>(static_cast<COUNT_T>(count));
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// 3) [데이터]들을 통채로 복사한다.
 	return _s._append_bytes(count * sizeof(A1), _object.GetData());
 }
 
 template<class S, class T, class A1, uint32 A2, uint32 A3>
-constexpr std::enable_if_t<!is_memcopy_able<typename A1>::value, T>
+constexpr std::enable_if_t<!is_memcopy_able<A1>::value, T>
 _ue4_extract_TStaticArray(S& _s)
 {
 	// declare) 
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// check) [데이터_갯수]가 배열의 수보다 커서는 안됀다.
 	if (size_data > A2)
@@ -574,9 +585,9 @@ _ue4_extract_TStaticArray(S& _s)
 	// 2) [데이터_갯수]만큼 읽어들인다.
 	if (size_data != COUNT_T(-1))
 	{
-		for (size_type i = 0; i < size_data; ++i)
+		for (COUNT_T i = 0; i < size_data; ++i)
 		{
-			result[i] = _s._extract<A1>();
+			result[i] = _s.template _extract<A1>();
 		}
 	}
 
@@ -585,14 +596,14 @@ _ue4_extract_TStaticArray(S& _s)
 }
 
 template<class S, class T, class A1, uint32 A2, uint32 A3>
-constexpr std::enable_if_t<is_memcopy_able<typename A1>::value, T>
+constexpr std::enable_if_t<is_memcopy_able<A1>::value, T>
 _ue4_extract_TStaticArray(S& _s)
 {
 	// declare) 
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// check) [데이터_갯수]가 배열의 수보다 커서는 안됀다.
 	if (size_data > A2)
@@ -614,30 +625,28 @@ _ue4_extract_TStaticArray(S& _s)
 template<class B, class A1, uint32 A2, uint32 A3> class serializer_prepend<B, TStaticArray<A1, A2, A3>>
 							{	public:
 								using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const TStaticArray<A1, A2, A3>& _data) { return _ue4_prepend_TStaticArray<S, A1, A2, A3>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, TStaticArray<A1, A2, A3>&& _data) { return _ue4_prepend_TStaticArray<S, A1, A2, A3>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const TStaticArray<A1, A2, A3>& _data)	{ return _ue4_prepend_TStaticArray<S, A1, A2, A3>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, TStaticArray<A1, A2, A3>&& _data)		{ return _ue4_prepend_TStaticArray<S, A1, A2, A3>(_s, _data);}
 							};
 template<class B, class A1, uint32 A2, uint32 A3> class serializer_append<B, TStaticArray<A1, A2, A3>>
 							{	public:
 								using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const TStaticArray<A1, A2, A3>& _data) { return _ue4_append_TStaticArray<S, A1, A2, A3>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, TStaticArray<A1, A2, A3>&& _data) { return _ue4_append_TStaticArray<S, A1, A2, A3>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const TStaticArray<A1, A2, A3>& _data)	{ return _ue4_append_TStaticArray<S, A1, A2, A3>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, TStaticArray<A1, A2, A3>&& _data)		{ return _ue4_append_TStaticArray<S, A1, A2, A3>(_s, _data);}
 							};
 template<class B, class A1, uint32 A2, uint32 A3> class serializer_extract<B, TStaticArray<A1, A2, A3>>
 							{	
 								public: using type = TStaticArray<A1, A2, A3>;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TStaticArray<S, TStaticArray<A1, A2, A3>, A1, A2, A3>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TStaticArray<S, TStaticArray<A1, A2, A3>, A1, A2, A3>(_s); }
 							};
 template<class B, class A1, uint32 A2, uint32 A3> class serializer_peek<B, TStaticArray<A1, A2, A3>>
 							{	
 								public: using type = TStaticArray<A1, A2, A3>;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TStaticArray<S, TStaticArray<A1, A2, A3>, A1, A2, A3>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TStaticArray<S, TStaticArray<A1, A2, A3>, A1, A2, A3>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class A1, uint32 A2, uint32 A3> class serializer_size_of<TStaticArray<A1, A2, A3>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TArray(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TArray(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const TStaticArray<A1, A2, A3>& _object)	{ return _ue4_size_of_TArray(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -645,29 +654,27 @@ template<class A1, uint32 A2, uint32 A3> class serializer_size_of<TStaticArray<A
 //-----------------------------------------------------------------------------
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_TSparseArray_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const T& _data) { return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, T&& _data) { return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_prepend_TArray<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_TSparseArray_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const T& _data) { return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, T&& _data) { return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_append_TArray<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_TSparseArray_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TArray<S, typename T::ElementType>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TArray<S, typename T::ElementType>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_TSparseArray_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TArray<S, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TArray<S, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_TSparseArray_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TArray(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TArray(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const T& _object)							{ return _ue4_size_of_TArray(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -678,17 +685,20 @@ _buffer_view<typename S::element_t> _ue4_prepend_TList(S& _s, const T& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
-	// 1)
+	// 1) get number
+	auto count = _object.Num();
+
+	// 2)
 	auto buf_old = _object.data();
 
-	// 2) [데이터]들을 추가한다.
+	// 3) [데이터]들을 추가한다.
 	for (auto& iter : _object)
 	{
-		_append<T::ElementType>(iter);
+		_s.template _append<T::ElementType>(iter);
 	}
 
-	// 3) [데이터_갯수]를 써넣는다.
-	_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
+	// 4) [데이터_갯수]를 써넣는다.
+	_s.template _prepend<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// return) 
 	return RET_T(_object.data(), buf_old - _object.data());
@@ -699,23 +709,26 @@ _buffer_view<typename S::element_t> _ue4_append_TList(S& _s, const T& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
+	// 1) get number
+	auto count = _object.Num();
+
 	// check) upper bound
-	_CGD_BUFFER_BOUND_CHECK((_object.data() + size_ + sizeof(T) * _count) <= get_upper_bound());
+	_CGD_BUFFER_BOUND_CHECK((_s.data() + _s.size() + sizeof(T) * count) <= _s.get_upper_bound());
 
 	// 1) [원본_버퍼_포인터]를 저장해 놓는다.
-	auto len_old = size_;
+	auto len_old = _s.size();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// 3) [데이터]들을 추가한다.
 	for (auto& iter : _object)
 	{
-		_append<T::ElementType>(iter);
+		_s.template _append<T::ElementType>(iter);
 	}
 
 	// return)
-	return RET_T(_object.data() + len_old, size_ - len_old);
+	return RET_T(_object.data() + len_old, _s.size() - len_old);
 }
 
 template<class S, class T, class TELEMENT>
@@ -725,14 +738,14 @@ T _ue4_extract_TList(S& _s)
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// 2) [데이터_갯수]만큼 읽어들인다.
 	if (size_data != COUNT_T(-1))
 	{
-		for (size_type i = 0; i < size_data; ++i)
+		for (COUNT_T i = 0; i < size_data; ++i)
 		{
-			result[i] = _s._extract<TELEMENT>();
+			result[i] = _s.template _extract<TELEMENT>();
 		}
 	}
 
@@ -742,29 +755,27 @@ T _ue4_extract_TList(S& _s)
 
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_TList_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const T& _data) { return _ue4_prepend_TList<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, T&& _data) { return _ue4_prepend_TList<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_prepend_TList<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_prepend_TList<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_TList_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const T& _data) { return _ue4_append_TList<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, T&& _data) { return _ue4_append_TList<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_append_TList<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_append_TList<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_TList_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TList<S, T, typename T::ElementType>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TList<S, T, typename T::ElementType>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_TList_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TList<S, T, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TList<S, T, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_TList_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TArray(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TArray(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const T& _object)							{ return _ue4_size_of_TArray(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -775,20 +786,23 @@ _buffer_view<typename S::element_t> _ue4_prepend_TLinkedListBase(S& _s, const T&
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
-	// 1)
-	auto buf_old = _object.data();
+	// 1) count
+	auto count = _object.Num();
 
-	// 2) [데이터_갯수]만큼 데이터들을 추가한다.
-	for (int i = static_cast<int>(_count - 1); i >= 0; --i)
+	// 2)
+	auto buf_old = _s.data();
+
+	// 3) [데이터_갯수]만큼 데이터들을 추가한다.
+	for (int i = static_cast<int>(count - 1); i >= 0; --i)
 	{
-		_prepend<T>(_data[i]);
+		_s.template _prepend<T>(_object[i]);
 	}
 
-	// 3) [데이터_갯수]를 써넣는다.
-	_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
+	// 4) [데이터_갯수]를 써넣는다.
+	_s.template _prepend<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// return) 
-	return RET_T(_object.data(), buf_old - _object.data());
+	return RET_T(_s.data(), buf_old - _object.data());
 }
 
 template<class S, class T>
@@ -796,23 +810,26 @@ _buffer_view<typename S::element_t> _ue4_append_TLinkedListBase(S& _s, const T& 
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
+	// 1)
+	auto count = _object.Num();
+
 	// check) upper bound
-	_CGD_BUFFER_BOUND_CHECK((_object.data() + size_ + sizeof(T) * _count) <= get_upper_bound());
+	_CGD_BUFFER_BOUND_CHECK((_s.data() + _s.size() + sizeof(T) * count) <= _s.get_upper_bound());
 
 	// 1) [원본_버퍼_포인터]를 저장해 놓는다.
-	auto len_old = size_;
+	auto len_old = _s.size();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// 3) [데이터]들을 추가한다.
-	for (std::size_t i = 0; i < _count; ++i)
+	for (std::size_t i = 0; i < count; ++i)
 	{
-		_append<T>(_data[i]);
+		_s.template _append<T>(_object[i]);
 	}
 
 	// return)
-	return RET_T(_object.data() + len_old, size_ - len_old);
+	return RET_T(_s.data() + len_old, _s.size() - len_old);
 }
 
 template<class S, class T>
@@ -824,18 +841,18 @@ T _ue4_extract_TLinkedListBase(S& _s)
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// 2) [데이터_갯수]만큼 읽어들인다.
 	if (size_data != COUNT_T(-1))
 	{
 		// - first 
-		result = _s._extract<T::ElementType>();
+		result = _s.template _extract<T::ElementType>();
 
 		// - others
-		for (size_type i = 1; i < size_data; ++i)
+		for (COUNT_T i = 1; i < size_data; ++i)
 		{
-			result.LinkAfter(new T(_s._extract<T::ElementType>()));
+			result.LinkAfter(new T(_s.template _extract<T::ElementType>()));
 		}
 	}
 
@@ -845,29 +862,27 @@ T _ue4_extract_TLinkedListBase(S& _s)
 
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_TLinkedListBase_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const T& _data) { return _ue4_prepend_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, T&& _data) { return _ue4_prepend_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_prepend_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_prepend_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_TLinkedListBase_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const T& _data) { return _ue4_append_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, T&& _data) { return _ue4_append_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_append_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_append_TLinkedListBase<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_TLinkedListBase_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TLinkedListBase<S, typename T::ElementType>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TLinkedListBase<S, typename T::ElementType>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_TLinkedListBase_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TLinkedListBase<S, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TLinkedListBase<S, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_TLinkedListBase_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TArray(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TArray(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const T& _object)							{ return _ue4_size_of_TArray(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -878,20 +893,23 @@ _buffer_view<typename S::element_t> _ue4_prepend_TSet(S& _s, const T& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
-	// 1)
+	// 1) get number of data
+	auto count = _object.Num();
+
+	// 2)
 	auto buf_old = _object.data();
 
-	//// 2) [데이터_갯수]만큼 데이터들을 추가한다.
-	//for (int i = static_cast<int>(_count - 1); i >= 0; --i)
+	//// 3) [데이터_갯수]만큼 데이터들을 추가한다.
+	//for (int i = static_cast<int>(count - 1); i >= 0; --i)
 	//{
-	//	_prepend<T>(_data[i]);
+	//	_s.template _prepend<T>(_object[i]);
 	//}
 
-	//// 3) [데이터_갯수]를 써넣는다.
-	//_prepend<COUNT_T>(static_cast<COUNT_T>(_count));
+	//// 4) [데이터_갯수]를 써넣는다.
+	//_prepend<COUNT_T>(static_cast<COUNT_T>(count));
 
 	// return) 
-	return RET_T(_object.data(), buf_old - _object.data());
+	return RET_T(_s.data(), buf_old - _s.data());
 }
 
 template<class S, class T>
@@ -899,23 +917,26 @@ _buffer_view<typename S::element_t> _ue4_append_TSet(S& _s, const T& _object)
 {
 	using RET_T = _buffer_view<typename S::element_t>;
 
+	// 1) get number of data
+	auto count = _object.Num();
+
 	// check) upper bound
-	_CGD_BUFFER_BOUND_CHECK((_object.data() + size_ + sizeof(T) * _count) <= get_upper_bound());
+	_CGD_BUFFER_BOUND_CHECK((_s.data() + _s.size() + sizeof(T) * count) <= _s.get_upper_bound());
 
-	// 1) [원본_버퍼_포인터]를 저장해 놓는다.
-	auto len_old = size_;
+	// 2) [원본_버퍼_포인터]를 저장해 놓는다.
+	auto len_old = _s.size();
 
-	// 2) [데이터_갯수]를 써넣는다.
-	_append_general<COUNT_T>(static_cast<COUNT_T>(_count));
+	// 3) [데이터_갯수]를 써넣는다.
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(count));
 
-	// 3) [데이터]들을 추가한다.
+	// 4) [데이터]들을 추가한다.
 	for (auto& iter : _object)
 	{
-		_append(iter);
+		_s.template _append(iter);
 	}
 
 	// return)
-	return RET_T(_object.data() + len_old, size_ - len_old);
+	return RET_T(_s.data() + len_old, _s.size() - len_old);
 }
 
 template<class S, class T>
@@ -927,18 +948,18 @@ T _ue4_extract_TSet(S& _s)
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// 2) [데이터_갯수]만큼 읽어들인다.
 	if (size_data != COUNT_T(-1))
 	{
 		// - first 
-		result = _s._extract<T::ElementType>();
+		result = _s.template _extract<T::ElementType>();
 
 		// - others
-		for (size_type i = 1; i < size_data; ++i)
+		for (COUNT_T i = 1; i < size_data; ++i)
 		{
-			result.Add(_s._extract<T::ElementType>());
+			result.Add(_s.template _extract<T::ElementType>());
 		}
 	}
 
@@ -950,29 +971,27 @@ T _ue4_extract_TSet(S& _s)
 
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_TSet_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const T& _data) { return _ue4_prepend_TSet<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, T&& _data) { return _ue4_prepend_TSet<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_prepend_TSet<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_prepend_TSet<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_TSet_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const T& _data) { return _ue4_append_TSet<S, typename T::ElementType>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, T&& _data) { return _ue4_append_TSet<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_append_TSet<S, typename T::ElementType>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_append_TSet<S, typename T::ElementType>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_TSet_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TSet<S, typename T::ElementType>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TSet<S, typename T::ElementType>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_TSet_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TSet<S, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TSet<S, typename T::ElementType>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_TSet_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TArray(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TArray(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const T& _object)							{ return _ue4_size_of_TArray(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -1009,7 +1028,7 @@ _buffer_view<typename S::element_t> _ue4_append_TMap(S& _s, const T& _object)
 	auto len_old = _s.size();
 
 	// 2) [데이터_갯수]를 써넣는다.
-	_s._append_general<COUNT_T>(static_cast<COUNT_T>(_object.Num()));
+	_s.template _append_general<COUNT_T>(static_cast<COUNT_T>(_object.Num()));
 
 	// 3) [데이터]들을 추가한다.
 	for (auto& iter: _object)
@@ -1029,7 +1048,7 @@ T _ue4_extract_TMap(S& _s)
 	T result{};
 
 	// 1) [데이터_갯수]를 얻어낸다.
-	auto size_data = _s._extract<COUNT_T>();
+	auto size_data = _s.template _extract<COUNT_T>();
 
 	// 2) [데이터_갯수]만큼 읽어들인다.
 	if (size_data != COUNT_T(-1))
@@ -1040,8 +1059,8 @@ T _ue4_extract_TMap(S& _s)
 		// - add
 		for (auto i = 0; i < size_data; ++i)
 		{
-			const auto key = _s._extract<typename T::ElementType::KeyType>();
-			const auto value = _s._extract<typename T::ElementType::ValueType>();
+			const auto key = _s.template _extract<typename T::ElementType::KeyType>();
+			const auto value = _s.template _extract<typename T::ElementType::ValueType>();
 
 			result.Add(key, value);
 		}
@@ -1067,29 +1086,27 @@ size_t _ue4_size_of_TMap(const T& _object)
 
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_TMapBase_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const T& _data) { return _ue4_prepend_TMap<S, T>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, T&& _data) { return _ue4_prepend_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_prepend_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_prepend_TMap<S, T>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_TMapBase_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const T& _data) { return _ue4_append_TMap<S, T>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, T&& _data) { return _ue4_append_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_append_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_append_TMap<S, T>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_TMapBase_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TMap<S, T>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TMap<S, T>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_TMapBase_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TMap<S, T>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TMap<S, T>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_TMapBase_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TMap(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TMap(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const T& _object)							{ return _ue4_size_of_TMap(_object); }
 							};
 
 //-----------------------------------------------------------------------------
@@ -1097,28 +1114,28 @@ template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_TMapB
 //-----------------------------------------------------------------------------
 template<class B, class T> class serializer_prepend<B, T, std::enable_if_t<is_ue4_TSortedMap_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_prepend(S& _s, const T& _data) { return _ue4_prepend_TMap<S, T>(_s, _data);}
-								template<class S> constexpr static type _do_prepend(S& _s, T&& _data) { return _ue4_prepend_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_prepend_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_prepend_TMap<S, T>(_s, _data);}
 							};
 template<class B, class T> class serializer_append<B, T, std::enable_if_t<is_ue4_TSortedMap_v<T>>>
 							{	public: using type = _buffer_view<typename B::element_t>;
-								template<class S> constexpr static type _do_append(S& _s, const T& _data) { return _ue4_append_TMap<S, T>(_s, _data);}
-								template<class S> constexpr static type _do_append(S& _s, T&& _data) { return _ue4_append_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, const T& _data)			{ return _ue4_append_TMap<S, T>(_s, _data);}
+								template<class S> constexpr static type _do(S& _s, T&& _data)				{ return _ue4_append_TMap<S, T>(_s, _data);}
 							};
 template<class B, class T> class serializer_extract<B, T, std::enable_if_t<is_ue4_TSortedMap_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_extract(S& _s) { return _ue4_extract_TMap<S, T>(_s); }
+								template<class S> constexpr static type _do(S& _s)							{ return _ue4_extract_TMap<S, T>(_s); }
 							};
 template<class B, class T> class serializer_peek<B, T, std::enable_if_t<is_ue4_TSortedMap_v<T>>>
 							{	using TX = std::remove_const_t<T>;
 								public: using type = TX;
-								template<class S> constexpr static type _do_peek(const S& _s, int64_t& _offset) { S tb =_s + _offset; auto temp = _ue4_extract_TMap<S, T>(tb); _offset = tb.data() - _s.data(); return temp;}
+								template<class S> constexpr static type _do(const S& _s, int64_t& _offset)	{ S tb =_s + _offset; auto temp = _ue4_extract_TMap<S, T>(tb); _offset = tb.data() - _s.data(); return temp;}
 							};
 template<class T>		    class serializer_size_of<T, std::enable_if_t<is_ue4_TSortedMap_v<T>>>
 							{	public:
-								constexpr static std::size_t  _get_append_size(const T&) { return _ue4_size_of_TMap(_object); }
-								template<class S>
-								constexpr static std::size_t  _get_extract_size(const S& _buffer, int64_t& _offset) { auto size = _ue4_size_of_TMap(_object); if ((_buffer.size() - _offset) < size) throw std::exception(); return size; }
+								constexpr static std::size_t  _do(const T& _object)							{ return _ue4_size_of_TMap(_object); }
 							};
 }
+
+#endif

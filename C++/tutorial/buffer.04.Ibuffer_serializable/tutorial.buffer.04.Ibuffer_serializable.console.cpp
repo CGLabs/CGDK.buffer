@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
-//*                      Cho sanghyun's Game Classes II                       *
-//*                      Ver 10.0 / Release 2019.12.01                        *
+//*                               CGDK::buffer                                *
+//*                       ver 4.0 / release 2021.11.01                        *
 //*                                                                           *
 //*                  tutorials buffer (4) - buffer serialize                  *
 //*                                                                           *
@@ -42,10 +42,17 @@ int main()
 {
 	// ------------------------------------------------------------------
 	//
-	// 1. Ibuffer_serializable을 사용한 직렬화
+	// 1. 직렬화/역직렬화 커스터마이즈(Ibuffer_serializable을 사용)
 	//
-	//    Ibuffer_serializable을 상속받아 직렬화를 직접 정의할 수 있다.
-	//    Ibuffer_serializable을 상속받은 후 다음 3개의 virtual 함수를 정의한다.
+	//    다음과 같은 경우 Ibuffer_serializable가 유용합니다.
+	// 
+	//     (1) 클래스/구조체 중 특정 데이터만 직렬화가 필요한 경우
+	//     (2) 직렬화/역직렬화 시 추가적인 처리가 필요한 경우
+	//     (3) 변수로 존재하지 않는 데이터를 직렬화하거나 역직렬활 경우
+	//     (4) 클래스/구조체의 생성자를 사용한 경우
+	// 
+	//  2. 직렬화/역직렬화의 정의
+	//    Ibuffer_serializable을 상속 후 3개의 virtual 함수를 정의한다.
 	//    
 	//    (v) process_serialize_in
 	//        - extract할 때 호출되는 함수로 전달되어오는 _buffer로부터 값을 
@@ -122,28 +129,29 @@ int main()
 		// - bar의 size_값을 출력한다. 
 		std::cout << "foo.size_ " << bar.size() << " bytes\n";
 
+		// ------------------------------------------------------
+
 		// *3) foo형을 extract해서 읽어낸다.
 		auto v1 = bar.extract<foo>();
 
 		// - foo를 출력한다.
-		std::cout << "a: " << v1.a << '\n';
-		std::cout << "b: " << static_cast<int32_t>(v1.b) << '\n';
-		std::cout << "c: " << v1.c << '\n';
-		std::cout << "d: " << v1.d << '\n';
+		std::cout << "a: " << v1.a << std::endl;
+		std::cout << "b: " << static_cast<int32_t>(v1.b) << std::endl;
+		std::cout << "c: " << v1.c << std::endl;
+		std::cout << "d: " << v1.d << std::endl;
 		std::cout << "e: ";
 		for(auto iter: v1.e)
 			std::cout << iter << " ";
-		std::cout << '\n' << '\n';
+		std::cout << std::endl << std::endl;
 	}
 
 
 	// ------------------------------------------------------------------
-	// 2. 구조체를 사용한 hetrogenous append/extract (1)
+	// 2. 좀 더 편리한 Ibuffer_serializable 구현하기
 	//
 	//    Ibuffer_serializable 관련 함수를 'DEFINE_BUFFER_SERIALIZE'를 사용해
 	//    간단히 정의할 수 있다.
-	//
-	//    get_size_of<T>(...) 함수를 사용해 직렬화 크기르르 얻을 수 있다.
+	//    
 	//
 	// ------------------------------------------------------------------
 
@@ -183,24 +191,28 @@ int main()
 		bar.append(s1);
 
 		// - bar의 size_값을 출력한다. 
-		std::cout << "foo.size_ " << bar.size() << '\n';
+		std::cout << "foo.size_ " << bar.size() << std::endl;
+
+		// ------------------------------------------------------
 
 		// *3) foo형을 extract해서 읽어낸다.
 		auto v1 = bar.extract<foo>();
 
 		// - foo를 출력한다.
-		std::cout << "a: " << v1.a << '\n';
-		std::cout << "b: " << static_cast<int32_t>(v1.b) << '\n';
-		std::cout << "c: " << v1.c << '\n';
-		std::cout << "d: " << v1.d << '\n';
+		std::cout << "a: " << v1.a << std::endl;
+		std::cout << "b: " << static_cast<int32_t>(v1.b) << std::endl;
+		std::cout << "c: " << v1.c << std::endl;
+		std::cout << "d: " << v1.d << std::endl;
 		std::cout << "e: "; for (auto iter : v1.e) std::cout << iter << " ";
-		std::cout << '\n' << '\n';
+		std::cout << std::endl << std::endl;
 	}
 
 	// ------------------------------------------------------------------
-	// 3. 구조체를 사용한 hetrogenous append/extract (2)
+	// 3. make_shared_buffer<T>를 사용한 바로 직렬화
 	//
-	//    역시 make_shared_buffer<T>(...)를 사용할 수 있다.
+	//    alloc_share_buffer 후 append<T>를 하는 번거러운 과정없이
+	//    그냥 make_shared_buffer<T>를 사용해 버퍼의 할당과 직렬화까지
+	//    한번의 호출로 끝낼 수도 있다.
 	//
 	// ------------------------------------------------------------------
 	{
@@ -218,15 +230,17 @@ int main()
 		// - bar의 size_값을 출력한다. 
 		std::cout << "foo.size_ " << bar.size() << " bytes\n";
 
+		// ------------------------------------------------------
+
 		// - foo형을 extract해서 읽어낸다.
 		auto v1 = bar.extract<foo>();
 
 		// - foo를 출력한다.
-		std::cout << "a: " << v1.a << '\n';
-		std::cout << "b: " << static_cast<int32_t>(v1.b) << '\n';
-		std::cout << "c: " << v1.c << '\n';
-		std::cout << "d: " << v1.d << '\n';
+		std::cout << "a: " << v1.a << std::endl;
+		std::cout << "b: " << static_cast<int32_t>(v1.b) << std::endl;
+		std::cout << "c: " << v1.c << std::endl;
+		std::cout << "d: " << v1.d << std::endl;
 		std::cout << "e: "; for (auto iter : v1.e) std::cout << iter << " ";
-		std::cout << '\n' << '\n';
+		std::cout << std::endl << std::endl;
 	}
 }

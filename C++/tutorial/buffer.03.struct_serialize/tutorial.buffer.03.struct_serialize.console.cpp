@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
-//*                      Cho sanghyun's Game Classes II                       *
-//*                      Ver 10.0 / Release 2019.12.01                        *
+//*                               CGDK::buffer                                *
+//*                       ver 4.0 / release 2021.11.01                        *
 //*                                                                           *
 //*                  tutorials buffer (3) - struct serialize                  *
 //*                                                                           *
@@ -73,15 +73,17 @@ int main()
 		// - bar의 size_값을 출력한다. 
 		std::cout << "bar.size_: " << bar.size() << " bytes\n";
 
+		// ------------------------------------------------------
+
 		// *3) foo형을 extract해서 읽어낸다.
 		/*auto v1 =*/ bar.extract<foo>();
 
 		// - foo를 출력한다.
-		std::cout << "a: " << s1.a << '\n';
-		std::cout << "b: " << static_cast<int32_t>(s1.b) << '\n';
-		std::cout << "c: " << s1.c << '\n';
-		std::cout << "d: " << s1.d << '\n';
-		std::cout << '\n';
+		std::cout << "a: " << s1.a << std::endl;
+		std::cout << "b: " << static_cast<int32_t>(s1.b) << std::endl;
+		std::cout << "c: " << s1.c << std::endl;
+		std::cout << "d: " << s1.d << std::endl;
+		std::cout << std::endl;
 	}
 
 
@@ -136,16 +138,18 @@ int main()
 		// - bar의 size_값을 출력한다. 
 		std::cout << "bar.size_: " << bar.size() << " bytes\n";
 
+		// ------------------------------------------------------
+
 		// *3) goo형을 extract해서 읽어낸다.
 		auto v1 = bar.extract<goo>();
 
 		// - goo를 출력한다.
-		std::cout << "a: " << v1.a << '\n';
-		std::cout << "b: " << static_cast<int32_t>(v1.b) << '\n';
-		std::cout << "c: " << v1.c << '\n';
-		std::cout << "d: " << v1.d << '\n';
-		std::cout << "e: "; for(auto iter: v1.e) std::cout << iter << " "; std::cout << '\n';
-		std::cout << '\n' << '\n';
+		std::cout << "a: " << v1.a << std::endl;
+		std::cout << "b: " << static_cast<int32_t>(v1.b) << std::endl;
+		std::cout << "c: " << v1.c << std::endl;
+		std::cout << "d: " << v1.d << std::endl;
+		std::cout << "e: "; for(auto iter: v1.e) std::cout << iter << " "; std::cout << std::endl;
+		std::cout << std::endl << std::endl;
 	}
 
 
@@ -171,16 +175,18 @@ int main()
 		// - bar의 size_값을 출력한다. 
 		std::cout << "bar.size: " << bar.size() << " bytes\n";
 
+		// ------------------------------------------------------
+
 		// - foo형을 extract해서 읽어낸다.
 		auto v1 = bar.extract<goo>();
 
 		// - foo를 출력한다.
-		std::cout << "a: " << v1.a << '\n';
-		std::cout << "b: " << static_cast<int32_t>(v1.b) << '\n';
-		std::cout << "c: " << v1.c << '\n';
-		std::cout << "d: " << v1.d << '\n';
+		std::cout << "a: " << v1.a << std::endl;
+		std::cout << "b: " << static_cast<int32_t>(v1.b) << std::endl;
+		std::cout << "c: " << v1.c << std::endl;
+		std::cout << "d: " << v1.d << std::endl;
 		std::cout << "e: "; for (auto iter : v1.e) std::cout << iter << " ";
-		std::cout << '\n' << '\n';
+		std::cout << std::endl << std::endl;
 	}
 
 }

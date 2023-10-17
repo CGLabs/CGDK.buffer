@@ -1,7 +1,7 @@
 //*****************************************************************************
 //*                                                                           *
 //*                               CGDK::buffer                                *
-//*                       ver 5.0 / release 2021.11.01                        *
+//*                       ver 3.01 / release 2023.10.17                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -316,13 +316,6 @@ constexpr void _buffer_view<ELEM_T>::_extract_buffer_view(_buffer_view<ELEM_T>& 
 	// 1) [데이터_갯수를 먼저 읽어들인다.]
 	auto length = *reinterpret_cast<size_type*>(this->data_);
 
-	// check) this->data_를 넣는다.
-	if (length == 0)
-	{
-		_dest = _buffer_view<ELEM_T>();
-		return;
-	}
-
 	// 2) 
 	const auto bytes_extract = length + sizeof(size_type);
 
@@ -330,6 +323,20 @@ constexpr void _buffer_view<ELEM_T>::_extract_buffer_view(_buffer_view<ELEM_T>& 
 	_CGD_BUFFER_BOUND_CHECK(this->size_ >= bytes_extract);
 
 	// 3) extract bytes
+	if (length == 0)
+	{
+		// - set null
+		_dest = _basic_buffer<ELEM_T>();
+
+		// - extract...
+		this->data_ += sizeof(size_type);
+		this->size_ -= sizeof(size_type);
+
+		// return) 
+		return;
+	}
+
+	// 3) 
 	_dest = _buffer_view<ELEM_T>(this->data_ + sizeof(size_type), length);
 
 	// 4) [데이터_바이트수]만큼 extract
@@ -351,20 +358,29 @@ constexpr _basic_buffer<BUFFER_T> _buffer_view<ELEM_T>::_extract_basic_buffer()
 	auto length = *reinterpret_cast<size_type*>(this->data_);
 
 	// check) this->data_를 넣는다.
-	if(length == 0)
-		return buf_temp;
+	if (length != 0)
+	{
+		// - extract...
+		this->data_ += sizeof(size_type);
+		this->size_ -= sizeof(size_type);
 
-	// 2) 
+		// return) 
+		return buf_temp;
+	}
+
+	// 2) get add length
 	const auto bytes_extract = length + sizeof(size_type);
-	const auto ptr_data = this->data_ + sizeof(size_type);
 
 	// check) 
 	_CGD_BUFFER_BOUND_CHECK(this->size_ >= bytes_extract);
 
-	// 3) make buffer
+	// 3)
+	const auto ptr_data = this->data_ + sizeof(size_type);
+
+	// 4) make buffer
 	buf_temp = _basic_buffer<BUFFER_T>({ ptr_data , length }, buffer_bound{ ptr_data, this->data_ + bytes_extract });
 
-	// 3) [데이터_바이트수]만큼 extract
+	// 5)) [데이터_바이트수]만큼 extract
 	this->data_ += bytes_extract;
 	this->size_ -= bytes_extract;
 

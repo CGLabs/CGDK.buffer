@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
-//*                      Cho sanghyun's Game Classes II                       *
-//*                      Ver 10.0 / Release 2019.12.01                        *
+//*                               CGDK::buffer                                *
+//*                       ver 4.0 / release 2021.11.01                        *
 //*                                                                           *
 //*                    tutorials buffer (1) - basic buffer                    *
 //*                                                                           *
@@ -39,6 +39,77 @@ using namespace CGDK;
 int main()
 {
 	// ------------------------------------------------------------------
+	// 
+	//                          CGDK.buffer.C++
+	// 
+	// 마법과 같이 동작하는 직렬화 기능을 가진 가벼운 버퍼 시스템입니다.
+	// 복잡한 데이터의 직렬화와 역직렬화도 아주 간단히 작성할 수 있습니다.
+	// 
+	// * CGDK.buffer.C++ 특징
+	//    1) 손쉬운 데이터 직렬화와 역직렬화를 제공합니다.
+	//    2) template으로 제작되어 header파일의 include만으로 사용 가능합니다.
+	//    3) 매우 빠릅니다.
+	//    4) 대규모 다양하고 복잡한 형태의 데이터도 직렬화를 제공합니다.
+	//    5) 직렬화와 역직렬화의 커스터마이즈가 가능합니다.
+	// 
+	// 
+	// 게임 혹은 어플리케이션의 네트워크 송수신을 위해 최초 개발되었으나
+	// 파일입출력, 화면입출력, 인자전달 등 다양한 용도로도 사용됩니다.
+	// template으로 제작되어 헤더파일의 lib링크없이 include만으로 사용할 
+	// 수 있습니다.
+	// 즉 C++17이상만 지원하는 모든 플랫폼에서 사용가능합니다.
+	// 따라서 일반적인 서버 뿐만 아니라 unreal 3d와 같은 플랫폼에서도 사용
+	// 가능합니다.
+	// 또 msvc, gcc, clang 등의 주요 c++ 컴파일러를 지원합니다.
+	// 
+	// ------------------------------------------------------------------
+
+	// ------------------------------------------------------------------
+	// 1. 간단한 사용법
+	//    핵심 함수 2개만 알면 모든 직렬화와 역직렬화가 가능합니다.
+	// 
+	//     append<T>(...) 는 직렬화 함수로 버퍼에 데이터를 써넣는 함수.
+	//     extract<T>() 는 역직렬화 버퍼에서 데이터를 읽어내는 함수.
+	// 
+	//    간단한 예제를 보자면.. int64_t형 값 100과 문자열 "test"를 직렬화
+	//    하려면?
+	//    먼저 버퍼에 메모리를 할당해야겠죠.
+	// 
+	//      foo.append(100);
+	//      foo.append("test"sv);
+	//     
+	//    이라고만 하면 됩니다. 
+	//    이렇게 직렬화한 데이터를 다시 역직렬화 하고 싶다면
+	// 
+	//      v1 = foo.extract<uint64_t>();
+	//      v2 = foo.extract<std::string>();
+	//    
+	//    이라고만 하시면 됩니다. 간단하죠?
+	//    근데 한가지 직렬화를 할 동적 버퍼를 할당 받고 싶다면?
+	// 
+	//      auto foo = alloc_shared_buffer(100); // 100byte 할당받음.     
+	//      
+	//      foo.append(100);
+	//      foo.append("test"sv);
+	// 
+	// 2. buffer의 종류
+	//    
+	//     buffer_view    읽기 기능만 가능
+	//                    extract<T>, front<T> 함수
+	//                    data,size 두개의 변수로 구성되어 16byte 크기
+	// 					  
+	//     buffer         buffer_view를 상속 받아 쓰기기능을 추가
+	//                    append<T> 함수
+	//                    data와 size에 더해 bound정보(lower, upper) 추가
+	//                    32byte의 크기
+	// 
+	//     shared_buffer  할당 받은 메모리를 스마트포이터로 관리하는 기능
+	//                    32byte + shared_ptr<T> 크기를 가짐
+	//                    alloc_buffer를 사용해 동적 할당
+	// 
+	// ------------------------------------------------------------------
+
+	// ------------------------------------------------------------------
 	// 1. shared_buffer와 메모리 할당
 	// ------------------------------------------------------------------
 	{
@@ -64,13 +135,13 @@ int main()
 	{
 		std::cout << "2. append/extract" << '\n';
 
-		// - shared_buffer에 1000 byte할당받기
+		// 1) shared_buffer에 1000 byte할당받기
 		auto baz = alloc_shared_buffer(1000);
 
-		// - 먼저 baz의 data_값과 len값을 출력한다.
+		// trace) 먼저 baz의 data_값과 len값을 출력한다.
 		std::cout << "mem allocated>  "<< "data_: " << (uint64_t)baz.data() << "  size_: " << baz.size() << '\n';
 
-		// 1) append()함수를 사용해 baz에 값을 써넣는다.
+		// 2) append()함수를 사용해 baz에 값을 써넣는다.
 		baz.append<int>(100);		// int형으로 100을 써넣는다.
 		baz.append<float>(3.14f);	// float형으로 3.14f을 써넣는다.
 		baz.append<uint64_t>(1234);	// uint64_t형으로 123을 써넣는다.
@@ -79,7 +150,7 @@ int main()
 		//   총 크기인 16byte만큼 size_값이 늘어나게 된다.
 		std::cout << "data appended>  "<< "data_: " << (uint64_t)baz.data() << "  size_: " << baz.size() << '\n';
 
-		// 2) extract()함수를 사용해 baz에서 값을 읽어낸다.
+		// 3) extract()함수를 사용해 baz에서 값을 읽어낸다.
 		//    써넣은 순서와 자료형 대로 값을 일어낸다.
 		auto v1 = baz.extract<int>();
 		auto v2 = baz.extract<float>();
@@ -225,22 +296,31 @@ int main()
 	{
 		std::cout << "5. array" << '\n';
 
+		// 설명)
+		//   C의 전통적인 배열 변수의 직렬화도 지원한다.
+		//   std::array나 std::vector와 같이 직렬화를 처리하기 때문에 상호
+		//   호환이 가능하다.
+
 		// - append할 배열 데이터
 		int s1[4]{ 1,2,3,4 };
 		std::string s2[2]{ "first", "second" };
 		const char* s3[2]{ "first", "second" };
 
-		// - 1000byte 버퍼를 생성함.
+		// - 1000byte 버퍼를 할당 받음.
 		auto baz = alloc_shared_buffer(1000);
 
-		// 1) buffer를 추가함
+		// 1) 배열을 buffer에 append함.
 		baz.append(s1);
 		baz.append(s2);
 		baz.append(s3);
 		baz.append(s3);
 		baz.append(s3);
 
-		// 2) extaact한다.
+		// 설명) 배열은 내부적으로 다른 선형 컨테이너들과 동일하게 직렬화된다.
+		//       따라서 배열로 append한 것을 std::vector나 std::array로 역직렬화 해낼 수 있다.
+		//       배열 변수로 역직렬화는 불가능하다.
+
+		// 2) 벼을을 extaact한다.
 		std::array<int, 4>				v1 = baz.extract<std::array<int, 4>>();
 		std::array<std::string, 2>		v2 = baz.extract<std::array<std::string, 2>>();
 	#ifdef __cpp_lib_string_view
@@ -270,7 +350,7 @@ int main()
 	std::cout << std::endl;
 
 	// ------------------------------------------------------------------
-	// 6. front<T>로 읽기만 하기
+	// 6. front<T>로 읽기(peek)
 	// ------------------------------------------------------------------
 	{
 		std::cout << "6. front<T>" << '\n';
@@ -333,7 +413,7 @@ int main()
 		auto t1 = std::chrono::system_clock::now(); // std::chrono::system_clock::time_point
 		auto t2 = std::chrono::system_clock::to_time_t(t1); // std::time_t
 
-		// - 1000byte 버퍼를 생성함.
+		// - 1000byte 버퍼 할당
 		auto baz = alloc_shared_buffer(1000);
 
 		// *1) buf에 std::vector와 std::map을 append함.
@@ -363,7 +443,7 @@ int main()
 		std::string s2 = "test string";
 		float s3 = 1.0f;
 
-		// - 1000byte 버퍼를 생성함.
+		// - 1000byte 버퍼 할당
 		auto baz = alloc_shared_buffer(1000);
 
 		// 1) std::tuple로 값을 append한다.
@@ -382,7 +462,7 @@ int main()
 	std::cout << std::endl;
 
 	// ------------------------------------------------------------------
-	// 10. std::tuple과 structred binding (2)
+	// 10. std::tuple과 structred binding 문법(2)
 	//
 	//    - structed binding과 함께 사용하면 일일이 변수선언하는 것을 피할수 있다.
 	//    - 이 역시 tuple과 보다는 구조체를 사용한 extract에 더 많이 사용된다.
@@ -395,7 +475,7 @@ int main()
 		std::string s2 = "test string";
 		float s3 = 1.0f;
 
-		// - 1000byte 버퍼를 생성함.
+		// - 1000byte 버퍼 할당
 		auto baz = alloc_shared_buffer(1000);
 
 		// 1) std::tuple로 값을 append한다.
@@ -423,7 +503,7 @@ int main()
 		buf_temp.append<std::string_view>("test");
 	#endif
 
-		// - 1000byte 버퍼를 생성함.
+		// - 1000byte 버퍼 할당
 		auto baz = alloc_shared_buffer(1000);
 
 		// 1) buffer를 추가함
@@ -435,9 +515,10 @@ int main()
 	std::cout << std::endl;
 
 	// ------------------------------------------------------------------
-	// 12. 구조체 직렬화
-	//    - std::vector<T>, std::list<T>, std::map<T>와 같은 데이터의 직렬화
-	//    
+	// 12. 단순 구조체 직렬화
+	//    - 단순 구조체를 직렬화 하는 것이다.
+	//    - 단순한 메모리 복사만을 하는 처리를 말하는 것이며
+	//      (Herogeouns 구조체의 직렬화는 tutorial03,04,05를 참조)
 	// ------------------------------------------------------------------
 	{
 		std::cout << "12. structure serialization" << '\n';

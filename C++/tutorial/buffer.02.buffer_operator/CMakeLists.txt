@@ -1,9 +1,9 @@
 #*****************************************************************************
 #*                                                                           *
-#*                      Cho sanghyun's Game Classes II                       *
-#*                      Ver 10.0 / release 2019.12.11                        *
+#*                               CGDK::buffer                                *
+#*                       ver 4.0 / release 2021.11.01                        *
 #*                                                                           *
-#*                  CMake - CGDK10.buffert.append_extract                    *
+#*                    CMake - CGDK.buffer.append_extract                     *
 #*                                                                           *
 #*                                                                           *
 #*                                                                           *
@@ -20,7 +20,7 @@
 # setting
 # ----------------------------------------------------------------------------
 # 1) project name
-PROJECT ( "CGDK10.tutorial.buffer.append_extract" )
+PROJECT ( "CGDK.tutorial.buffer.append_extract" )
 
 # 2) project version
 SET ( PROJECT_VERSION_MAJOR 10 )

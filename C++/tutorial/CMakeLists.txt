@@ -20,7 +20,7 @@
 # setting
 #-----------------------------------------------------------------------------
 # 1) project name
-PROJECT ( "CGDK10.tutorial.buffer" )
+PROJECT ( "CGDK.tutorial.buffer" )
 
 # 2) project version
 SET ( PROJECT_VERSION_MAJOR 10 )
@@ -47,3 +47,6 @@ ADD_SUBDIRECTORY (buffer.03.struct_serialize)
 
 # 4) Ibuffer_serializable
 ADD_SUBDIRECTORY (buffer.04.Ibuffer_serializable)
+
+# 4) static_buffer
+ADD_SUBDIRECTORY (buffer.06.static_buffer)

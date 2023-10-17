@@ -29,7 +29,38 @@
 	#include <list>
 #endif
 
-// 3) C++ Standard Template Libraries
+
+//-----------------------------------------------------------------------------
+//
+// compile options
+//
+//  1) #define CGDK_NO_BOUND_CHECK
+//     disable bound check, no assert, no throw exception on buffer overflow
+// 
+//  2) #define CGDK_DISABLE_ASSERT
+//     enable bound check, no assert, throw exceptions on buffer overflow
+// 
+//  3) default
+//     enable bound check, assert and then throw exceptions on buffer overflow
+// 
+//-----------------------------------------------------------------------------
+#if defined(NDEBUG) || !defined(_DEBUG)
+	#define CGDK_DISABLE_ASSERT
+#endif
+
+#if defined(CGDK_NO_BOUND_CHECK)
+	#define _CGD_BUFFER_BOUND_CHECK(condition)	
+#elif defined(CGDK_DISABLE_ASSERT)
+	#define _CGD_BUFFER_BOUND_CHECK(condition)	if((condition) == false) { throw std::overflow_error("CGDK::shared_buffer out of memory bounding");}
+#else
+	#define _CGD_BUFFER_BOUND_CHECK(condition)	if((condition) == false) { CGDK_ASSERT_ON_BOUND; throw std::overflow_error("CGDK::shared_buffer out of memory bounding");}
+#endif
+
+
+//-----------------------------------------------------------------------------
+// preprocess
+//-----------------------------------------------------------------------------
+// 1) C++ Standard Template Libraries
 namespace std
 {
 	template<class, size_t> class array;
@@ -61,7 +92,7 @@ namespace std
 #endif
 }
 
-// 4) CGDK classes
+// 2) CGDK classes
 namespace CGDK
 {
 	template<class,std::size_t> class static_vector;
@@ -104,11 +135,6 @@ namespace CGDK
 
 constexpr std::size_t	_XX_MAX_STRING_SIZE = 65536;
 inline std::size_t _buffer_string_size_saturate(std::size_t _a) { return (_a < _XX_MAX_STRING_SIZE) ? _a : _XX_MAX_STRING_SIZE; }
-
-// 2) enable bound check
-#if !defined(NDEBUG) && defined(_DEBUG)
-	//#define _CGDK_ENABLE_BUFFER_BOUND_CHECK
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -362,16 +388,6 @@ inline text<char8_t> 	operator "" _text(const char8_t* _text, std::size_t _size)
 inline text<char16_t>	operator "" _text(const char16_t* _text, std::size_t _size) noexcept { return text<char16_t>(std::u16string_view(_text, _size));}
 inline text<char32_t>	operator "" _text(const char32_t* _text, std::size_t _size) noexcept { return text<char32_t>(std::u32string_view(_text, _size));}
 
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-// 1) 
-#if defined(_CGDK_ENABLE_BUFFER_BOUND_CHECK)
-	#define _CGD_BUFFER_BOUND_CHECK(condition)	if((condition) == false) { CGDK_ASSERT_ON_BOUND; throw std::length_error("CGDK::shared_buffer out of memory bounding");}
-#else
-	#define _CGD_BUFFER_BOUND_CHECK(condition)
-#endif
 
 //-----------------------------------------------------------------------------
 // Ibuffer_serializable
@@ -1245,7 +1261,7 @@ template<class B, class T>	class serializer_append<B, own_ptr<T>, std::enable_if
 							};
 template<class B, class T>	class serializer_extract<B, own_ptr<T>, std::enable_if_t<std::is_base_of_v<Ibuffer_serializable, T>>>
 							{	using TX = std::remove_const_t<T>;
-								public:	using type = own_ptr<TX>&&;
+								public:	using type = own_ptr<TX>;
 								template<class S> constexpr static type _do_extract(S& _s) { own_ptr<TX> t = make_own<TX>(); t->serialize_in(_s); return t;}
 								template<class D, class S> constexpr static void _do_extract(D& _dest, S& _s) { _dest = make_own<TX>(); _dest->serialize_in(_s);}
 							};

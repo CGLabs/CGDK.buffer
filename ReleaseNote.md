@@ -1,3 +1,27 @@
+## CGDK 3.01 (2022.07.10)
+   ### (C++)
+   # common
+   - buffer의 overflow시 assert, exception, 혹은 무반응을 사용자가 설정할 수 있도록 변경
+      #define CGDK_NO_BOUND_CHECK => bound 검사를 하지 않음(assert나 exception 던지지 않음)
+      #define CGD_DISABLE_ASSERT => bound 범위 밖 조작의 경우에도 assert 발생를 발생하지 않는다.(Debug 모드일 때만 해당), 그냥 예외를 바로 던진다.
+    - 구조체 직렬화(structure serialzation)시 stack overflow 발생 상황 줄임.
+      구조체 직렬화는 지역 변수를 활용하기 때문에 지나치 큰 변수의 직렬화시 stack overflow가 날 수 있었다.
+      최대한 지역 변수의 사용을 최소화함으로 인해 stack에 의한 제한을 많이 완화 했음.
+    - unreal 3d를 지원하기 위한 기능.
+
+  # buffer(_basic_buffer)
+    - _basic_buffer(buffer) 배열로 초기화 기능 추가
+    - ramained()함수 추가 - 원본 버퍼의 남은 영역을 buffer로 만들어 리턴해 주는 함수
+    - append시 return값이 모두 reference형에서 오는 오류 수정 (기본형일 경우만 reference 리턴값 가짐)
+    - 중복 코드 제거
+    - buffer_view의 extract시 오류 수정
+    - extract_multi 시 own_ptr<T> 동작 오류 수정(CGDK10에서 사용할 경우에만 해당)
+  # _shared_buffer
+    - remained()함수 추가. 원본 버퍼의 남은 버퍼를 shared)buffer로 만들어 리턴해주는 함수
+
+  # toturial 정리
+    - tutorial 내용과 설명을 일부 변경
+
 ## CGDK 3.0 (2022.07.10)
 CGD.buffer에서 CGDK.buffer로 명칭 변경
    ### (C++)

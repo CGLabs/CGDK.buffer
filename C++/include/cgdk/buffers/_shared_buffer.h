@@ -1,7 +1,7 @@
 //*****************************************************************************
 //*                                                                           *
 //*                               CGDK::buffer                                *
-//*                       ver 5.0 / release 2021.11.01                        *
+//*                       ver 3.01 / release 2023.10.17                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -34,7 +34,7 @@ public:
 			using object_ptr_t = std::shared_ptr<memory_t>;
 		#endif
 
-			template<class T> using extr_tr = typename base_t::template extr_tr<T>;
+			template <class T> using extr_tr = typename base_t::template extr_tr<T>;
 			template <class T> class to_base_t {};
 			template <class X> class to_base_t<_buffer_view<X>> { public: static _buffer_view<X> casting (Imemory* _rhs) { return (_rhs != nullptr) ? _buffer_view<X>{ _rhs->data(), 0}: _buffer_view<X>{}; }};
 			template <class X> class to_base_t<_basic_buffer<X>> { public: static _basic_buffer<X> casting (Imemory* _rhs) { return (_rhs != nullptr) ? _basic_buffer<X> {_buffer_view<X>{ _rhs->data(), 0}, _rhs->get_bound()} : _basic_buffer<X>{}; }};
@@ -77,6 +77,8 @@ public:
 			void				clear() noexcept { base_t::clear(); psource.reset();}
 			void				swap(self_t& _rhs) noexcept { base_t::swap(_rhs); object_ptr_t p = std::move(_rhs.psource); _rhs.psource = std::move(psource); psource = std::move(p);}
 			void				swap(base_t& _rhs) noexcept { base_t::swap(_rhs);}
+	constexpr self_t			remained() const noexcept { return self_t(base_t(typename base_t::base_t{ this->get_back_ptr(), 0 }, this->bound), this->psource); }
+	constexpr self_t			remained(skip _skip) const noexcept { return self_t(base_t(typename base_t::base_t{ this->get_back_ptr() + _skip.amount, 0 }, this->bound), this->psource); }
 	template <class T>
 			self_t				split_head(const _buffer_view<T>& _source);
 	template <class T>

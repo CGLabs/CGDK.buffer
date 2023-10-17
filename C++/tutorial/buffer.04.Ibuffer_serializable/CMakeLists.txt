@@ -1,9 +1,9 @@
 #*****************************************************************************
 #*                                                                           *
-#*                      Cho sanghyun's Game Classes II                       *
-#*                      Ver 10.0 / release 2019.12.11                        *
+#*                               CGDK::buffer                                *
+#*                       ver 4.0 / release 2021.11.01                        *
 #*                                                                           *
-#*               CMake - CGDK10.buffert.Ibuffer_serializable                 *
+#*                 CMake - CGDK.buffer.Ibuffer_serializable                  *
 #*                                                                           *
 #*                                                                           *
 #*                                                                           *
@@ -20,7 +20,7 @@
 # setting
 # ----------------------------------------------------------------------------
 # 1) project name
-PROJECT ( "CGDK10.tutorial.buffer.Ibuffer_serializable" )
+PROJECT ( "CGDK.tutorial.buffer.Ibuffer_serializable" )
 
 # 2) project version
 SET ( PROJECT_VERSION_MAJOR 10 )

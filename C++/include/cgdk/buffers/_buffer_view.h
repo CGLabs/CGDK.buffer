@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
 //*                               CGDK::buffer                                *
-//*                       ver 5.0 / release 2021.11.01                        *
+//*                       ver 3.01 / release 2023.10.17                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -47,6 +47,13 @@ public:
 	constexpr _buffer_view(base_t&& _buffer) noexcept : base_t{ _buffer.size_, _buffer.data_ } {}
 	template <class T>
 	constexpr _buffer_view(buffer_base<T>&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
+
+	template <class T, size_t N>
+	constexpr _buffer_view(T(&_array)[N]) noexcept : base_t{ N * sizeof(T), reinterpret_cast<element_t*>(_array) } {}
+	template <class T, size_t N>
+	constexpr _buffer_view(std::array<T, N>& _array) noexcept : base_t{ N * sizeof(T), reinterpret_cast<element_t*>(_array.data()) } {}
+	template <class T>
+	constexpr _buffer_view(std::basic_string_view<T> _string) noexcept : base_t{ _string.size() * sizeof(T), reinterpret_cast<element_t*>(_string.data()) } {}
 
 // public) 
 public:
@@ -178,12 +185,12 @@ public:
 			template <class T>
 	constexpr auto				get_front_ptr() const noexcept			{ return reinterpret_cast<T*>(this->data_); }
 			template <class T = char>
-	constexpr void				set_front_ptr(T* _pos)					{ _CGD_BUFFER_BOUND_CHECK(_pos <= this->get_back_ptr<T>()); auto temp_offset = reinterpret_cast<char*>(_pos) - this->data_; this->data_ = reinterpret_cast<char*>(_pos); this->size_ -= temp_offset;  }
+	constexpr void				set_front_ptr(T* _pos)					{ _CGD_BUFFER_BOUND_CHECK(_pos <= this->get_back_ptr<T>()); auto temp_offset = reinterpret_cast<element_t*>(_pos) - this->data_; this->data_ = reinterpret_cast<element_t*>(_pos); this->size_ -= temp_offset;  }
 	constexpr auto				get_back_ptr() const noexcept			{ return this->data_ + this->size_;}
 			template <class T>
 	constexpr auto				get_back_ptr() const noexcept			{ return reinterpret_cast<T*>(this->data_ + this->size_);}
 			template <class T = char>
-	constexpr void				set_back_ptr(T* _pos)					{ _CGD_BUFFER_BOUND_CHECK(_pos >= this->get_front_ptr<T>()); this->size_ = reinterpret_cast<char*>(_pos) - this->data_; }
+	constexpr void				set_back_ptr(T* _pos)					{ _CGD_BUFFER_BOUND_CHECK(_pos >= this->get_front_ptr<T>()); this->size_ = reinterpret_cast<element_t*>(_pos) - this->data_; }
 
 	// 8) Operator Overloading
 			// [operator] +/-
@@ -215,10 +222,7 @@ public:
 	constexpr self_t&			operator= (base_t&& _rhs) noexcept { this->data_ =_rhs.data_; this->size_ =_rhs.size_; return *this;}
 			template<class T>
 	constexpr self_t&			operator= (buffer_base<T>&& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
-			template <class T>
-	constexpr self_t&			operator= (std::basic_string_view<T> _string) noexcept { this->data_ = reinterpret_cast<ELEM_T*>(_string.data()); this->size_ = _string.size() * sizeof(T); return *this; }
-			template <class T, std::size_t N>
-	constexpr self_t&			operator= (T(&_memory)[N]) noexcept { this->data_ = reinterpret_cast<ELEM_T*>(_memory); this->size_ = N * sizeof(T); return *this; }
+
 			// [operator] +=/-=
 	constexpr self_t&			operator+= (CGDK::offset _rhs)
 			{
@@ -333,27 +337,40 @@ public:
 			}
 
 			template<class T>
-	constexpr std::enable_if_t<!is_own_ptr_serialziable<T>::value, void> 
+	constexpr std::enable_if_t<!is_own_ptr_serialziable<T>::value && !std::is_base_of_v<Ibuffer_serializable, T>, void>
 								_extract_tuple(std::tuple<T>& _dest)
 			{
 				std::get<0>(_dest) = this->_extract<std::remove_reference_t<std::remove_cv_t<T>>>();
 			}
 			template<class T>
-	constexpr std::enable_if_t<is_own_ptr_serialziable<T>::value, void>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<T>::value || (std::is_base_of_v<Ibuffer_serializable, T> && !is_object_ptr_v<T>), void>
+								_extract_tuple(std::tuple<T>& _dest)
+			{
+				std::get<0>(_dest).serialize_in(*this);
+			}
+			template<class T>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<T>::value || (std::is_base_of_v<Ibuffer_serializable, T> && is_object_ptr_v<T>), void>
 								_extract_tuple(std::tuple<T>& _dest)
 			{
 				std::get<0>(_dest)->serialize_in(*this);
 			}
 
 			template<class TFIRST, class TSECOND, class... TREST>
-	constexpr std::enable_if_t<!is_own_ptr_serialziable<TFIRST>::value, void> 
+	constexpr std::enable_if_t<!is_own_ptr_serialziable<TFIRST>::value && !std::is_base_of_v<Ibuffer_serializable, TFIRST>, void>
 								_extract_tuple(std::tuple<TFIRST, TSECOND, TREST...>& _dest)
 			{
 				std::get<0>(_dest) = this->_extract< std::remove_reference_t<std::remove_cv_t<TFIRST>>>();
 				this->_extract_tuple((std::tuple<TSECOND, TREST...>&)_dest);
 			}
 			template<class TFIRST, class TSECOND, class... TREST>
-	constexpr std::enable_if_t<is_own_ptr_serialziable<TFIRST>::value, void>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<TFIRST>::value || (std::is_base_of_v<Ibuffer_serializable, TFIRST> && !is_object_ptr_v<TFIRST>), void>
+								_extract_tuple(std::tuple<TFIRST, TSECOND, TREST...>& _dest)
+			{
+				std::get<0>(_dest).serialize_in(*this);
+				this->_extract_tuple((std::tuple<TSECOND, TREST...>&)_dest);
+			}
+			template<class TFIRST, class TSECOND, class... TREST>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<TFIRST>::value || (std::is_base_of_v<Ibuffer_serializable, TFIRST> && is_object_ptr_v<TFIRST>), void>
 								_extract_tuple(std::tuple<TFIRST, TSECOND, TREST...>& _dest)
 			{
 				std::get<0>(_dest)->serialize_in(*this);
@@ -361,14 +378,47 @@ public:
 			}
 
 			template<class T>
-	constexpr void				_extract_multi(T& _dest)
+	constexpr std::enable_if_t<!is_own_ptr_serialziable<T>::value && !std::is_base_of_v<Ibuffer_serializable, T>, void>
+								_extract_multi(T& _dest)
 			{
 				_dest = this->_extract<T>();
 			}
+
+			template<class T>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<T>::value || (std::is_base_of_v<Ibuffer_serializable, T> && !is_object_ptr_v<T>), void>
+								_extract_multi(T& _dest)
+			{
+				_dest.serialize_in(*this);
+			}
+
+			template<class T>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<T>::value || (std::is_base_of_v<Ibuffer_serializable, T> && is_object_ptr_v<T>), void>
+								_extract_multi(T& _dest)
+			{
+				_dest->serialize_in(*this);
+			}
+
 			template<class TFIRST, class TSECOND, class... TREST>
-	constexpr void				_extract_multi(TFIRST& _first, TSECOND& _second, TREST&... _rest)
+	constexpr std::enable_if_t<!is_own_ptr_serialziable<TFIRST>::value && !std::is_base_of_v<Ibuffer_serializable, TFIRST>, void>
+								_extract_multi(TFIRST& _first, TSECOND& _second, TREST&... _rest)
 			{
 				_first = this->_extract<std::remove_reference_t<std::remove_cv_t<TFIRST>>>();
+				this->_extract_multi(_second, _rest...);
+			}
+
+			template<class TFIRST, class TSECOND, class... TREST>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<TFIRST>::value || (std::is_base_of_v<Ibuffer_serializable, TFIRST> && !is_object_ptr_v<TFIRST>), void>
+								_extract_multi(TFIRST& _first, TSECOND& _second, TREST&... _rest)
+			{
+				_first.serialize_in(*this);
+				this->_extract_multi(_second, _rest...);
+			}
+
+			template<class TFIRST, class TSECOND, class... TREST>
+	constexpr std::enable_if_t<is_own_ptr_serialziable<TFIRST>::value || (std::is_base_of_v<Ibuffer_serializable, TFIRST> && is_object_ptr_v<TFIRST>), void>
+								_extract_multi(TFIRST& _first, TSECOND& _second, TREST&... _rest)
+			{
+				_first->serialize_in(*this);
 				this->_extract_multi(_second, _rest...);
 			}
 
