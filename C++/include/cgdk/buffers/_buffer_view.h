@@ -66,11 +66,11 @@ public:
 	constexpr size_type			size_bytes() const noexcept				{ return this->size_ * sizeof(element_t);}
 	template <class CAST_SIZE_T>
 	constexpr CAST_SIZE_T		size_bytes() const noexcept				{ auto bytes = size_bytes(); CGDK_ASSERT(bytes == static_cast<size_type>(static_cast<CAST_SIZE_T>(bytes))); return static_cast<CAST_SIZE_T>(bytes);}
-	constexpr void				set_size(size_type _new_size) noexcept	{ this->size_ = _new_size; }
-	constexpr void				add_size(size_type _size) noexcept		{ this->size_ += _size; }
-	constexpr void				sub_size(size_type _size) noexcept		{ this->size_ -= _size; }
-	constexpr void				inc_size() noexcept						{ ++this->size_; }
-	constexpr void				dec_size() noexcept						{ --this->size_; }
+	constexpr void				set_size(size_type _new_size)			{ this->size_ = _new_size; } // unsafe
+	constexpr void				add_size(size_type _size)				{ this->size_ += _size; } // unsafe
+	constexpr void				sub_size(size_type _size)				{ this->size_ -= _size; } // unsafe
+	constexpr void				inc_size()								{ ++this->size_; } // unsafe
+	constexpr void				dec_size()								{ --this->size_; } // unsafe
 	constexpr void				clear() noexcept						{ this->size_ = 0; this->data_ = nullptr;}
 
 	constexpr auto&				operator[](size_type _index)			{ return this->data_[_index];}
@@ -81,14 +81,14 @@ public:
 
 	// 2) data/
 	constexpr element_t*		data() const noexcept					{ return this->data_;}
-	constexpr element_t*		data(int64_t _offset) const				{ return this->data_ + _offset;}
+	constexpr element_t*		data(int64_t _offset) const				{ return this->data_ + _offset;} // unsafe
 	template <class T = element_t>
 	constexpr auto				data() const noexcept					{ return reinterpret_cast<_buffer_return_t<traits, T>*>(this->data_);}
 	template <class T = element_t>
-	constexpr auto				data(int64_t _offset) const				{ return reinterpret_cast<_buffer_return_t<traits, T>*>(this->data_ + _offset);}
-	constexpr void				set_data(element_t* _data) noexcept		{ this->data_ = _data; }
-	constexpr void				add_data(size_type _size) noexcept		{ this->data_ += _size; }
-	constexpr void				sub_data(size_type _size) noexcept		{ this->data_ -= _size; }
+	constexpr auto				data(int64_t _offset) const				{ return reinterpret_cast<_buffer_return_t<traits, T>*>(this->data_ + _offset);} // unsafe
+	constexpr void				set_data(element_t* _data)				{ this->data_ = _data; } // unsafe
+	constexpr void				add_data(size_type _size)				{ this->data_ += _size; } // unsafe
+	constexpr void				sub_data(size_type _size)				{ this->data_ -= _size; } // unsafe
 
 	// 3) exist/empty
 	constexpr void				resize(size_type _new_size)				{ if (_new_size > this->size_) throw std::length_error("resize operation of _buffer_view<T>' is allowed only for deminishing size 'resize(size_t)'. use operator '^' instead"); this->size_ = _new_size;}

@@ -223,7 +223,7 @@ struct any_constructor_append
 	constexpr operator Type () const
 	{
 		// 1) pre-offset
-		offset = alliened_offset_pre<IALIGN>(offset, sizeof(Type));
+		offset = align_offset_pre<IALIGN>(offset, sizeof(Type));
 
 		// 1) append data
 		buf_dest.append<std::decay_t<Type>>(*reinterpret_cast<const Type*>(source + offset));

@@ -2322,14 +2322,14 @@ template<typename T>		class serializer_size_of<T, std::enable_if_t<is_associativ
 //-----------------------------------------------------------------------------
 // aggrigate structure (reflection)
 //-----------------------------------------------------------------------------
-template <std::size_t ISIZE>	constexpr std::size_t alliened_offset_pre     (std::size_t _source, std::size_t _add);
-template <>						constexpr std::size_t alliened_offset_pre< 1> (std::size_t _source, std::size_t) { return _source; }
-template <>						constexpr std::size_t alliened_offset_pre< 2> (std::size_t _source, std::size_t _add) { return (!(_source & 0x01) || _add <= 1) ? _source : _source + 1;}
-template <>						constexpr std::size_t alliened_offset_pre< 4> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x03); return (remained == 0 || ( 4 - remained) >= _add) ? _source : ((_source & (~0x03)) +  4);}
-template <>						constexpr std::size_t alliened_offset_pre< 8> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x07); return (remained == 0 || ( 8 - remained) >= _add) ? _source : ((_source & (~0x07)) +  8);}
-template <>						constexpr std::size_t alliened_offset_pre<16> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x0f); return (remained == 0 || (16 - remained) >= _add) ? _source : ((_source & (~0x0f)) + 16);}
-template <>						constexpr std::size_t alliened_offset_pre<32> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x1f); return (remained == 0 || (32 - remained) >= _add) ? _source : ((_source & (~0x1f)) + 32);}
-template <>						constexpr std::size_t alliened_offset_pre<64> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x3f); return (remained == 0 || (64 - remained) >= _add) ? _source : ((_source & (~0x3f)) + 64);}
+template <std::size_t ISIZE>	constexpr std::size_t align_offset_pre     (std::size_t _source, std::size_t _add);
+template <>						constexpr std::size_t align_offset_pre< 1> (std::size_t _source, std::size_t) { return _source; }
+template <>						constexpr std::size_t align_offset_pre< 2> (std::size_t _source, std::size_t _add) { return (!(_source & 0x01) || _add <= 1) ? _source : _source + 1;}
+template <>						constexpr std::size_t align_offset_pre< 4> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x03); return (remained == 0 || ( 4 - remained) >= _add) ? _source : ((_source & (~0x03)) +  4);}
+template <>						constexpr std::size_t align_offset_pre< 8> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x07); return (remained == 0 || ( 8 - remained) >= _add) ? _source : ((_source & (~0x07)) +  8);}
+template <>						constexpr std::size_t align_offset_pre<16> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x0f); return (remained == 0 || (16 - remained) >= _add) ? _source : ((_source & (~0x0f)) + 16);}
+template <>						constexpr std::size_t align_offset_pre<32> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x1f); return (remained == 0 || (32 - remained) >= _add) ? _source : ((_source & (~0x1f)) + 32);}
+template <>						constexpr std::size_t align_offset_pre<64> (std::size_t _source, std::size_t _add) { auto remained = (_source & 0x3f); return (remained == 0 || (64 - remained) >= _add) ? _source : ((_source & (~0x3f)) + 64);}
 
 namespace reflection
 {
