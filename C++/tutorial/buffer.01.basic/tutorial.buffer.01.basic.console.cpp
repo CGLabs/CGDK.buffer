@@ -1,17 +1,15 @@
 ﻿//*****************************************************************************
 //*                                                                           *
 //*                               CGDK::buffer                                *
-//*                       ver 4.0 / release 2021.11.01                        *
+//*                       ver 3.03 / release 2023.10.17                       *
 //*                                                                           *
 //*                    tutorials buffer (1) - basic buffer                    *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
-//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
-//*  Best for Game Developement and Optimized for Game Developement.          *
+//*  programmed by Cho SangHyun. sangduck@cgcii.com                           *
 //*                                                                           *
-//*                (c) 2003. Cho Sanghyun. All right reserved.                *
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
@@ -35,6 +33,7 @@
 
 // 3) using namespace 
 using namespace CGDK;
+using namespace std::literals;
 
 int main()
 {
@@ -190,7 +189,6 @@ int main()
 
 		// check)
 		std::cout << "data appended>  " << "data_: " << (uint64_t)baz.data() << "  size_: " << baz.size() << '\n';
-
 
 		// 3) extract<T>()함수를 사용해 역직렬화한다.
 		auto v1 = baz.extract<std::string>();
@@ -558,6 +556,4 @@ int main()
 		std::cout << "v1.z " << v1.z << std::endl;
 	}
 	std::cout << std::endl;
-
-	[[maybe_unused]] auto ch =  _getch();
 }

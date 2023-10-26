@@ -13,6 +13,9 @@
   <ItemGroup>
     <ClCompile Include="tutorial.buffer.03.struct_serialize.console.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{49001313-6F6C-41E5-9EE8-E6980EAA092D}</ProjectGuid>

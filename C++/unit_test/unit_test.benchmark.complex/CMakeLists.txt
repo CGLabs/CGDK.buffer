@@ -1,17 +1,15 @@
 #*****************************************************************************
 #*                                                                           *
-#*                      Cho sanghyun's Game Classes II                       *
-#*                      Ver 10.0 / release 2019.12.11                        *
+#*                               CGDK::buffer                                *
+#*                       ver 3.03 / release 2023.10.17                       *
 #*                                                                           *
 #*             CMake - CGDK.buffer.unit_test.benchbmark.complex              *
 #*                                                                           *
 #*                                                                           *
 #*                                                                           *
 #*                                                                           *
-#*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
-#*  Best for Game Developement and Optimized for Game Developement.          *
+#*  programmed by Cho SangHyun. sangduck@cgcii.com                           *
 #*                                                                           *
-#*                (c) 2003. Cho Sanghyun. All right reserved.                *
 #*                          http://www.CGCII.co.kr                           *
 #*                                                                           *
 #*****************************************************************************
@@ -29,7 +27,8 @@ SET ( PROJECT_VERSION_PATCH 100 )
 SET ( PROJECT_VERSION_TWEAK 1 )
 
 # 3) build version
-CMAKE_MINIMUM_REQUIRED ( VERSION 3.10 )
+CMAKE_MINIMUM_REQUIRED ( VERSION 3.20 )
+CMAKE_POLICY( VERSION 3.20 )
 
 # 4) default BUILD_TYPE
 IF (NOT DEFINED CMAKE_BULD_TYPE)
@@ -41,8 +40,10 @@ SET ( CMAKE_RUNTIME_OTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../execute )
 SET ( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../execute )
 
 # 6) compile options
-SET ( CMAKE_CXX_FLAGS "-DC_FLAGS -fexceptions -std=c++2a" )
-SET ( CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Wextra" )
+set ( CMAKE_CXX_STANDARD 20)
+set ( CMAKE_CXX_STANDARD_REQUIRED ON)
+SET ( CMAKE_CXX_FLAGS "-DC_FLAGS -fexceptions -std=c++20" )
+SET ( CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g3 -Wall -Wextra" )
 SET ( CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -Wall -Wextra" )
 
 # 7) include directories
@@ -59,6 +60,7 @@ LINK_DIRECTORIES(
 
 # 9) requires
 FIND_PACKAGE(GTest REQUIRED)
+FIND_PACKAGE(Protobuf REQUIRED)
 
 
 #-----------------------------------------------------------------------------
@@ -68,9 +70,15 @@ SET (SRC_FILES
 #pre-compiled header
 pch.cpp
 
-#CGDK/License
-test.cpp
+#test
+test_cgdk.cpp
+test_protobuf.cpp
+protobuf/messages_test.pb.cc
 )
+
+# protobuf
+ADD_SUBDIRECTORY(protobuf)
+
 
 
 #-----------------------------------------------------------------------------
@@ -98,6 +106,7 @@ ADD_EXECUTABLE(${PROJECT_NAME}.${BUILD_TYPE} ${SRC_FILES})
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME}.${BUILD_TYPE}
 	${GTEST_LIBRARIES}
 	${GTEST_MAIN_LIBRARIES}
+	protobuf
 	rt
 	pthread
 )

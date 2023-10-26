@@ -13,6 +13,9 @@
   <ItemGroup>
     <ClCompile Include="tutorial.buffer.02.buffer_operator.console.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{492D8D06-B38A-40D2-AB8C-6FE99583EB56}</ProjectGuid>

@@ -12,7 +12,7 @@ void test_buffer_view_extract_string(const T& _source)
 {
 	// declare) static memory
 	char buf_array[4096];
-	CGDK::buffer temp = CGDK::make_buffer(buf_array);
+	CGDK::buffer temp{ buf_array };
 
 	// 1) append string
 	function_string_append(temp, _source);
@@ -34,7 +34,7 @@ void test_buffer_view_front_string(const T& _source)
 {
 	// declare) static memory
 	char buf_array[4096];
-	CGDK::buffer temp = CGDK::make_buffer(buf_array);
+	CGDK::buffer temp{ buf_array };
 
 	// 1) append string
 	function_string_append(temp, _source);
@@ -62,7 +62,7 @@ namespace CGDK
 			char buf_array[4096];
 
 			// - buffer
-			CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+			CGDK::buffer buf_temp{ buf_array };
 
 			// - timepoint 설정
 			auto dtA = chrono::from_date_time<chrono::time::local::time_point>({ 2017,12,11,5,10,20,1000 });;
@@ -87,7 +87,7 @@ namespace CGDK
 			char buf_array[4096];
 
 			// - buffer
-			CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+			CGDK::buffer buf_temp{ buf_array };
 
 			// - timepoint 설정
 			auto dtA = chrono::from_date_time<chrono::time::utc::time_point>({ 2017,12,11,5,10,20,1000 });;
@@ -122,7 +122,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
 		for(int i=0; i<_TEST_COUNT;++i)
@@ -139,7 +139,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
 		function_append_general(buf_temp);
@@ -156,7 +156,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
 		function_append_general(buf_temp);
@@ -173,7 +173,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
 		function_append_general(buf_temp);
@@ -196,7 +196,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_test = CGDK::make_buffer(buf_array, OFFSET) + offset(OFFSET);
+		CGDK::buffer buf_test = CGDK::buffer{buf_array} + size(OFFSET) + offset(OFFSET);
 
 		// - 값 써넣기
 		buf_test.prepend(str_test);
@@ -218,7 +218,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - Buffer 할당
-		CGDK::buffer buf_alloc = CGDK::make_buffer(buf_array, OFFSET);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(OFFSET);
 
 		// Defintions)
 		std::string_view str_test{ "Test String" };
@@ -250,7 +250,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer 할당
-		CGDK::buffer buf_test = CGDK::make_buffer(buf_array, OFFSET) + offset(OFFSET);
+		CGDK::buffer buf_test = CGDK::buffer{ buf_array } + size(OFFSET) + offset(OFFSET);
 
 		// - 값 써넣기
 		buf_test.prepend(strTest1);
@@ -281,7 +281,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_test = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_test{ buf_array };
 
 		// - 값 써넣기
 		buf_test.append(str_test);
@@ -306,7 +306,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_temp = make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
 		buf_temp.append(str_test);
@@ -328,7 +328,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - buffer
-		CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
 	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
@@ -351,7 +351,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_temp = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
 		buf_temp.append(std::string_view("Test XX"));
@@ -386,7 +386,7 @@ namespace CGDK
 		char buf_temp_2[4096];
 		
 		// Case A) 메모리 할당 (Allocating Memory)
-		CGDK::buffer buf_write = CGDK::make_buffer(buf_temp_1);
+		CGDK::buffer buf_write{ buf_temp_1 };
 
 		// 2) 문자열 리스트 통채로 추가 (appending string list)
 		buf_write.append(list_test);
@@ -395,7 +395,7 @@ namespace CGDK
 		EXPECT_TRUE(buf_write.size() == get_size_of(list_test));
 
 		// Case B) 메모리 할당 (Allocation Memory)
-		CGDK::buffer temp_memory = CGDK::make_buffer(buf_temp_2);
+		CGDK::buffer temp_memory{ buf_temp_2 };
 
 		// 3) Iterator를 사용해 특정 범위의 데이터만 써넣을 수도 있다.(ranged appending using iterator)
 		temp_memory.append(list_test.begin(), list_test.end());
@@ -526,7 +526,7 @@ namespace CGDK
 		char buf_array[4096];
 
 		// - 
-		CGDK::buffer buf_test = make_buffer(buf_array);
+		CGDK::buffer buf_test{ buf_array };
 
 		// - 값 써 넣기
 		auto result_a = buf_test.append(_text(str_test));
@@ -552,7 +552,7 @@ namespace CGDK
 	{
 		// declare) static memory
 		char buf_array[4096];
-		CGDK::buffer buf_test = make_buffer(buf_array);
+		CGDK::buffer buf_test{ buf_array };
 
 		// 2) 추가한다
 		buf_test.append({ 1,2,3,4,5,6,7 });
@@ -562,7 +562,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_temp = make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// declare) 
 		const	int					iValue_Write		 = 3;
@@ -615,7 +615,7 @@ namespace CGDK
 
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_temp = make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// 2) 버퍼에 Struct를 빈값으로 써넣는다! 그리고 추가한 곳 위치의 참조를 얻는다.
 		TESTSTRUCT&	temp = buf_temp.append<TESTSTRUCT>();
@@ -648,7 +648,7 @@ namespace CGDK
 
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_temp = make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// 2) 버퍼에 Struct를 빈값으로 써넣는다! 그리고 추가한 곳 위치의 참조를 얻는다.
 		TESTSTRUCT& temp = buf_temp.append<TESTSTRUCT>();
@@ -696,7 +696,7 @@ namespace CGDK
 
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_temp = make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// 2) 버퍼에 Struct를 빈값으로 써넣는다! 그리고 추가한 곳 위치의 참조를 얻는다.
 		TESTSTRUCT&	temp = buf_temp.append<TESTSTRUCT&>();
@@ -737,7 +737,7 @@ namespace CGDK
 
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_temp = make_buffer(buf_array);
+		CGDK::buffer buf_temp{ buf_array };
 
 		// 2) 버퍼에 Struct를 빈값으로 써넣는다! 그리고 추가한 곳 위치의 참조를 얻는다.
 		TESTSTRUCT&	temp = buf_temp.append<TESTSTRUCT&>();
@@ -802,7 +802,7 @@ namespace CGDK
 		char buf_array[get_size_of("Test String")];
 
 		// - alloc shared_buffer
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - overflow test - pass
 		{
@@ -880,7 +880,7 @@ namespace CGDK
 
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{buf_array} + size(4096);
 
 		// - overflow test
 		{
@@ -940,7 +940,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
@@ -957,7 +957,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		buf_alloc.append(array_string_wchar_t);
 
@@ -984,7 +984,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		buf_alloc.append(array_string_wchar_t);
 
@@ -1015,7 +1015,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append
 		buf_alloc.append(array_string_wchar_t);
@@ -1044,7 +1044,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append
 		buf_alloc.append(array_string_wchar_t);
@@ -1076,7 +1076,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -1100,7 +1100,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -1134,7 +1134,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -1151,7 +1151,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_vector_int);
@@ -1176,7 +1176,7 @@ namespace CGDK
 	{
 		// 1) alloc buffer 
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_vector_int);
@@ -1203,7 +1203,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_vector_int);
@@ -1229,7 +1229,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_vector_int);
@@ -1258,7 +1258,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0; i<_TEST_COUNT; ++i)
@@ -1282,7 +1282,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -1309,7 +1309,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
@@ -1326,7 +1326,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_vector_std_string);
@@ -1351,7 +1351,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_vector_std_string);
@@ -1380,7 +1380,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_vector_std_string);
@@ -1406,7 +1406,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_vector_std_string);
@@ -1435,7 +1435,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -1459,7 +1459,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -1490,7 +1490,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// Defintions)
 		std::array<int, 10>	temp_std_array = { 10, 11, 12, 13, 14, 15, };
@@ -1515,7 +1515,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// Defintions)
 		std::array<int, 10>	temp_std_array = { 10, 11, 12, 13, 14, 15, };
@@ -1543,7 +1543,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - 임시로...
 		CGDK::buffer buf_test = buf_alloc;
@@ -1565,7 +1565,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - 임시로...
 		CGDK::buffer buf_test = buf_alloc;
@@ -1590,7 +1590,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - 임시로...
 		CGDK::buffer buf_test = buf_alloc;
@@ -1613,7 +1613,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - 임시로...
 		CGDK::buffer buf_test = buf_alloc;
@@ -1639,7 +1639,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// Defintions)
 		std::array<std::string, 4> temp_std_array = { "a", "bc", "def", "hijk" };
@@ -1664,7 +1664,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// Defintions)
 		std::array<std::string, 4>	temp_std_array = { "a", "bc", "def", "hijk" };
@@ -1692,7 +1692,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// Defintions)
 		std::array<std::string_view, 4>	temp_std_array = { "a", "bc", "def", "hijk" };
@@ -1717,7 +1717,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// Defintions)
 		std::array<std::string_view, 4>	temp_std_array = { "a", "bc", "def", "hijk" };
@@ -1749,7 +1749,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -1766,7 +1766,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_list_int);
@@ -1791,7 +1791,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_list_int);
@@ -1819,7 +1819,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_list_int);
@@ -1845,7 +1845,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append 
 		buf_alloc.append(std_list_int);
@@ -1875,7 +1875,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -1899,7 +1899,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -1927,7 +1927,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -1941,7 +1941,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append string
 		buf_alloc.append(std_list_std_string);
@@ -1966,7 +1966,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append string
 		buf_alloc.append(std_list_std_string);
@@ -1994,7 +1994,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append string
 		buf_alloc.append(std_list_std_string);
@@ -2020,7 +2020,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append string
 		buf_alloc.append(std_list_std_string);
@@ -2048,7 +2048,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2072,7 +2072,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -2100,7 +2100,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -2117,7 +2117,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append string
 		buf_alloc.append(std_list_std_vector_int);
@@ -2142,7 +2142,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append string
 		buf_alloc.append(std_list_std_vector_int);
@@ -2169,7 +2169,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_list_std_vector_int);
@@ -2195,7 +2195,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_list_std_vector_int);
@@ -2224,7 +2224,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -2248,7 +2248,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -2280,7 +2280,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
@@ -2297,7 +2297,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_int);
@@ -2322,7 +2322,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_int);
@@ -2351,7 +2351,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_int);
@@ -2377,7 +2377,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_int);
@@ -2406,7 +2406,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2430,7 +2430,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -2457,7 +2457,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2475,7 +2475,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_std_string);
@@ -2500,7 +2500,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_std_string);
@@ -2527,7 +2527,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_std_string);
@@ -2553,7 +2553,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_set_std_string);
@@ -2582,7 +2582,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2606,7 +2606,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -2637,7 +2637,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2655,7 +2655,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_int_int);
@@ -2680,7 +2680,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_int_int);
@@ -2707,7 +2707,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_int_int);
@@ -2733,7 +2733,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_int_int);
@@ -2761,7 +2761,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2786,7 +2786,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - ...
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2804,7 +2804,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_string_int);
@@ -2831,7 +2831,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_string_int);
@@ -2860,7 +2860,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_string_int);
@@ -2886,7 +2886,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_string_int);
@@ -2913,13 +2913,13 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096) + offset(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
 			// - 
-			auto buf_temp = buf_alloc + offset(4096);
+			auto buf_temp = buf_alloc;
 
 			// - 
 			buf_temp.prepend(std_map_std_string_int);
@@ -2938,7 +2938,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - ....
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -2956,7 +2956,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_wstring_std_vector_int);
@@ -2981,7 +2981,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_wstring_std_vector_int);
@@ -3008,7 +3008,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_wstring_std_vector_int);
@@ -3034,7 +3034,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_wstring_std_vector_int);
@@ -3063,7 +3063,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -3088,7 +3088,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -3106,7 +3106,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_vector_std_string_view);
@@ -3131,7 +3131,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_vector_std_string_view);
@@ -3158,7 +3158,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_vector_std_string_view);
@@ -3182,7 +3182,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_map_std_vector_std_string_view);
@@ -3208,7 +3208,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -3232,7 +3232,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array, 4096);
+		CGDK::buffer buf_alloc = CGDK::buffer{ buf_array } + size(4096);
 
 		// - extract
 		for (int i = 0; i < _TEST_COUNT; ++i)
@@ -3268,7 +3268,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - ...
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -3286,7 +3286,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_unordered_map_std_string_int);
@@ -3311,7 +3311,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_unordered_map_std_string_int);
@@ -3338,7 +3338,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append data
 		buf_alloc.append(std_unordered_map_std_string_int);
@@ -3365,7 +3365,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer temp_memory = make_buffer(buf_array);
+		CGDK::buffer temp_memory{ buf_array };
 
 		// - extract
 		for(int i=0;i<_TEST_COUNT;++i)
@@ -3399,7 +3399,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 2) 테스트를 위해 0~9 중 임의의 데이터 갯수를 구한다.
 		int iCount = rand()%10;
@@ -3439,11 +3439,11 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		char buf_array_A[4096];
-		CGDK::buffer bufA = make_buffer(buf_array_A);
-		bufA.resize(100);
+		CGDK::buffer bufA{ buf_array_A };
+		bufA.set_size(100);
 
 		buf_alloc.append(std_vector_int);
 
@@ -3466,11 +3466,11 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		char buf_array_A[4096];
-		CGDK::buffer bufA = make_buffer(buf_array_A);
-		bufA.resize(100);
+		CGDK::buffer bufA{ buf_array_A };
+		bufA.set_size(100);
 
 		buf_alloc.append(std_vector_int);
 
@@ -3501,7 +3501,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3542,7 +3542,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3588,7 +3588,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3627,7 +3627,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3669,7 +3669,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3708,7 +3708,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3750,7 +3750,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3792,7 +3792,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_source = make_buffer(buf_array);
+		CGDK::buffer buf_source{ buf_array};
 
 		{
 			// 3) vector를 append하면 각 개체가 통채로 들어간다.
@@ -3838,7 +3838,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 2) Buffer를 할당한다. (최소 64Byte를 할당받는다.)
 		auto buf_temp = buf_alloc;
@@ -3880,7 +3880,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 2) Buffer를 할당한다. (최소 64Byte를 할당받는다.)
 		auto buf_temp = buf_alloc;
@@ -3919,7 +3919,7 @@ namespace CGDK
 	#if defined(CGDK_SYSTEM_OBJECT)
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append
 		tm time_now = chrono::to_tm(chrono::time::local::now());
@@ -3950,7 +3950,7 @@ namespace CGDK
 	#if defined(CGDK_SYSTEM_OBJECT)
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - append
 		tm time_now = chrono::to_tm(chrono::time::local::now());
@@ -3982,7 +3982,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - ...
 		auto buf_temp = buf_alloc;
@@ -4037,7 +4037,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 1) 필요한 메모리는 12Byte지만 적당히 100Byte를 할당받았다.
 		auto buf_temp = buf_alloc;
@@ -4130,7 +4130,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 1) 필요한 메모리는 12Byte지만 적당히 100Byte를 할당받았다.
 		auto buf_temp = buf_alloc;
@@ -4209,7 +4209,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 1) 필요한 메모리는 12Byte지만 적당히 100Byte를 할당받았다.
 		auto buf_temp = buf_alloc;
@@ -4280,7 +4280,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		{
 			CGDK::buffer buf_test_source = buf_alloc;
@@ -4306,7 +4306,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		{
 			CGDK::buffer buf_test;
@@ -4327,7 +4327,7 @@ namespace CGDK
 	{
 		//// - alloc buffer
 		//char buf_array[4096];
-		//CGDK::buffer buf_alloc = make_buffer(buf_array);
+		//CGDK::buffer buf_alloc{ buf_array };
 
 		//{
 		//	CGDK::buffer buf_test;
@@ -4346,7 +4346,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		{
 			CGDK::buffer buf_test;
@@ -4439,7 +4439,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - operator + CGDK::offset
 		{
@@ -4460,7 +4460,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - operator += CGDK::offset
 		{
@@ -4480,7 +4480,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - operator + CGDK::size
 		{
@@ -4501,7 +4501,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - operator += CGDK::size
 		{
@@ -4520,7 +4520,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// operator ^ int
 		{
@@ -4539,7 +4539,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// operator ^= int
 		{
@@ -4557,7 +4557,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// operator ^ CGDK::buffer_view
 		{
@@ -4575,7 +4575,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		buf_alloc[10] = 100;
 
@@ -4588,7 +4588,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		{
 			CGDK::buffer buf_test = buf_alloc;
@@ -4644,11 +4644,11 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array_1[4096];
-		CGDK::buffer buf_alloc_1 = make_buffer(buf_array_1);
+		CGDK::buffer buf_alloc_1{ buf_array_1 };
 
 		// - alloc buffer
 		char buf_array_2[4096];
-		CGDK::buffer buf_alloc_2 = make_buffer(buf_array_2);
+		CGDK::buffer buf_alloc_2{ buf_array_2 };
 
 		{
 			CGDK::buffer buf_test1 = buf_alloc_1;
@@ -4682,7 +4682,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array_source[4096];
-		CGDK::buffer buf_alloc_source = make_buffer(buf_array_source);
+		CGDK::buffer buf_alloc_source{ buf_array_source };
 
 		buf_alloc_source.append<int32_t>(100);
 		buf_alloc_source.append<int64_t>(100);
@@ -4690,7 +4690,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array_dest[4096];
-		CGDK::buffer buf_alloc_dest = make_buffer(buf_array_dest);
+		CGDK::buffer buf_alloc_dest{ buf_array_dest };
 
 		// - copy from
 		buf_alloc_dest.copy_from(buf_alloc_source);
@@ -4769,7 +4769,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 1) 필요한 메모리는 12Byte지만 적당히 100Byte를 할당받았다.
 		auto buf_temp = buf_alloc;
@@ -4858,7 +4858,7 @@ namespace CGDK
 
 		// - alloc buffer
 		char buf_array[4096];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// 1) 필요한 메모리는 12Byte지만 적당히 100Byte를 할당받았다.
 		auto buf_temp = buf_alloc;

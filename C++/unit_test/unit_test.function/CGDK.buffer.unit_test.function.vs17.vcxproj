@@ -59,6 +59,9 @@
     <OutDir>../execute/</OutDir>
     <IntDir>../output/$(ProjectName)/$(Configuration)_$(PlatformTarget)_$(PlatformToolset)\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="test_data.h" />

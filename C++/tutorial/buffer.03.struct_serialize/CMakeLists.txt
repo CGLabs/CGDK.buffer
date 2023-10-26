@@ -1,17 +1,15 @@
 #*****************************************************************************
 #*                                                                           *
 #*                               CGDK::buffer                                *
-#*                       ver 4.0 / release 2021.11.01                        *
+#*                       ver 3.03 / release 2023.10.17                       *
 #*                                                                           *
-#*                    CMake - CGDK.buffer.struct_serialize                   *
-#*                                                                           *
-#*                                                                           *
+#*               CMake - CGDK.buffer.tutorial.struct_serialize               *
 #*                                                                           *
 #*                                                                           *
-#*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
-#*  Best for Game Developement and Optimized for Game Developement.          *
 #*                                                                           *
-#*                (c) 2016 Cho Sanghyun All right reserved.                  *
+#*                                                                           *
+#*  programmed by Cho SangHyun. sangduck@cgcii.com                           *
+#*                                                                           *
 #*                          http://www.CGCII.co.kr                           *
 #*                                                                           *
 #*****************************************************************************
@@ -20,7 +18,7 @@
 # setting
 # ----------------------------------------------------------------------------
 # 1) project name
-PROJECT ( "CGDK.tutorial.buffer.struct_serialize" )
+PROJECT ( "CGDK.buffer.tutorial.struct_serialize" )
 
 # 2) project version
 SET ( PROJECT_VERSION_MAJOR 10 )
@@ -30,7 +28,8 @@ SET ( PROJECT_VERSION_TWEAK 1 )
 set ( DEFAULT_BUILD_TYPE Debug )
 
 # 3) build version
-CMAKE_MINIMUM_REQUIRED ( VERSION 3.10 )
+CMAKE_MINIMUM_REQUIRED ( VERSION 3.20 )
+CMAKE_POLICY( VERSION 3.20 )
 
 # 4) default BUILD_TYPE
 IF (NOT DEFINED CMAKE_BULD_TYPE)
@@ -44,8 +43,10 @@ SET ( CMAKE_RUNTIME_OTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
 SET ( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR} )
 
 # 6) compile options
-SET ( CMAKE_CXX_FLAGS "-DC_FLAGS -fexceptions -std=c++17" )
-SET ( CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Wextra" )
+set ( CMAKE_CXX_STANDARD 20)
+set ( CMAKE_CXX_STANDARD_REQUIRED ON)
+SET ( CMAKE_CXX_FLAGS "-DC_FLAGS -fexceptions -std=c++20" )
+SET ( CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g3 -Wall -Wextra" )
 SET ( CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -Wall -Wextra" )
 
 # 7) include directories

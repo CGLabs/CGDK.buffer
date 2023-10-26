@@ -758,7 +758,7 @@ namespace CGDK
 		char buf_array[get_size_of("Test String")];
 
 		// - alloc shared_buffer
-		CGDK::buffer buf_alloc = CGDK::make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - overflow test - pass
 		{
@@ -831,6 +831,8 @@ namespace CGDK
 
 	TEST(CGDK_shared_buffer, buffer_string_prepend_bound_check)
 	{
+	#define CGDK_DISABLE_ASSERT // for test
+
 		// Defintions)
 		std::string_view str_test = "Test String";
 
@@ -880,6 +882,7 @@ namespace CGDK
 			// check) 
 			EXPECT_TRUE(result);
 		}
+	#undef CGDK_DISABLE_ASSERT // for test
 	}
 
 
@@ -1496,7 +1499,7 @@ namespace CGDK
 	{
 		// - alloc buffer
 		char buf_array[2048];
-		CGDK::buffer buf_alloc = make_buffer(buf_array);
+		CGDK::buffer buf_alloc{ buf_array };
 
 		// - 임시로...
 		CGDK::buffer buf_test = buf_alloc;
@@ -3300,8 +3303,8 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		char buf_array_A[2048];
-		CGDK::buffer bufA = make_buffer(buf_array_A);
-		bufA.resize(100);
+		CGDK::buffer bufA{ buf_array_A };
+		bufA.set_size(100);
 
 		buf_alloc.append(std_vector_int);
 
@@ -3326,8 +3329,8 @@ namespace CGDK
 		auto buf_alloc = alloc_shared_buffer(2048);
 
 		char buf_array_A[2048];
-		CGDK::buffer bufA = make_buffer(buf_array_A);
-		bufA.resize(100);
+		CGDK::buffer bufA{ buf_array_A };
+		bufA.set_size(100);
 
 		buf_alloc.append(std_vector_int);
 

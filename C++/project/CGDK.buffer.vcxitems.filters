@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="buffers">
+      <UniqueIdentifier>{c07bb19e-e3fa-4c1a-8ddd-35bbfb1de95e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffer" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\shared_buffer" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_basic_buffer.inl">
+      <Filter>buffers</Filter>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_buffer_view.inl">
+      <Filter>buffers</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_basic_buffer.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_buffer_base.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_buffer_common.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_buffer_traits.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_buffer_unreal.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_buffer_view.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_Imemory.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_make_shared_buffer.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\CGDK10.C++\include\cgdk\buffers\_shared_buffer.h">
+      <Filter>buffers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

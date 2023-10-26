@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="protobuf\messages_test.pb.cc">
+      <Filter>protobuf</Filter>
+    </ClCompile>
+    <ClCompile Include="common_data.cpp" />
+    <ClCompile Include="test_cgdk.cpp" />
+    <ClCompile Include="test_protobuf.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="protobuf\messages_test.pb.h">
+      <Filter>protobuf</Filter>
+    </ClInclude>
+    <ClInclude Include="definitions.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="protobuf\messages_test.proto">
+      <Filter>protobuf</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="protobuf">
+      <UniqueIdentifier>{e31e3029-8671-44b0-8e90-d46d1623f01e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -3,4 +3,7 @@
   <ItemGroup>
     <ClCompile Include="tutorial.buffer.01.basic.console.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
 </Project>

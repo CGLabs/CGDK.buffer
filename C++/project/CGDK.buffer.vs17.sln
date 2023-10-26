@@ -1,0 +1,15 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CGDK.buffer", "..\include\cgdk\CGDK.buffer.vcxitems", "{16BD894D-7FA1-4C50-8F5A-4F1A49355C93}"
+EndProject
+Global
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B365F8D2-42EA-46AE-A6EC-817D7332FA49}
+	EndGlobalSection
+EndGlobal

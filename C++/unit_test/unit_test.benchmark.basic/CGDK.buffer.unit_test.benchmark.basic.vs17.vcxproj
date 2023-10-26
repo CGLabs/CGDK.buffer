@@ -59,6 +59,9 @@
     <OutDir>../execute/</OutDir>
     <IntDir>../output/$(ProjectName)/$(Configuration)_$(PlatformTarget)_$(PlatformToolset)\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="definitions.h" />
     <ClInclude Include="pch.h" />
@@ -131,6 +134,11 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PreBuildEvent>
+      <Command>cd $(ProjectDir)protobuf
+generate_messages.bat
+cd ..</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

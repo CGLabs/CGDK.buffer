@@ -1,17 +1,15 @@
 ﻿//*****************************************************************************
 //*                                                                           *
 //*                               CGDK::buffer                                *
-//*                       ver 4.0 / release 2021.11.01                        *
+//*                       ver 3.03 / release 2023.10.17                       *
 //*                                                                           *
 //*                  tutorials buffer (3) - struct serialize                  *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
-//*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
-//*  Best for Game Developement and Optimized for Game Developement.          *
+//*  programmed by Cho SangHyun. sangduck@cgcii.com                           *
 //*                                                                           *
-//*                (c) 2003. Cho Sanghyun. All right reserved.                *
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
@@ -24,6 +22,7 @@
 	#include <conio.h>
 #endif
 #include <iostream>
+#include <memory>
 
 // 2) CGDK.buffer header file
 #include "cgdk/shared_buffer"

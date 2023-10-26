@@ -1,17 +1,15 @@
 #*****************************************************************************
 #*                                                                           *
 #*                               CGDK::buffer                                *
-#*                       ver 4.0 / release 2021.11.01                        *
+#*                       ver 3.03 / release 2023.10.17                       *
 #*                                                                           *
-#*                    CMake - CGDK.buffer.append_extract                     *
-#*                                                                           *
-#*                                                                           *
+#*               CMake - CGDK.buffer.tutorial.append_extract                 *
 #*                                                                           *
 #*                                                                           *
-#*  This Program is programmed by Cho SangHyun. sangduck@cgcii.co.kr         *
-#*  Best for Game Developement and Optimized for Game Developement.          *
 #*                                                                           *
-#*                (c) 2016 Cho Sanghyun All right reserved.                  *
+#*                                                                           *
+#*  programmed by Cho SangHyun. sangduck@cgcii.com                           *
+#*                                                                           *
 #*                          http://www.CGCII.co.kr                           *
 #*                                                                           *
 #*****************************************************************************
@@ -20,7 +18,7 @@
 # setting
 # ----------------------------------------------------------------------------
 # 1) project name
-PROJECT ( "CGDK.tutorial.buffer.append_extract" )
+PROJECT ( "CGDK.buffer.tutorial.append_extract" )
 
 # 2) project version
 SET ( PROJECT_VERSION_MAJOR 10 )

@@ -8,6 +8,7 @@
 #include <array>
 #include <unordered_map>
 #include <vector>
+#include <list>
 #if defined(__cpp_lib_format)
 	#include <format>
 #endif
