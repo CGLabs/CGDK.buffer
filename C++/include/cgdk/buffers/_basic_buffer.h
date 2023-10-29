@@ -14,10 +14,6 @@
 
 #pragma once
 
-#if !defined(FMT_FORMAT_H_) && !defined(__GNUC__) && defined(__cpp_lib_format)
-	#include <format>
-#endif
-
 namespace CGDK
 {
 #if defined(FMT_FORMAT_H_)
@@ -26,34 +22,33 @@ namespace CGDK
 	{
 		return fmt::format(_format, std::forward<TREST>(_rest)...);
 	}
-#else
-	#if defined(__cpp_lib_format) && defined(_FORMAT_)
-		#if defined(__GNUC__)
-			template <class T, class... TREST>
-			constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
-			{
-			#if defined(__linux__)
-				// check) GCC don't support {fmt} yet~ include {fmt} manually
-				assert(false);
+#elif defined(__cpp_lib_format) && defined(_FORMAT_)
+	#include <format>
+	#if defined(__GNUC__)
+		template <class T, class... TREST>
+		constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
+		{
+		#if defined(__linux__)
+			// check) GCC don't support {fmt} yet~ include {fmt} manually
+			assert(false);
 
-				// retrun) failre
-				return std::basic_string<T>();
-			#else
-				return std::format(_format, std::forward<TREST>(_rest)...);
-			#endif
-			}
+			// retrun) failre
+			return std::basic_string<T>();
 		#else
-			template <class... TREST>
-			constexpr std::string _fmt_format_string(std::string_view _format, TREST&&... _rest)
-			{
-				return std::vformat(_format, std::make_format_args(std::forward<TREST>(_rest)...));
-			}
-			template <class... TREST>
-			constexpr std::wstring _fmt_format_string(std::wstring_view _format, TREST&&... _rest)
-			{
-				return std::vformat(_format, std::make_wformat_args(std::forward<TREST>(_rest)...));
-			}
+			return std::format(_format, std::forward<TREST>(_rest)...);
 		#endif
+		}
+	#else
+		template <class... TREST>
+		constexpr std::string _fmt_format_string(std::string_view _format, TREST&&... _rest)
+		{
+			return std::vformat(_format, std::make_format_args(std::forward<TREST>(_rest)...));
+		}
+		template <class... TREST>
+		constexpr std::wstring _fmt_format_string(std::wstring_view _format, TREST&&... _rest)
+		{
+			return std::vformat(_format, std::make_wformat_args(std::forward<TREST>(_rest)...));
+		}
 	#endif
 #endif
 
