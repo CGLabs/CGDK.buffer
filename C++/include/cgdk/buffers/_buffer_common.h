@@ -21,11 +21,12 @@
 #include <stdexcept>
 #include <type_traits>
 
-// 2) memory
-#include <memory>
+// 2) stl
 #if !defined(_MSC_VER)
 	#include <list>
 #endif
+#include <memory>
+#include <string>
 
 
 //-----------------------------------------------------------------------------
