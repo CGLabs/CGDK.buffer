@@ -1,3 +1,9 @@
+## CGDK 3.03 (2023.10.28)
+   ### (C++)
+   # common
+    - unit_test update
+    - document update
+
 ## CGDK 3.02 (2023.10.24)
    ### (C++)
    # common
