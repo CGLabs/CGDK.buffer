@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
-#include <cgdk/buffer>
+#include <cgdk/shared_buffer>
 
 #include "definitions.h"
 

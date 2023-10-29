@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buffer.04.Ibuffer_serializa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buffer.02.buffer_operator.console", "buffer.02.buffer_operator\tutorial.buffer.02.buffer_operator.console.vs17.vcxproj", "{492D8D06-B38A-40D2-AB8C-6FE99583EB56}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buffer.06.stataic_buffer", "buffer.06.stataic_buffer\tutorial.buffer.06.stataic_buffer.vcxproj", "{9B4CD356-5B0D-480E-A207-97A559214628}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buffer.06.static_buffer", "buffer.06.static_buffer\tutorial.buffer.06.static_buffer.vcxproj", "{9B4CD356-5B0D-480E-A207-97A559214628}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

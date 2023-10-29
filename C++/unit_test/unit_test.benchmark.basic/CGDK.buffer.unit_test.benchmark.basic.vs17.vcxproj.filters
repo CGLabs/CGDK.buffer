@@ -8,6 +8,7 @@
     <ClCompile Include="common_data.cpp" />
     <ClCompile Include="test_cgdk.cpp" />
     <ClCompile Include="test_protobuf.cpp" />
+    <ClCompile Include="test_flatbuffers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -15,11 +16,41 @@
       <Filter>protobuf</Filter>
     </ClInclude>
     <ClInclude Include="definitions.h" />
+    <ClInclude Include="flatbuffers\messages_test_1_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\messages_test_2_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\messages_test_3_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\messages_test_4_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\messages_test_5_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="protobuf\messages_test.proto">
       <Filter>protobuf</Filter>
+    </None>
+    <None Include="flatbuffers\messages_test_1.fbs">
+      <Filter>flatbuffers</Filter>
+    </None>
+    <None Include="flatbuffers\messages_test_2.fbs">
+      <Filter>flatbuffers</Filter>
+    </None>
+    <None Include="flatbuffers\messages_test_3.fbs">
+      <Filter>flatbuffers</Filter>
+    </None>
+    <None Include="flatbuffers\messages_test_4.fbs">
+      <Filter>flatbuffers</Filter>
+    </None>
+    <None Include="flatbuffers\messages_test_5.fbs">
+      <Filter>flatbuffers</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +59,9 @@
   <ItemGroup>
     <Filter Include="protobuf">
       <UniqueIdentifier>{e31e3029-8671-44b0-8e90-d46d1623f01e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="flatbuffers">
+      <UniqueIdentifier>{5f31f10d-791d-4a29-8763-7875c739be58}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

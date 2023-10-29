@@ -23,6 +23,7 @@
 
 // 2) stl
 #if !defined(_MSC_VER)
+	#include <memory.h>
 	#include <list>
 #endif
 #include <memory>

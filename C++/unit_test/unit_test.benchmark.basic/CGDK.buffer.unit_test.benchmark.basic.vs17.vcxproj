@@ -64,6 +64,11 @@
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="definitions.h" />
+    <ClInclude Include="flatbuffers\messages_test_1_generated.h" />
+    <ClInclude Include="flatbuffers\messages_test_2_generated.h" />
+    <ClInclude Include="flatbuffers\messages_test_3_generated.h" />
+    <ClInclude Include="flatbuffers\messages_test_4_generated.h" />
+    <ClInclude Include="flatbuffers\messages_test_5_generated.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="protobuf\messages_test.pb.h" />
   </ItemGroup>
@@ -85,12 +90,18 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level1</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level1</WarningLevel>
     </ClCompile>
+    <ClCompile Include="test_flatbuffers.cpp" />
     <ClCompile Include="test_protobuf.cpp">
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level1</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level1</WarningLevel>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="flatbuffers\messages_test_1.fbs" />
+    <None Include="flatbuffers\messages_test_2.fbs" />
+    <None Include="flatbuffers\messages_test_3.fbs" />
+    <None Include="flatbuffers\messages_test_4.fbs" />
+    <None Include="flatbuffers\messages_test_5.fbs" />
     <None Include="packages.config" />
     <None Include="protobuf\messages_test.proto" />
   </ItemGroup>
@@ -128,7 +139,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../include;flatbuffers_src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -171,7 +182,7 @@ cd ..</Command>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../include;flatbuffers_src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>

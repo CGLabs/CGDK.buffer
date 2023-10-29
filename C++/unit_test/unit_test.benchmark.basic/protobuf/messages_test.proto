@@ -21,7 +21,7 @@
 syntax = "proto3";
 
 // 2) Package¸í
-package		tutorial;
+package		test;
 
 
 //-----------------------------------------------------------------------------
@@ -95,4 +95,14 @@ message protobuf_message_struct
 	repeated int32		value_3 = 3;
 	uint64				value_4 = 4;
 	map<string, int32>	value_5 = 5;
+}
+
+// [Message] protobuf IDL
+message protobuf_UNBELIEVABLE
+{
+	sint32				a = 1;
+	sint64				b = 2;
+	string				c = 3;
+	repeated int32		d = 4;
+	map<int32, string>	e = 5;
 }

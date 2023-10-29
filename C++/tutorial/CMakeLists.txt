@@ -40,7 +40,7 @@ CMAKE_MINIMUM_REQUIRED ( VERSION 3.10 )
 ADD_SUBDIRECTORY (buffer.01.basic)
 
 # 2) append_extract
-ADD_SUBDIRECTORY (buffer.02.append_extract)
+ADD_SUBDIRECTORY (buffer.02.buffer_operator)
 
 # 3) struct_serialize
 ADD_SUBDIRECTORY (buffer.03.struct_serialize)

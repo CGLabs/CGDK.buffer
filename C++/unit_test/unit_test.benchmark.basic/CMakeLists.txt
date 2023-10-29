@@ -49,6 +49,7 @@ SET ( CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -Wall -Wextra" )
 # 7) include directories
 INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}/../../include/
+	/snap/flatbuffers/current/include/
 	./
 	${GTEST_INCLUDE_DIRS}
 )
@@ -56,6 +57,7 @@ INCLUDE_DIRECTORIES(
 # 8) library directories
 LINK_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}/../execute/
+	/snap/flatbuffers/current/lib/
 )
 
 # 9) requires
@@ -73,6 +75,7 @@ pch.cpp
 #test
 common_data.cpp
 test_cgdk.cpp
+test_flatbuffers.cpp
 test_protobuf.cpp
 protobuf/messages_test.pb.cc
 )
@@ -107,6 +110,7 @@ TARGET_LINK_LIBRARIES( ${PROJECT_NAME}.${BUILD_TYPE}
 	${GTEST_LIBRARIES}
 	${GTEST_MAIN_LIBRARIES}
 	protobuf
+	flatbuffers
 	rt
 	pthread
 )
