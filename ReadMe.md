@@ -28,7 +28,7 @@ C++버전은 CGDK::buffer이며 C# 버전은 CGDK.buffer입니다.
    - Reflection을 사용하여 구현하였습니다.
    - C++ 버전화 호환됩니다.
 
-### buffer의 종류
+## buffer의 종류
 3종류의 buffer를 제공하고 있으며 모두 상속 관계에 있습니다.
 #### CGDK::buffer_view
 * data_와 size_만 가진 buffer로 읽기나 덥어쓰기만 가능합니다.
@@ -210,3 +210,5 @@ var temp1 = bufTemp.extract<TEST2>();
 
 ## 시작하기
 * C++/document/Getting_start_CGDK.buffer.pptx 를 참조하십시요.
+> sangducks@gmail.com
+> sangduck@cgcii.co.kr
