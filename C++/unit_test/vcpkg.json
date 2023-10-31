@@ -4,7 +4,8 @@
   "builtin-baseline": "db2071b44938c0fb7943a94c8ab912e4e182a60b",
 
   "dependencies": [
-    "protobuf"
+    "protobuf",
+    "flatbuffers"
   ]
 }
 
