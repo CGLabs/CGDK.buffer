@@ -2,7 +2,7 @@
 CGDK::buffer는 메시지 직렬화 버퍼 시스템입니다.
 C++버전은 CGDK::buffer이며 C# 버전은 CGDK.buffer입니다.
 
-### CGD::buffer
+#### CGD::buffer
    - 매우 간단합니다.(사실상 append/extract/front가 전부...)
    - 매우 빠릅니다. (c++ 버전은 tmp로 구현되어 압도적 최강의 성능을 자랑합니다.)
    - 매우 작고 가볍습니다.
@@ -23,28 +23,28 @@ C++버전은 CGDK::buffer이며 C# 버전은 CGDK.buffer입니다.
       * Ibuffer_serialzable
       * 기타...
 
-### CGD.buffer
+#### CGD.buffer
    - C#버전
    - Reflection을 사용하여 구현하였습니다.
    - C++ 버전화 호환됩니다.
 
-## buffer의 종류
+### buffer의 종류
 3종류의 buffer를 제공하고 있으며 모두 상속 관계에 있습니다.
-### CGDK::buffer_view
+#### CGDK::buffer_view
 * data_와 size_만 가진 buffer로 읽기나 덥어쓰기만 가능합니다.
 * 'extract<T>' 함수(읽어내기)
 * 'front<T>' 함수(읽기와 덥어 쓰기)
-### CGDK::buffer
+#### CGDK::buffer
 * CGDK::buffer_view를 상속받아 경계정보(boung_info)를 추가한 버퍼 클래스입니다.
 * 'append<T>'함수로 붙히기를 지원합니다.
-### CGDK::shared_buffer
+#### CGDK::shared_buffer
 * CGDK::buffer를 상속 받아 스마트 포인터 기능을 더한 버퍼 클래스입니다.
 * 할당된 원본 버퍼를 스마트포인터로 관리합니다.
 * alloc_shared_buffer(SIZE) 혹은 make_shared_buffer<T>를 사용해 버퍼를 할당 받을 수 있습니다.
 
 
 ## CGD::buffer사용하기
-### 직렬화하기(Schemaless)  
+#### 직렬화하기(Schemaless)  
 ``` C++
   buf.append<[TYPE]>([value]);
 ```
@@ -70,7 +70,7 @@ bufTemp.append<uint>(1000);
 bufTemp.append<string>("Test String");	// 문자열도 가능
 ```
 
-### 역직렬화하기(Schemaless)
+#### 역직렬화하기(Schemaless)
 
 ``` C++
   [value] buf.extract<[TYPE]>();
@@ -105,10 +105,10 @@ std::map<int, list<std::string>>  maplistTemp = { ...};
 	    
 CGD::buffer bufTemp(malloc(256));
 	    
-bufTemp.append<std::vector<int>>(listTest);
-bufTemp.append<std::list<std::string>>(listStringTest);
-bufTemp.append<map<std::std::string, int>>(mapTemp);
-bufTemp.append<map<int, std::list<std::string>>>(maplistTemp);
+bufTemp.append(listTest);
+bufTemp.append(listStringTest);
+bufTemp.append(mapTemp);
+bufTemp.append(maplistTemp);
 	    
 .................
 	    
@@ -125,10 +125,10 @@ Dictionary<int, List<string>>  dicListTest = new ...;
        
 CGD.buffer bufTemp = new CGD.buffer(new byte[256]);
        
-bufTemp.append<List<int>> (listTest);
-bufTemp.append<List<string>> (listStringTest);
-bufTemp.append<Dictionary<string,int>> (dicTest);
-bufTemp.append<Dictionary<string,List<int>>> (dicListTest);
+bufTemp.append(listTest);
+bufTemp.append(listStringTest);
+bufTemp.append(dicTest);
+bufTemp.append(dicListTest);
        
 .................
        
@@ -140,13 +140,13 @@ var temp4 = bufTemp.extract<Dictionary<string,List<int>>> ();
 bufTemp.append(maplistTemp);
 ```
 
-### 직렬화에 필요한 메모리 구하기
+#### 직렬화에 필요한 메모리 구하기
 ``` C++
 auto size = CGDK::get_size_of(maplistTemp);
 ```
 * 데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있습니다.
 
-### buffer에 메모리 동적 할당 받기
+#### buffer에 메모리 동적 할당 받기
 * CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 받을 수 있습니다.
 * CGD::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당해제됩니다.
 
