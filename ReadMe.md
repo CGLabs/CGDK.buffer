@@ -1,6 +1,10 @@
 ## CGDK::buffer란
 CGDK::buffer는 메시지 직렬화 버퍼 시스템입니다.   
-C++버전은 CGDK::buffer이며 C# 버전은 CGDK.buffer입니다.
+C++버전은 CGDK::buffer이며   
+C# 버전은 CGDK.buffer입니다.
+
+자세한 소개 (https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/intruduce_CGDK.buffer.pptx)
+
 
 #### CGD::buffer
    - 간단합니다.(사실상 append/extract/front가 전부...)
@@ -52,6 +56,7 @@ TYPE를 생략할 경우 입력되는 값의 자료형으로 간주합니다.
   buf.append<[TYPE]>([value]);
 ```
     
+[C++]
 ``` C++
 CGD::buffer bufTemp(malloc(256));
        
@@ -61,6 +66,7 @@ bufTemp.append<int>(-100);
 bufTemp.append<uint32_t>(1000);
 bufTemp.append<std::string>("Test String"); // 문자열도 가능
 ```
+[C#]
 ``` C#
 CGD.buffer bufTemp = new CGD.buffer(new byte[256]);
        
@@ -79,6 +85,7 @@ bufTemp.append<string>("Test String");	// 문자열도 가능
 작성된 메시지는 extract()로 간단히 읽어낼 수가 있습니다.   
 버퍼 제일 앞에서 TYPE형으로 데이터를 역직렬화를 합니다.   
 
+[C++]
 ``` C++
 auto temp1 = bufTemp.extract<uint8_t>();
 auto temp2 = bufTemp.extract<char>();
@@ -86,6 +93,7 @@ auto temp3 = bufTemp.extract<int>();
 auto temp4 = bufTemp.extract<uint32_t>();
 auto temp5 = bufTemp.extract<std::string>();
 ```
+[C#]
 ``` C#
 var temp1 = bufTemp.extract<byte>();
 var temp2 = bufTemp.extract<SByte>();
@@ -98,6 +106,7 @@ var temp5 = bufTemp.extract<string>();
 C++의 vector<T>, list<T>, set<T>, map<T> ....      
 C#의 List<T>, Dictionary<K,V> ...   
 
+[C++]
 ``` C++
 std::vector<int>                  listTest = { ...};
 std::list<std::string>            listStringTest = { ...};
@@ -118,6 +127,7 @@ auto temp2 = bufTemp.extract<std::list<std::string>>();
 auto temp3 = bufTemp.extract<std::map<int, std::string>>();
 auto temp4 = bufTemp.extract<std::map<int, std::list<std::string>>>();
 ```
+[C#]
 ``` C#
 List<int>                      listTest = new ...;
 List<string>                   listStringTest = new ...;
@@ -143,6 +153,7 @@ bufTemp.append(maplistTemp);
 
 #### 직렬화에 필요한 메모리 구하기
 데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있습니다.   
+[C++]
 ``` C++
 auto size = CGDK::get_size_of(maplistTemp);
 ```
@@ -151,6 +162,7 @@ auto size = CGDK::get_size_of(maplistTemp);
 CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 받을 수 있습니다.   
 CGD::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당해제됩니다.   
 
+[C++]
 ``` C++
 // 1000byte 메모리를 동적 할당 받는다.
 auto temp1 = CGDK::alloc_shared_buffer(1000); 
@@ -163,6 +175,7 @@ auto temp2 = CGDK::alloc_shared_buffer(CGDK::get_size_of(maplistTemp));
 구조체를 Schema로 사용 가능합니다.   
 '구조체 직렬화'를 원하는 구조체의 'ENABLE_STRUCT_SERIALIZABLE'을 추가해 주면 됩니다.   
 
+[C++]
 ``` C++
 struct TEST
 {
@@ -185,6 +198,7 @@ struct TEST2
 ```
 이렇게 정의한 후   
 
+[C++]
 ``` C++
 TEST2  tempData;
 	    
@@ -206,10 +220,10 @@ var temp1 = bufTemp.extract<TEST2>();
 * unreal3D(c++) 지원
 * unity 3D(c#) 지원
 
-## 소개
-* intruduce_CGDK.buffer.pptx 를 참조하십시요.
 
 ## 시작하기
-* C++/document/Getting_start_CGDK.buffer.pptx 를 참조하십시요.
+ https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/Getting_start_CGDK.buffer.pptx
+
+
 > sangducks@gmail.com
 > sangduck@cgcii.co.kr
