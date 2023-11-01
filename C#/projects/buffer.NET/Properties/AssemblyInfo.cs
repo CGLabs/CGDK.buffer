@@ -2,11 +2,11 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("CGDK.buffer.framework")]
+[assembly: AssemblyTitle("CGDK.buffer.NET")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("CGDK.buffer.framework")]
+[assembly: AssemblyProduct("CGDK.buffer.NET")]
 [assembly: AssemblyCopyright("Copyright ©2023")]
 [assembly: AssemblyTrademark("CGCII")]
 [assembly: AssemblyCulture("")]
