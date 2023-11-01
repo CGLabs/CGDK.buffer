@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\dll\NET.framework\AnyCPU\Debug\</OutputPath>
+    <OutputPath>..\..\dll\NET.framework\AnyCPU\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,7 +26,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\dll\NET.framework\AnyCPU\Release\</OutputPath>
+    <OutputPath>..\..\dll\NET.framework\AnyCPU\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -60,7 +60,7 @@
   <Import Project="..\buffer\buffer.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetPath)" "..\..\..\..\dll\" /y
-xcopy "$(TargetDir)$(TargetName).pdb" "..\..\..\..\dll\" /y</PostBuildEvent>
+    <PostBuildEvent>xcopy "$(TargetPath)" "..\..\dll\" /y
+xcopy "$(TargetDir)$(TargetName).pdb" "..\..\dll\" /y</PostBuildEvent>
   </PropertyGroup>
 </Project>

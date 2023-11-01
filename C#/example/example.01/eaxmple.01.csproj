@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Example01</RootNamespace>
     <AssemblyName>Example01</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -33,8 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CGDbuffer%28forCSharp%29">
-      <HintPath>..\..\..\..\..\..\ProjectFQ3\CGDK9(for C++)\CGDBuffer\C#\CGDbuffer(forCSharp).dll</HintPath>
+    <Reference Include="CGDK.buffer.NET.framework">
+      <HintPath>..\..\dll\CGDK.buffer.NET.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
