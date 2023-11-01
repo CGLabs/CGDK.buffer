@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <BaseOutputPath>..\..\dll\NET\AnyCPU\</BaseOutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;..\..\dll\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;..\..\dll\&quot; /y" />
+  </Target>
+
+  <Import Project="..\buffer\buffer.projitems" Label="Shared" />
+
+</Project>
