@@ -64,7 +64,7 @@ namespace Example
 
 
 			// Case 8) 복사본을 만든다. (깊은 복사)
-			CGDK.buffer bufTemp7	 = bufTemp1.clone();
+			CGDK.buffer bufTemp7 = bufTemp1.clone();
 
 			// 할당 해제
 			bufTemp1.clear();
@@ -94,10 +94,10 @@ namespace Example
 
 			// EXTRACT) 값을 일어낸다.
 			//    - 값을 읽어내게 되면 Offset값부터 값을 읽어내게 되고 Offset값을 읽어낸 크기 증가시킨다.
-			var	temp1	 = bufTemp.extract<byte>();		// 10
-			var	temp2	 = bufTemp.extract<SByte>();	// 20
-			var	temp3	 = bufTemp.extract<int>();		// -100
-			var	temp4	 = bufTemp.extract<uint>();		// 1000
+			var	temp1 = bufTemp.extract<byte>(); // 10
+			var	temp2 = bufTemp.extract<SByte>(); // 20
+			var	temp3 = bufTemp.extract<int>(); // -100
+			var	temp4 = bufTemp.extract<uint>(); // 1000
 
 			// 확인)
 			Console.WriteLine("temp1:"+temp1 +"  temp2:"+ temp2 + "  temp3"+temp3 + "  temp4"+temp4);
@@ -132,9 +132,9 @@ namespace Example
 
 
 			// EXTRACT) 추가된 문자열을 뽑아낸다.
-			var	str1 = bufTemp.extract<string>();	// "First test String"
-			var str2 = bufTemp.extract<string>();	// "Second"
-			var str3 = bufTemp.extract<string>();	// "Third"
+			var	str1 = bufTemp.extract<string>(); // "First test String"
+			var str2 = bufTemp.extract<string>(); // "Second"
+			var str3 = bufTemp.extract<string>(); // "Third"
 
 			// 확인)
 			Console.WriteLine(str1);
@@ -151,9 +151,9 @@ namespace Example
 		static void Sample_simple_append_extract_collection()
 		{
 			// Decalre) 임시로 사용할 List를 선언한다.
-			List<int>				list_int	 = new List<int>	{ 10, 20, 30, 40};
-			List<string>			list_string	 = new List<string> { "first","second","second"};
-			Dictionary<string, int>	dictionary_int_string	 = new Dictionary<string, int> { {"first", 10}, {"second", 20}, {"third", 30}};
+			List<int> list_int = new List<int>{ 10, 20, 30, 40};
+			List<string> list_string = new List<string> { "first","second","second"};
+			Dictionary<string, int>	dictionary_int_string = new Dictionary<string, int> { {"first", 10}, {"second", 20}, {"third", 30}};
 
 			// 1) byte[256]를 생성해서 설정한다.
 			CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
@@ -170,9 +170,9 @@ namespace Example
 			var data3 = bufTemp.extract<Dictionary<string, int>>();
 
 			// 2) 출력한다.
-			foreach(var iter in data1)	{Console.WriteLine(iter.ToString());}
-			foreach(var iter in data2)	{Console.WriteLine(iter.ToString());}
-			foreach(var iter in data3)	{Console.WriteLine(iter.ToString());}
+			foreach(var iter in data1) {Console.WriteLine(iter.ToString());}
+			foreach(var iter in data2) {Console.WriteLine(iter.ToString());}
+			foreach(var iter in data3) {Console.WriteLine(iter.ToString());}
 		}
 
 
@@ -195,11 +195,11 @@ namespace Example
 		static void Sample_simple_append_extract_struct()
 		{
 			// Decalre) 임시로 사용할 List를 선언한다.
-			TEST	temp	 = new TEST();
-			temp.x	 = 10;
-			temp.y	 = 1.0f;
-			temp.z	 = "temp string";
-			temp.w	 = new List<int> { 10, 20, 30};
+			TEST temp = new TEST();
+			temp.x = 10;
+			temp.y = 1.0f;
+			temp.z = "temp string";
+			temp.w = new List<int> { 10, 20, 30};
 
 
 			// 1) byte[256]를 생성해서 설정한다.
@@ -229,22 +229,22 @@ namespace Example
 		//----------------------------------------------------------------------------
 		public struct TEST2
 		{
-			public int			a;
-			public List<int>	b;
-			public TEST			c;
+			public int a;
+			public List<int> b;
+			public TEST c;
 		};
 
 		static void Sample_simple_append_extract_struct2()
 		{
 			// Declare) 임시로 사용할 List를 선언한다.
 			TEST2 temp = new TEST2();
-			temp.a		 = 10;
+			temp.a = 10;
 			//temp.b;				// 생성하지 않았다! (이 변수는 null일 것이다.)
-			temp.c		 = new TEST();
-			temp.c.x	 = 10;
-			temp.c.y	 = 1.0f;
-			//temp.c.z	 = "temp string";
-			temp.c.w	 = new List<int> { 10, 20, 30 };
+			temp.c = new TEST();
+			temp.c.x = 10;
+			temp.c.y = 1.0f;
+			//temp.c.z = "temp string";
+			temp.c.w = new List<int> { 10, 20, 30 };
 
 			// 1) byte[256]를 생성해서 설정한다.
 			CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
@@ -274,17 +274,17 @@ namespace Example
 		public class TEST3
 		{
 			[CGDK.Attribute.Serializable]
-			public int			a;
+			public int a;
 			[CGDK.Attribute.Serializable]
-			public List<int>	b;
+			public List<int> b = null;
 			[CGDK.Attribute.Serializable]
-			public TEST			c;
+			public TEST c;
 		};
 
 		[Serializable]
 		public class TEST4 : TEST3
 		{
-			public	int d;
+			public	int d = 0;
 		}
 
 		static void	Sample_simple_append_extract_class()

@@ -60,7 +60,7 @@
   <Import Project="..\buffer\buffer.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetPath)" "..\..\dll\" /y
-xcopy "$(TargetDir)$(TargetName).pdb" "..\..\dll\" /y</PostBuildEvent>
+    <PostBuildEvent>xcopy "$(TargetPath)" "..\..\..\" /y
+xcopy "$(TargetDir)$(TargetName).pdb" "..\..\..\" /y</PostBuildEvent>
   </PropertyGroup>
 </Project>
