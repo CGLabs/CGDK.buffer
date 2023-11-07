@@ -1,0 +1,22 @@
+table flatbufers_message_GENERAL
+{
+	value_1:int32;
+	value_2:uint32;
+	value_3:int64;
+	value_4:uint64;
+	value_5:float;
+	value_6:double;
+}
+
+// [Message] protobuf_message_string
+table flatbuffers_message_string
+{
+	value_1:string;
+	value_2:string;
+	value_3:string;
+	value_4:string;
+	value_5:string;
+	value_6:string;
+	value_7:string;
+	value_8:string;
+}

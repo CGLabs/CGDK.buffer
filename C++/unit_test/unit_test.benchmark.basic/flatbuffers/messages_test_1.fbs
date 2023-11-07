@@ -1,0 +1,10 @@
+table flatbufers_message_GENERAL
+{
+	value_1:int32;
+	value_2:uint32;
+	value_3:int64;
+	value_4:uint64;
+	value_5:float;
+	value_6:double;
+}
+root_type flatbufers_message_GENERAL;

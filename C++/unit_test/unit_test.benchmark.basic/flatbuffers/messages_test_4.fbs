@@ -1,0 +1,10 @@
+// [Message] flatbuffers
+table map_node_string_int {
+	key:string(key);
+	value:int32;
+}
+
+table message_map_std_string_int {
+	a:[map_node_string_int];
+}
+root_type message_map_std_string_int;

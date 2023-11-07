@@ -1,0 +1,5 @@
+// [Message] flatbuffers
+table message_list_int {
+	a:[int];
+}
+root_type message_list_int;
