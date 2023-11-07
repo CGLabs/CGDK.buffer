@@ -19,19 +19,19 @@
 #-----------------------------------------------------------------------------
 # setting
 #-----------------------------------------------------------------------------
-# 1) project name
-PROJECT ( "CGDK.tutorial.buffer" )
+# 1) build version
+CMAKE_MINIMUM_REQUIRED ( VERSION 3.20 )
+CMAKE_POLICY( VERSION 3.20 )
 
 # 2) project version
 SET ( PROJECT_VERSION_MAJOR 10 )
 SET ( PROJECT_VERSION_MINOR 0 )
 SET ( PROJECT_VERSION_PATCH 100 )
 SET ( PROJECT_VERSION_TWEAK 1 )
-set ( DEFAULT_BUILD_TYPE release )
+set ( DEFAULT_BUILD_TYPE Debug )
 
-# 3) build version
-CMAKE_MINIMUM_REQUIRED ( VERSION 3.10 )
-
+# 3) project name
+PROJECT ( "CGDK.tutorial.buffer" )
 
 #-----------------------------------------------------------------------------
 # compile
