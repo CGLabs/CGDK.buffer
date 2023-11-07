@@ -146,8 +146,10 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>cd $(ProjectDir)protobuf
-generate_messages.bat
+      <Command>cd $(ProjectDir)flatbuffers
+call generate_messages.bat
+cd $(ProjectDir)protobuf
+call generate_messages.bat
 cd ..</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -196,8 +198,10 @@ cd ..</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>cd $(ProjectDir)protobuf
-generate_messages.bat
+      <Command>cd $(ProjectDir)flatbuffers
+call generate_messages.bat
+cd $(ProjectDir)protobuf
+call generate_messages.bat
 cd ..</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
