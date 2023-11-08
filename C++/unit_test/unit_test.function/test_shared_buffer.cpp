@@ -837,12 +837,12 @@ namespace CGDK
 		std::string_view str_test = "Test String";
 
 		// 1) alloc buffer 
-		CGDK::buffer buf_alloc = alloc_shared_buffer(2048) ^ 2048;
+		shared_buffer buf_alloc = alloc_shared_buffer(2048) ^ 2048;
 
 		// - overflow test
 		{
 			// - 
-			auto buf_test = buf_alloc + offset(get_size_of(str_test) - 1);
+			buffer buf_test = buf_alloc + offset(get_size_of(str_test) - 1);
 
 			// declare)
 			bool result = false;
@@ -901,7 +901,7 @@ namespace CGDK
 
 		for(int i=0;i<_TEST_COUNT;++i)
 		{
-			CGDK::buffer buf_write = buf_alloc;
+			buffer buf_write = buf_alloc;
 
 			buf_write.append(array_string_wchar_t);
 

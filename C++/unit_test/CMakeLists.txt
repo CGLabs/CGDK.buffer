@@ -38,4 +38,5 @@ PROJECT ( "CGDK.buffer.unit_test" )
 #-----------------------------------------------------------------------------
 # 1) uint.test
 ADD_SUBDIRECTORY (./unit_test.benchmark.basic)
+ADD_SUBDIRECTORY (./unit_test.benchmark.complex)
 ADD_SUBDIRECTORY (./unit_test.function)

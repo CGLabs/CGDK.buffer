@@ -97,8 +97,10 @@ std::vector<int> std_vector_int =
 std::vector<std::string> std_vector_std_string = 
 {
 	"zero",
+	"one",
 	"two",
 	"tree",
+	"hundred",
 	"fifteen",
 	"five",
 	"eleven"
@@ -107,8 +109,10 @@ std::vector<std::string> std_vector_std_string =
 std::vector<std::wstring> std_vector_std_wstring
 {
 	L"zero",
+	L"one",
 	L"two",
 	L"tree",
+	L"hundred",
 	L"fifteen",
 	L"five",
 	L"eleven"
