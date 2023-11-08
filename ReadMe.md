@@ -1,61 +1,71 @@
 ## CGDK::buffer란
-CGDK::buffer는 메시지 직렬화 버퍼 시스템입니다.   
-C++버전은 CGDK::buffer이며   
-C# 버전은 CGDK.buffer입니다.
+CGDK::buffer는 메시지 직렬화 버퍼 시스템<br>
+C++버전은 CGDK::buffer이며<br>
+C# 버전은 CGDK.buffer<br>
 
-자세한 소개 (https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/intruduce_CGDK.buffer.pptx)
+자세한 소개 (https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/intruduce_CGDK.buffer.pptx)<br>
 
 
 #### CGD::buffer
-   - 간단합니다.(사실상 append/extract/front가 전부...)
-   - 빠릅니다. (c++ 버전은 tmp로 구현되어 압도적 최강의 성능을 자랑합니다.)
-   - 작고 가볍습니다.
-   - Schemaless와 Schema(구조체 직렬화)를 모두 지원합니다.
-   - 설정이나 스크립트(IDL)없이 구조체를 그대로 Schema로 사용합니다.
-   - C++은 C++11 Template Meta Programming을 사용해 구현해 100% template이므로 Include만으로 사용 가능합니다.
-   - 자료형에 따라 그에 맞는 직렬화를 수행합니다.
-   - 지원되는 자료형은
-      * 기본 자료형(char,int32_t, ... float, double)
-      * ENUM
-      * 문자열(char*, wchar_t*, std::string, std::wstring, std_string_view, ...)
-      * 배열(T[N], std::array<T,N>)
-      * 컨테이너(std::vector<T>, std::list<T>, std::set<T>,std::map<K,V>, ...)
-      * 시간(chrono::time_stamp, chrono::duration, ...) 
-      * 포인터(std::shared_ptr<T>, std::unique_ptr<T>)
-      * buffer (CGDK::buffer_veiew, CGDK::buffer,CGDK::shared_buffer)
-      * struct
-      * Ibuffer_serialzable
-      * 기타... 
+   - 매우 간단(사실상 append/extract/front가 전부...)<br>
+   - 초고성능 (c++ 버전은 tmp로 구현되어 압도적 최강의 성능을 자랑합니다.)<br>
+   - 작고 가벼움<br>
+   - Schemaless와 Schema(구조체 직렬화)를 모두 지원<br>
+   - 설정이나 스크립트(IDL)없이 구조체를 그대로 Schema로 사용 가능<br>
+   - C++은 C++11 Template Meta Programming을 사용해 구현해 100% template이므로 Include만으로 사용 가능<br>
+   - 자료형에 따라 그에 맞는 직렬화를 수행<br>
+   - 지원되는 자료형은<br>
+      * 기본 자료형(char,int32_t, ... float, double)<br>
+      * enum<br>
+      * 문자열(char*, wchar_t*, std::string, std::wstring, std_string_view, ...)<br>
+      * 배열(T[N], std::array<T,N>)<br>
+      * 컨테이너(std::vector<T>, std::list<T>, std::set<T>,std::map<K,V>, ...)<br>
+      * 시간(chrono::time_stamp, chrono::duration, ...) <br>
+      * 포인터(std::shared_ptr<T>, std::unique_ptr<T>)<br>
+      * buffer (CGDK::buffer_veiew, CGDK::buffer,CGDK::shared_buffer)<br>
+      * struct<br>
+      * Ibuffer_serialzable<br>
+      * 기타...<br>
 
 #### CGD.buffer
-   - C#버전
-   - 직렬화/역직렬화 방법은 C++과 동일합니다.(append/extract)
-   - Reflection을 사용하여 구현하였습니다.
-   - C++ 버전화 호환됩니다.   
+   - C#버전<br>
+   - 직렬화/역직렬화 방법은 C++과 동일합니다.(append/extract)<br>
+   - reflection을 사용하여 구현하였습니다.<br>
+   - C++ 버전화 호환됩니다.<br>
+<br>
+<br>
 
 ## buffer의 종류
-3종류의 buffer를 제공하고 있으며 모두 상속 관계에 있습니다.   
+[C++]<br>
+   3종류의 buffer를 제공하고 있으며 모두 상속 관계<br>
 
-#### CGDK::buffer_view
-data_와 size_만 가진 buffer로 읽기나 덥어쓰기만 가능합니다.   
-'extract<T>' 함수(읽어내기)   
-'front<T>' 함수(읽기와 덥어 쓰기)   
-#### CGDK::buffer
-CGDK::buffer_view를 상속받아 경계정보(boung_info)를 추가한 버퍼 클래스입니다.   
-'append<T>'함수로 붙히기를 지원합니다.   
-#### CGDK::shared_buffer
-CGDK::buffer를 상속 받아 스마트 포인터 기능을 더한 버퍼 클래스입니다.   
-할당된 원본 버퍼를 스마트포인터로 관리합니다.   
-alloc_shared_buffer(SIZE) 혹은 make_shared_buffer<T>를 사용해 버퍼를 할당 받을 수 있습니다.   
+  - CGDK::buffer_view<br>
+     data_와 size_만 가진 buffer로 읽기나 덥어쓰기만 가능<br>
+     'extract<T>' 함수(읽어내기)<br>
+     'front<T>' 함수(읽기와 덥어 쓰기)<br><br>
+  - CGDK::buffer<br>
+     CGDK::buffer_view를 상속받아 경계정보(boung_info)를 추가한 버퍼 클래스<br>
+     'append<T>'함수로 붙히기를 지원<br><br>
+  - CGDK::shared_buffer<br>
+     CGDK::buffer를 상속 받아 스마트 포인터 기능을 더한 버퍼 클래스<br>
+     할당된 원본 버퍼를 스마트포인터로 관리함<br>
+     alloc_shared_buffer(SIZE) 혹은 make_shared_buffer<T>를 사용해 버퍼를 할당 받을 수 있음<br>
+<br>
 
+[C#]<br>
+   단일 클라스 종류만 존재.
+   (C#은 shared_buffer가 필요하지 않음)
+  - CGDK.buffer <br>
+     <br>
+     <br>
 
 ## CGD::buffer사용하기
-#### 직렬화하기(Schemaless)  
-버퍼에 데이터를 버퍼에 쓰기는 간단히 append<T>()로 가능합니다.   
-TYPE를 생략할 경우 입력되는 값의 자료형으로 간주합니다.   
-``` C++
-  buf.append<[TYPE]>([value]);
-```
+### 직렬화하기(Schemaless)  
+   버퍼에 데이터를 버퍼에 쓰기는 간단히 append<T>()로 가능<br>
+   (TYPE를 생략할 경우 입력되는 값의 자료형으로 간주함)<br>
+   ``` C++
+     buf.append<[TYPE]>([value]);
+   ```
     
 [C++]
 ``` C++
@@ -67,6 +77,8 @@ bufTemp.append<int>(-100);
 bufTemp.append<uint32_t>(1000);
 bufTemp.append<std::string>("Test String"); // 문자열도 가능
 ```
+<br>
+
 [C#]
 ``` C#
 CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
@@ -77,8 +89,8 @@ bufTemp.append<int>(-100);
 bufTemp.append<uint>(1000);
 bufTemp.append<string>("Test String");	// 문자열도 가능
 ```
-
-#### 역직렬화하기(Schemaless)
+<br><br>
+### 역직렬화하기(Schemaless)<br>
 
 ``` C++
   [value] buf.extract<[TYPE]>();
@@ -93,6 +105,8 @@ auto temp3 = bufTemp.extract<int>();
 auto temp4 = bufTemp.extract<uint32_t>();
 auto temp5 = bufTemp.extract<std::string>();
 ```
+<br>
+
 [C#]
 ``` C#
 var temp1 = bufTemp.extract<byte>();
@@ -102,9 +116,9 @@ var temp4 = bufTemp.extract<uint>();
 var temp5 = bufTemp.extract<string>();
 ```
 
-복합형 데이터의 직렬화/역직렬화도 가능합니다.   
-C++의 vector<T>, list<T>, set<T>, map<T> ....      
-C#의 List<T>, Dictionary<K,V> ...   
+복합형 데이터의 직렬화/역직렬화도 가능<br> 
+C++의 vector<T>, list<T>, set<T>, map<T> ....<br>
+C#의 List<T>, Dictionary<K,V> ...<br>
 
 [C++]
 ``` C++
@@ -127,6 +141,8 @@ auto temp2 = bufTemp.extract<std::list<std::string>>();
 auto temp3 = bufTemp.extract<std::map<int, std::string>>();
 auto temp4 = bufTemp.extract<std::map<int, std::list<std::string>>>();
 ```
+<br>
+
 [C#]
 ``` C#
 List<int>                      listTest = new ...;
@@ -151,16 +167,20 @@ var temp4 = bufTemp.extract<Dictionary<string,List<int>>> ();
 bufTemp.append(maplistTemp);
 ```
 
-#### 직렬화에 필요한 메모리 구하기
-데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있습니다.   
+<br>
+
+### 직렬화에 필요한 메모리 구하기
+데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있음 <br>
 [C++]
 ``` C++
 auto size = CGDK::get_size_of(maplistTemp);
 ```
 
-#### buffer에 메모리 동적 할당 받기
-CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 받을 수 있습니다.   
-CGDK::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당해제됩니다.   
+<br>
+
+### buffer에 메모리 동적 할당 받기
+CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 가능<br> 
+CGDK::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당 해제 됨<br>
 
 [C++]
 ``` C++
@@ -171,9 +191,11 @@ auto temp1 = CGDK::alloc_shared_buffer(1000);
 auto temp2 = CGDK::alloc_shared_buffer(CGDK::get_size_of(maplistTemp)); 
 ```
 
+<br>
+
 ### 구조체 직렬화
-'구조체 직렬화'를 원하는 구조체의 'ENABLE_STRUCT_SERIALIZABLE'을 추가해 주면 됩니다.   
-구조체를 Schema로 사용 가능합니다.
+'구조체 직렬화'를 원하는 구조체의 'ENABLE_STRUCT_SERIALIZABLE'을 추가해 주면 됨<br>
+구조체를 Schema로 사용 가능<br>
 
 [C++]
 ``` C++
@@ -196,7 +218,7 @@ struct TEST2
     TEST      c;
 };
 ```
-이렇게 정의한 후   
+이렇게 정의한 후<br>
 
 [C++]
 ``` C++
@@ -211,15 +233,17 @@ bufTemp.append<TEST2>(tempData);
 var temp1 = bufTemp.extract<TEST2>();
 
 ```
-이렇게 직렬화/역직렬화를 수행하면 됩니다.   
-주의) 생성자와 virtaul 함수를 가져서는 안됩니다.
+이렇게 직렬화/역직렬화를 수행 <br>
+주의) 생성자와 virtaul 함수를 가져서는 안됨<br>
+<br>
 
 ## 지원
-* C+17이상이면 지원가능  
-* C# 모든 버전 지원
-* unreal3D(c++) 지원
-* unity 3D(c#) 지원
+* C+17이상이면 지원가능<br>
+* C# 모든 버전 지원<br>
+* unreal3D(c++) 지원<br>
+* unity 3D(c#) 지원<br>
 
+<br>
 
 ## 시작하기
  https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/Getting_start_CGDK.buffer.pptx
