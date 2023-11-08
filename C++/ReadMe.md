@@ -12,12 +12,12 @@ visual studio, linux, unreal 3D 모두 설정이 동일합니다.
 ### '/tutorials'
 #### comment
    5개의 튜터리얼로 구성되어 있습니다.
-      - tutorial 1. 기본 사용법: 다양한 자료형 직렬화/역직렬화를 위한 append/extract/front 함수 등의 사용법을  설명합니다.
-      - tutorial 2. 버퍼 조작: 버퍼 자체를 조작하는 방법들을 설명합니다. (버퍼 깊은 복사, CGDK::buffer_view와 CGDK::buffer 용도, 버퍼 연사자 등...)
-      - tutorial 3. 구조체 직렬화: idl을 대신한 구조체 직렬화의 사용법과 예제를 보여줍니다.
-      - tutorial 4. Ibuffer_serialzation: 사용자 정의 schemaless 직렬화를 설정합니다. 구조체 직렬화를 사용하기 힘들거나 직접 직렬화/역직렬화를 정의할 필요가 있은 때 사용합니다.
-      - tutorial 5. unreal 3D 예제: (필요 이상으로 커서 포함하시지 않았습니다.)
-      - tutorial 6. 정적 버퍼: CGDK::buffer를 사용해 배열이나 std::array와 같은 정적 변수를 버퍼로 사용하는 벙법을 설명합니다.
+   [tutorial 1] 기본 사용법: 다양한 자료형 직렬화/역직렬화를 위한 append/extract/front 함수 등의 사용법을  설명합니다.
+   [tutorial 2] 버퍼 조작: 버퍼 자체를 조작하는 방법들을 설명합니다. (버퍼 깊은 복사, CGDK::buffer_view와 CGDK::buffer 용도, 버퍼 연사자 등...)
+   [tutorial 3] 구조체 직렬화: idl을 대신한 구조체 직렬화의 사용법과 예제를 보여줍니다.
+   [tutorial 4] Ibuffer_serialzation: 사용자 정의 schemaless 직렬화를 설정합니다. 구조체 직렬화를 사용하기 힘들거나 직접 직렬화/역직렬화를 정의할 필요가 있은 때 사용합니다.
+   [tutorial 5] unreal 3D 예제: (필요 이상으로 커서 포함하시지 않았습니다.)
+   [tutorial 6] 정적 버퍼: CGDK::buffer를 사용해 배열이나 std::array와 같은 정적 변수를 버퍼로 사용하는 벙법을 설명합니다.
 #### compile
    Visual studio는 프로젝트 파일('CGDK.buffer.github/C++/tutorial/CGDK.buffer.tutorial.vs17.sln)'을 열어서 컴파일 하시면 됩니다. ;
    Linux는 'CMake를 사용해서 컴파일 하시면 됩니다.
