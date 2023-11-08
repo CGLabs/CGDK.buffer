@@ -35,7 +35,7 @@ C# 버전은 CGDK.buffer<br>
 <br>
 <br>
 
-## buffer의 종류
+## buffer 클래스 종류
 [C++]<br>
    3종류의 buffer를 제공하고 있으며 모두 상속 관계<br>
 
@@ -59,8 +59,8 @@ C# 버전은 CGDK.buffer<br>
      <br>
      <br>
 
-## CGD::buffer사용하기
-### 직렬화하기(Schemaless)  
+## CGD::buffer 사용하기
+### 1. 직렬화하기(Schemaless)  
    버퍼에 데이터를 버퍼에 쓰기는 간단히 append<T>()로 가능<br>
    (TYPE를 생략할 경우 입력되는 값의 자료형으로 간주함)<br>
    ``` C++
@@ -90,7 +90,7 @@ bufTemp.append<uint>(1000);
 bufTemp.append<string>("Test String");	// 문자열도 가능
 ```
 <br><br>
-### 역직렬화하기(Schemaless)<br>
+### 2. 역직렬화하기(Schemaless)<br>
 
 ``` C++
   [value] buf.extract<[TYPE]>();
@@ -169,7 +169,7 @@ bufTemp.append(maplistTemp);
 
 <br>
 
-### 직렬화에 필요한 메모리 구하기
+### 3. 직렬화에 필요한 메모리 구하기
 데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있음 <br>
 [C++]
 ``` C++
@@ -178,7 +178,7 @@ auto size = CGDK::get_size_of(maplistTemp);
 
 <br>
 
-### buffer에 메모리 동적 할당 받기
+### 4. 동적 메모리 할당 받기
 CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 가능<br> 
 CGDK::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당 해제 됨<br>
 
@@ -193,7 +193,7 @@ auto temp2 = CGDK::alloc_shared_buffer(CGDK::get_size_of(maplistTemp));
 
 <br>
 
-### 구조체 직렬화
+### 5. 구조체 직렬화
 '구조체 직렬화'를 원하는 구조체의 'ENABLE_STRUCT_SERIALIZABLE'을 추가해 주면 됨<br>
 구조체를 Schema로 사용 가능<br>
 
