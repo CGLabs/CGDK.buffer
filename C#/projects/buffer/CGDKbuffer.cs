@@ -1,7 +1,7 @@
 ﻿//*****************************************************************************
 //*                                                                           *
 //*                                CGDK.buffer                                *
-//*                      Ver 2.0pre / Release 2015.01.05                      *
+//*                        Ver 3.0 / Release 2022.07.10                       *
 //*                                                                           *
 //*                                                                           *
 //*                                                                           *
@@ -204,33 +204,20 @@ public struct buffer
 	public void		append					(ulong _object)						{ Debug.Assert((m_buffer.Length-m_offset-m_count)>=sizeof(ulong));	BitConverter.GetBytes(_object).CopyTo(m_buffer, m_offset + m_count); m_count += sizeof(ulong); }
 	public void		append					(float _object)						{ Debug.Assert((m_buffer.Length-m_offset-m_count)>=sizeof(float));	BitConverter.GetBytes(_object).CopyTo(m_buffer, m_offset + m_count); m_count += sizeof(float); }
 	public void		append					(double _object)					{ Debug.Assert((m_buffer.Length-m_offset-m_count)>=sizeof(double));	BitConverter.GetBytes(_object).CopyTo(m_buffer, m_offset + m_count); m_count += sizeof(double); }
-	public void		append					(DateTime _object)
-	{
-		ulong	tempA	 = (ulong)_object.Year;
-				tempA	|= (((ulong)_object.Month) << 16);
-				tempA	|= (((ulong)_object.Day)   << 32);
-				tempA	|= (((ulong)_object.Hour)  << 48);
+	public void		append					(DateTime _object)					{ this.append<long>(_object.Ticks);	}
 
-		ulong	tempB	 = ((ulong)_object.Minute);
-				tempB	|= (((ulong)_object.Second) << 16);
-				tempB	|= (((ulong)_object.Millisecond) << 32);
-
-		append<ulong>(tempA);
-		append<ulong>(tempB);
-	}
-
-	public void		append<T>()													{ append<T>(default(T));}
-	public void		append<T>				(char _object) where T:struct		{ if(typeof(T)==typeof(char))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(sbyte _object) where T:struct		{ if(typeof(T)==typeof(sbyte))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(byte _object) where T:struct		{ if(typeof(T)==typeof(byte))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(short _object) where T:struct		{ if(typeof(T)==typeof(short))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(ushort _object) where T:struct		{ if(typeof(T)==typeof(ushort))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(int _object) where T:struct		{ if(typeof(T)==typeof(int))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(uint _object) where T:struct		{ if(typeof(T)==typeof(uint))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(long _object) where T:struct		{ if(typeof(T)==typeof(long))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(ulong _object) where T:struct		{ if(typeof(T)==typeof(ulong))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(float _object) where T:struct		{ if(typeof(T)==typeof(float))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
-	public void		append<T>				(double _object) where T:struct		{ if(typeof(T)==typeof(double))	{ append(_object);} else { append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>()													{ this.append<T>(default(T));}
+	public void		append<T>				(char _object) where T:struct		{ if(typeof(T)==typeof(char))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(sbyte _object) where T:struct		{ if(typeof(T)==typeof(sbyte))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(byte _object) where T:struct		{ if(typeof(T)==typeof(byte))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(short _object) where T:struct		{ if(typeof(T)==typeof(short))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(ushort _object) where T:struct		{ if(typeof(T)==typeof(ushort))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(int _object) where T:struct		{ if(typeof(T)==typeof(int))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(uint _object) where T:struct		{ if(typeof(T)==typeof(uint))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(long _object) where T:struct		{ if(typeof(T)==typeof(long))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(ulong _object) where T:struct		{ if(typeof(T)==typeof(ulong))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(float _object) where T:struct		{ if(typeof(T)==typeof(float))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
+	public void		append<T>				(double _object) where T:struct		{ if(typeof(T)==typeof(double))	{ append(_object);} else { this.append((T)Convert.ChangeType(_object, typeof(T)));}}
 	//public void		append<T>				(char _object) where T:struct		{ Debug.Assert(typeof(T) == typeof(char));	append(_object);}
 	//public void		append<T>				(sbyte _object) where T:struct		{ Debug.Assert(typeof(T) == typeof(sbyte));	append(_object);}
 	//public void		append<T>				(byte _object) where T:struct		{ Debug.Assert(typeof(T) == typeof(byte));	append(_object);}
@@ -3775,7 +3762,7 @@ public struct buffer
 
 	private static int	_SizeOf_DateTime()
 	{
-		return sizeof(ulong) + sizeof(ulong);
+		return sizeof(long);
 	}
 
 	private static int _size_of_buffer(CGDK.buffer _buffer)

@@ -394,7 +394,7 @@ namespace CGDBuffer_CSharp_UnitTest
 			var size_source = CGDK.buffer.get_size_of(tempTime);
 
 			// check) 
-			Assert.IsTrue(size_source == 16);
+			Assert.IsTrue(size_source == 8);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -414,33 +414,6 @@ namespace CGDBuffer_CSharp_UnitTest
 				Assert.IsTrue(buf_temp.size == 0);
 			}
 		}
-
-		[TestMethod]
-		public void test_buffer_datetime2()
-		{
-			var tempTime = new DateTime(2016, 12, 11, 03, 12, 22);
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// - Buffer 할당
-				var buf_temp = new CGDK.buffer(2048);
-
-				buf_temp.append<ushort>((ushort)tempTime.Year);
-				buf_temp.append<ushort>((ushort)tempTime.Month);
-				buf_temp.append<ushort>((ushort)tempTime.Day);
-				buf_temp.append<ushort>((ushort)tempTime.Hour);
-				buf_temp.append<ushort>((ushort)tempTime.Minute);
-				buf_temp.append<ushort>((ushort)tempTime.Second);
-				buf_temp.append<uint>((uint)tempTime.Millisecond);
-
-				var temp = buf_temp.extract<DateTime>();
-
-				// Check) 
-				Assert.IsTrue(tempTime == temp);
-				Assert.IsTrue(buf_temp.size == 0);
-			}
-		}
-
 
 		[TestMethod]
 		public void test_buffer_appendextract_string()
@@ -1273,4 +1246,17 @@ namespace CGDBuffer_CSharp_UnitTest
 			}
 		}
 	}
+
+
+
+	public struct sTEST
+	{
+		public int a;
+		public float b;
+		public String c;
+		public List<String> d;
+		public Dictionary<int, String> e;
+	}
+
+
 }
