@@ -378,7 +378,7 @@ public struct buffer
 			// Check) null 일 경우 -1만 쓰고 끝냄
 			if (_object == null)
 			{
-				append((short)-1);
+				append((Int32)-1);
 				return;
 			}
 
@@ -487,8 +487,8 @@ public struct buffer
 		if (_object == null)
 		{
 			// - -1을 쓰고 끝낸다.
-			Marshal.StructureToPtr((short)-1, new IntPtr(_ptr + _offset), false);
-			_offset += sizeof(short);
+			Marshal.StructureToPtr((Int32) -1, new IntPtr(_ptr + _offset), false);
+			_offset += sizeof(Int32);
 			return;
 		}
 
@@ -497,19 +497,19 @@ public struct buffer
 		var	iStringLength = temp_array.Length;
 
 		// Check) 버퍼의 크기가 충분한가 확인한다.
-		Debug.Assert((_offset+sizeof(short)+iStringLength*sizeof(char))<=m_buffer.Length);
+		Debug.Assert((_offset+sizeof(Int32) + iStringLength*sizeof(char))<=m_buffer.Length);
 
 		// 2) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-		Marshal.StructureToPtr((short)(iStringLength+1), new IntPtr(_ptr+_offset), false);
+		Marshal.StructureToPtr((Int32)(iStringLength+1), new IntPtr(_ptr+_offset), false);
 
 		// 3) [문자열]을 복사해 넣는다.
-		System.Buffer.BlockCopy(temp_array, 0, m_buffer, (int)_offset+sizeof(short), iStringLength*sizeof(char));
+		System.Buffer.BlockCopy(temp_array, 0, m_buffer, (int)_offset+sizeof(Int32), iStringLength*sizeof(char));
 
 		// 4) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-		_offset	+= (sizeof(short)+(iStringLength+1)*sizeof(char));
+		_offset	+= (sizeof(Int32) + (iStringLength+1)*sizeof(char));
 
 		// 5) [NULL]을 넣는다.
-		Marshal.StructureToPtr((short)0, new IntPtr(_ptr+_offset-sizeof(char)), false);
+		Marshal.StructureToPtr((Int32)0, new IntPtr(_ptr+_offset-sizeof(char)), false);
 	}
 	private void	_append<T>				(long _ptr, ref long _offset, params string[] _Array)
 	{
@@ -648,8 +648,8 @@ public struct buffer
 			// - null일 경우 그냥 -1만 쓰고 끝냄
 			else
 			{
-				Marshal.StructureToPtr((short)-1, new IntPtr(_ptr + _offset), false);
-				_offset += sizeof(short);
+				Marshal.StructureToPtr((Int32) - 1, new IntPtr(_ptr + _offset), false);
+				_offset += sizeof(Int32);
 			}
 		}
 	}
@@ -675,8 +675,8 @@ public struct buffer
 			else
 			{
 				// - -1을 쓰고 끝낸다.
-				Marshal.StructureToPtr((short)-1, new IntPtr(_ptr + _offset), false);
-				_offset += sizeof(short);
+				Marshal.StructureToPtr((Int32) - 1, new IntPtr(_ptr + _offset), false);
+				_offset += sizeof(Int32);
 				continue;
 			}
 		}
@@ -698,16 +698,16 @@ public struct buffer
 		if (_object == null)
 		{
 			// - -1을 쓰고 끝낸다.
-			Marshal.StructureToPtr((short)-1, new IntPtr(_ptr + _offset), false);
-			_offset += sizeof(short);
+			Marshal.StructureToPtr((Int32) - 1, new IntPtr(_ptr + _offset), false);
+			_offset += sizeof(Int32);
 			return;
 		}
 
 		// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
 	#if _USE_INLINE_PRIMITIVE_FUNCTION
-		Marshal.StructureToPtr((short)_object.Count, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(typeof(short));
+		Marshal.StructureToPtr((Int32)_object.Count, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(typeof(Int32));
 	#else
-		_append_Primitive(_ptr,ref _offset,(short)_object.Count);
+		_append_Primitive(_ptr,ref _offset,(Int32)_object.Count);
 	#endif
 
 		// 2) [데이터]들을 써넣는다.
@@ -1768,16 +1768,16 @@ public struct buffer
 			if (_object == null)
 			{
 				// - -1을 쓰고 끝낸다.
-				Marshal.StructureToPtr((short)-1, new IntPtr(_ptr + _offset), false);
-				_offset += sizeof(short);
+				Marshal.StructureToPtr((Int32) - 1, new IntPtr(_ptr + _offset), false);
+				_offset += sizeof(Int32);
 				return;
 			}
 
 			// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
 		#if _USE_INLINE_PRIMITIVE_FUNCTION
-			Marshal.StructureToPtr((short)_object.Count, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(typeof(short));
+			Marshal.StructureToPtr((Int32)_object.Count, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(typeof(Int32));
 		#else
-			_append_Primitive(_ptr, ref _offset, (short)_object.Count);
+			_append_Primitive(_ptr, ref _offset, (Int32)_object.Count);
 		#endif
 
 			// 3) [데이터]들을 써넣는다.
@@ -1896,8 +1896,8 @@ public struct buffer
 			if (_object == null)
 			{
 				// - -1을 쓰고 끝낸다.
-				Marshal.StructureToPtr((short)-1, new IntPtr(_ptr + _offset), false);
-				_offset += sizeof(short);
+				Marshal.StructureToPtr((Int32) - 1, new IntPtr(_ptr + _offset), false);
+				_offset += sizeof(Int32);
 				return;
 			}
 
@@ -2269,7 +2269,7 @@ public struct buffer
 
 		// 2) [문자열]을 복사한다.
 		temp_object.data = new byte[temp_object.size];
-		System.Buffer.BlockCopy(m_buffer, m_offset + (int)_offset + sizeof(short), temp_object.data, 0, temp_object.size);
+		System.Buffer.BlockCopy(m_buffer, m_offset + (int)_offset + sizeof(Int32), temp_object.data, 0, temp_object.size);
 
 		// 3) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
 		_offset += (sizeof(UInt32) + temp_object.size);
@@ -2281,29 +2281,29 @@ public struct buffer
 	private string	_extract_string			(long _ptr, ref long _offset)
 	{
 		// Check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
-		Debug.Assert(sizeof(short)<=m_count);
+		Debug.Assert(sizeof(Int32) <= m_count);
 
 		// Check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
-		if(sizeof(short)>m_count) 
+		if(sizeof(Int32) > m_count) 
 		{
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
 		}
 
 		// 1) String의 길이를 얻는다.
-		var length_string = (int)(short)Marshal.PtrToStructure(new IntPtr(_ptr+_offset), typeof(short));
+		var length_string = (Int32)Marshal.PtrToStructure(new IntPtr(_ptr+_offset), typeof(Int32));
 
 		// Check) length가 -1이면 null을 리턴한다.
 		if(length_string == -1)
 		{
-			_offset	+= sizeof(short);
+			_offset	+= sizeof(Int32);
 			return null;
 		}
 
 		// Check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
-		Debug.Assert((length_string * sizeof(char) + sizeof(short)) <= m_count);
+		Debug.Assert((length_string * sizeof(char) + sizeof(Int32)) <= m_count);
 
 		// Check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
-		if((length_string * sizeof(char) + sizeof(short)) > m_count) 
+		if((length_string * sizeof(char) + sizeof(Int32)) > m_count) 
 		{
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
 		}
@@ -2312,17 +2312,17 @@ public struct buffer
 		int size_copy = (length_string - 1) * sizeof(char);
 
 		// Check) [문자열]의 제일 끝이 NULL인지 확인한다.
-		if(m_buffer[m_offset + _offset + sizeof(short) + size_copy] != 0 ||m_buffer[m_offset + _offset + sizeof(short) + size_copy + 1] != 0) 
+		if(m_buffer[m_offset + _offset + sizeof(Int32) + size_copy] != 0 ||m_buffer[m_offset + _offset + sizeof(Int32) + size_copy + 1] != 0) 
 		{
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] string terminate No-'NULL' value");
 		}
 
 		// 3) [문자열]을 복사한다.
 		char[] charTemp = new char[length_string - 1];
-		System.Buffer.BlockCopy(m_buffer, m_offset+(int)_offset + sizeof(short), charTemp, 0, size_copy);
+		System.Buffer.BlockCopy(m_buffer, m_offset+(int)_offset + sizeof(Int32), charTemp, 0, size_copy);
 
 		// 4) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
-		_offset	+= (sizeof(short) + size_copy + sizeof(char));
+		_offset	+= (sizeof(Int32) + size_copy + sizeof(char));
 
 		// 5) [string]로 변환해 최종 리턴한다.
 		return	new string(charTemp);
@@ -2335,7 +2335,7 @@ public struct buffer
 		if (_static_size == null)
 		{
 			// 1) [데이터 갯수]를 읽어들인다.
-			temp_count = _extract_primitive<short>(_ptr, ref _offset);
+			temp_count = _extract_primitive<Int32>(_ptr, ref _offset);
 
 			// Check) length가 -1이면 null을 리턴한다.
 			if (temp_count == -1)
@@ -2416,7 +2416,7 @@ public struct buffer
 			for (int i = 0; i < temp_count; ++i)
 			{
 				// - [데이터 갯수]를 읽어들인다.
-				short count_item = _extract_primitive<short>(_ptr, ref _offset);
+				var count_item = _extract_primitive<Int32>(_ptr, ref _offset);
 
 				// Check) temp_count가 -1이면 null을 리턴한다.
 				if (count_item == -1)
@@ -2435,7 +2435,7 @@ public struct buffer
 			for (int i=0; i<temp_count; ++i)
 			{
 				// - [데이터 갯수]를 읽어들인다.
-				short count_item = _extract_primitive<short>(_ptr, ref _offset);
+				var count_item = _extract_primitive<Int32>(_ptr, ref _offset);
 
 				// Check) temp_count가 -1이면 null을 리턴한다.
 				if(count_item == -1)
@@ -2468,7 +2468,7 @@ public struct buffer
 	private object	_extract_DictionaryX	(long _ptr, ref long _offset, Type _type_create, Type[] _types) 
 	{
 		// 1) [데이터 갯수]를 읽어들인다.
-		short count_item = _extract_primitive<short>(_ptr, ref _offset);
+		var count_item = _extract_primitive<Int32>(_ptr, ref _offset);
 
 		// Check) temp_count가 -1이면 null을 리턴한다.
 		if (count_item != -1)
@@ -3492,7 +3492,7 @@ public struct buffer
 	private object	_extract_ListX			(long _ptr, ref long _offset, Type _type_create, Type _type)
 	{
 		// - [데이터 갯수]를 읽어들인다.
-		short count_item = _extract_primitive<short>(_ptr, ref _offset);
+		var count_item = _extract_primitive<Int32>(_ptr, ref _offset);
 
 		// Check) temp_count가 -1이면 null을 리턴한다.
 		if (count_item != -1)
@@ -3757,7 +3757,7 @@ public struct buffer
 		}
 
 		// Return0 
-		return	size;
+		return size;
 	}
 
 	private static int	_SizeOf_DateTime()
@@ -3776,14 +3776,14 @@ public struct buffer
 		if (_object == null)
 		{
 			// - -1을 쓰고 끝낸다.
-			return sizeof(short);
+			return sizeof(Int32);
 		}
 
 		// Declaere)
 		int	size = 0;
 
 		// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
-		size += sizeof(short);
+		size += sizeof(Int32);
 
 		// 2) [데이터]들을 써넣는다.
 		if (_types[0].IsPrimitive)
@@ -4609,14 +4609,14 @@ public struct buffer
 		// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 		if (_object == null)
 		{
-			return sizeof(short);
+			return sizeof(Int32);
 		}
 
 		// Declare) 
 		int	size = 0;
 
 		// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
-		size	+= sizeof(short);
+		size	+= sizeof(Int32);
 
 		// 3) [데이터]들을 써넣는다.
 		if (_type.IsPrimitive)
@@ -4764,7 +4764,7 @@ public struct buffer
 			else
 			{
 				// - -1을 쓰고 끝낸다.
-				size += sizeof(short);
+				size += sizeof(Int32);
 				continue;
 			}
 		}
@@ -4795,7 +4795,7 @@ public struct buffer
 			else
 			{
 				// - -1을 쓰고 끝낸다.
-				size += sizeof(short);
+				size += sizeof(Int32);
 				continue;
 			}
 		}
@@ -4808,7 +4808,7 @@ public struct buffer
 		if (_string == null)
 		{
 			// Return) -1을 쓰고 끝낸다.
-			return	sizeof(short);
+			return	sizeof(Int32);
 		}
 
 		// 1) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
@@ -4816,7 +4816,7 @@ public struct buffer
 		var	iStringLength = temp_array.Length;
 
 		// Return) [버퍼_길이]를 리턴한다.
-		return	(sizeof(short)+(iStringLength+1)*sizeof(char));
+		return	(sizeof(Int32) + (iStringLength+1)*sizeof(char));
 	}
 
 
