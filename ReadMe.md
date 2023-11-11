@@ -127,7 +127,7 @@ std::list<std::string>            listStringTest = { ...};
 std::map<std::string, int>        mapTemp = { ...};
 std::map<int, list<std::string>>  maplistTemp = { ...};
 	    
-CGD::buffer bufTemp(malloc(256));
+auto bufTemp = CGDK::alloc_shared_buffer(256));
 	    
 bufTemp.append(listTest);
 bufTemp.append(listStringTest);
@@ -169,7 +169,7 @@ bufTemp.append(maplistTemp);
 
 <br>
 
-### 3. 직렬화에 필요한 메모리 구하기
+### 3. 직렬화에 필요한 메모리 크기 구하기
 데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있음 <br>
 [C++]
 ``` C++
@@ -185,15 +185,35 @@ CGDK::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포
 [C++]
 ``` C++
 // 1000byte 메모리를 동적 할당 받는다.
-auto temp1 = CGDK::alloc_shared_buffer(1000); 
+auto temp1 = CGDK::alloc_shared_buffer(1000);
 
 // maplistTemp를 직렬화할 만큼의 메모리를 할당받는다.
-auto temp2 = CGDK::alloc_shared_buffer(CGDK::get_size_of(maplistTemp)); 
+auto temp2 = CGDK::alloc_shared_buffer(CGDK::get_size_of(maplistTemp));
 ```
 
 <br>
 
-### 5. 구조체 직렬화
+### 5. 정적 메모리 사용하기
+C++의 경우 CGDK::bufer는 배열이나 std::array를 임시 버퍼로 사용할 수 있습니다.
+지역 변수에 직렬화/역직렬화를 하고자 할 경우 성능에 유리할 수 있습니다.
+다만 
+
+[C++]
+``` C++
+// 지역 변수
+char temp_memory[256];
+
+// 지역변수를 메모리 버퍼로 활용합니다.
+CGDK::buffer bufTemp(temp_memory);
+
+bufTemp.append<int>(10);
+bufTemp.append<int>(100);
+
+```
+
+<br>
+
+### 6. 구조체 직렬화
 '구조체 직렬화'를 원하는 구조체의 'ENABLE_STRUCT_SERIALIZABLE'을 추가해 주면 됨<br>
 구조체를 Schema로 사용 가능<br>
 
@@ -236,9 +256,87 @@ var temp1 = bufTemp.extract<TEST2>();
 이렇게 직렬화/역직렬화를 수행 <br>
 주의) 생성자와 virtaul 함수를 가져서는 안됨<br>
 <br>
+<br>
 
-## 지원
-* C+17이상이면 지원가능<br>
+### 7. 읽기(peek)만 하기
+front<T> 함수를 사용하여 읽기가 가능합니다.<br>
+front 함수를 사용할 경우 읽을 위치(offset)를 지정하여야 합니다. (읽을 위치를 생략하면 0으로 간주합니다.)<br>
+c#의 경우 ref set_front와 get_front 함수가 분리 되어 있습니다.
+
+[C++]
+``` C++
+bufTemp.append<byte>(10);
+bufTemp.append<sbyte>(20);
+bufTemp.append<int>(-100);
+bufTemp.append<uint>(1000);
+bufTemp.append<std::string>("Test String");	// 문자열도 가능
+
+// - front를 사용해 값을 읽을 수 있습니다.
+auto value1 = bufTemp.front<uint8_t>(); //
+auto value2 = bufTemp.front<char>(1); //
+auto value3 = bufTemp.front<int>(2); //
+auto value4 = bufTemp.front<uint32_t>(10); // 
+auto value5 = bufTemp.front<std::string>(14); // 
+```
+
+[C#]
+``` C#
+bufTemp.append<byte>(10);
+bufTemp.append<sbyte>(20);
+bufTemp.append<int>(-100);
+bufTemp.append<uint>(1000);
+bufTemp.append<string>("Test String");	// 문자열도 가능
+
+// - get_front를 사용해 값을 읽을 수 있습니다.
+var value1 = bufTemp.get_front<byte>(); //
+var value2 = bufTemp.get_front<char>(1); //
+var value3 = bufTemp.get_front<int>(2); //
+var value4 = bufTemp.get_front<uint>(10); // 
+var value5 = bufTemp.get_front<string>(14); // 
+```
+
+<br>
+덥어 쓰기도 가능합니다.<br>
+c++은 front함수로 가능하며 C#은 set_front함수로 가능합니다.<br>
+
+[C++]
+``` C++
+bufTemp.front<int>(2) = 300; // offset 2 위치에 int값 300을 덥어씁니다.
+```
+[C#]
+``` C#
+bufTemp.set_front<int>(2, 300); // offset 2위치에 int값 300을 덥어 씁니다.
+```
+<br>
+<br>
+
+### 8. 나중에 덥어 쓰기<br>
+c++은 기본 자료형의 append 수행시 위치를 참조형 변수로 받아 놓았다 나중에 덮어 쓸 수 있습니다.<br>
+기본 자료형(char, short, int, float 등..)을 append할 경우 해당 위치의 참조형을 리턴해줍니다.<br>
+즉, int를 append하면 그 리턴 값은 int& 이 됩니다. 이것을 사용해서 추후 업데이트가 가능합니다.<br>
+front함수를 사용해 덥어 쓸 때 처럼 위치를 직접 지정해 주지 않아도 됩니다.<br>
+
+[C++]
+``` C++
+bufTemp.append<byte>(10);
+bufTemp.append<sbyte>(20);
+auto& temp_pos = bufTemp.append<int>(-100); // pos 변수에 위치를 받아 놓습니다.
+bufTemp.append<uint>(1000);
+bufTemp.append<string>("Test String");	// 문자열도 가능
+
+.................
+
+// - 덥어쓰기! 이렇게만 하면 해당 위치에 덥어써져서 -100값이 100으로 바뀝니다.
+temp_pos = 100;
+```
+이것을 이용해서 가변 메시지 길이를 나중에 써넣기가 가능합니다.<br>
+
+
+
+<br>
+
+## 지원 가능
+* C+17이상이면 가능<br>
 * C# 모든 버전 지원<br>
 * unreal3D(c++) 지원<br>
 * unity 3D(c#) 지원<br>
