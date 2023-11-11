@@ -53,8 +53,8 @@ C# 버전은 CGDK.buffer<br>
 <br>
 
 [C#]<br>
-   단일 클라스 종류만 존재.
-   (C#은 shared_buffer가 필요하지 않음)
+   단일 클라스 종류만 존재.<br>
+   (C#은 shared_buffer가 필요하지 않음)<br>
   - CGDK.buffer <br>
      <br>
      <br>
@@ -63,9 +63,11 @@ C# 버전은 CGDK.buffer<br>
 ### 1. 직렬화하기(Schemaless)  
    버퍼에 데이터를 버퍼에 쓰기는 간단히 append<T>()로 가능<br>
    (TYPE를 생략할 경우 입력되는 값의 자료형으로 간주함)<br>
+
    ``` C++
      buf.append<[TYPE]>([value]);
    ```
+    
     
 [C++]
 ``` C++
@@ -80,6 +82,7 @@ bufTemp.append<std::string>("Test String"); // 문자열도 가능
 <br>
 
 [C#]
+
 ``` C#
 CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
        
@@ -95,7 +98,7 @@ bufTemp.append<string>("Test String");	// 문자열도 가능
 ``` C++
   [value] buf.extract<[TYPE]>();
 ```
-extract<T>() 함수로 간단히 역직렬화를 할 수 있습니다.  
+extract<T>() 함수로 간단히 역직렬화를 할 수 있습니다.<br>
 
 [C++]
 ``` C++
@@ -169,8 +172,9 @@ bufTemp.append(maplistTemp);
 
 <br>
 
-### 3. 직렬화에 필요한 메모리 크기 구하기
+### 3. 직렬화에 필요한 메모리 크기 구하기<br>
 데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있음 <br>
+
 [C++]
 ``` C++
 auto size = CGDK::get_size_of(maplistTemp);
@@ -178,7 +182,7 @@ auto size = CGDK::get_size_of(maplistTemp);
 
 <br>
 
-### 4. 동적 메모리 할당 받기
+### 4. 동적 메모리 할당 받기<br>
 CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 가능<br> 
 CGDK::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당 해제 됨<br>
 
@@ -193,10 +197,10 @@ auto temp2 = CGDK::alloc_shared_buffer(CGDK::get_size_of(maplistTemp));
 
 <br>
 
-### 5. 정적 메모리 사용하기
-C++의 경우 CGDK::bufer는 배열이나 std::array를 임시 버퍼로 사용할 수 있습니다.
-지역 변수에 직렬화/역직렬화를 하고자 할 경우 성능에 유리할 수 있습니다.
-다만 
+### 5. 정적 메모리 사용하기<br>
+C++의 경우 CGDK::bufer는 배열이나 std::array를 임시 버퍼로 사용할 수 있습니다.<br>
+지역 변수에 직렬화/역직렬화를 하고자 할 경우 성능에 유리할 수 있습니다.<br>
+다만 <br>
 
 [C++]
 ``` C++
@@ -210,7 +214,6 @@ bufTemp.append<int>(10);
 bufTemp.append<int>(100);
 
 ```
-
 <br>
 
 ### 6. 구조체 직렬화
@@ -261,7 +264,7 @@ var temp1 = bufTemp.extract<TEST2>();
 ### 7. 읽기(peek)만 하기
 front<T> 함수를 사용하여 읽기가 가능합니다.<br>
 front 함수를 사용할 경우 읽을 위치(offset)를 지정하여야 합니다. (읽을 위치를 생략하면 0으로 간주합니다.)<br>
-c#의 경우 ref set_front와 get_front 함수가 분리 되어 있습니다.
+c#의 경우 ref set_front와 get_front 함수가 분리 되어 있습니다.<br>
 
 [C++]
 ``` C++
@@ -330,8 +333,6 @@ bufTemp.append<string>("Test String");	// 문자열도 가능
 temp_pos = 100;
 ```
 이것을 이용해서 가변 메시지 길이를 나중에 써넣기가 가능합니다.<br>
-
-
 
 <br>
 
