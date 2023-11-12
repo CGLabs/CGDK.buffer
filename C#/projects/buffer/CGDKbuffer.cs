@@ -609,6 +609,12 @@ public struct buffer
 
 	public unsafe void append<T>				(sbyte _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if(this.m_buffer == null)
@@ -634,6 +640,12 @@ public struct buffer
 
 	public unsafe void append<T>				(byte _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
@@ -659,6 +671,12 @@ public struct buffer
 
 	public unsafe void		append<T>				(short _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 
 		// check)
@@ -685,6 +703,12 @@ public struct buffer
 
 	public unsafe void		append<T>				(ushort _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 
 		// check)
@@ -711,6 +735,12 @@ public struct buffer
 
 	public unsafe void		append<T>				(int _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 
 		// check)
@@ -737,6 +767,12 @@ public struct buffer
 
 	public unsafe void		append<T>				(uint _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if(this.m_buffer == null)
@@ -762,6 +798,12 @@ public struct buffer
 
 	public unsafe void		append<T>				(long _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if(this.m_buffer == null)
@@ -787,6 +829,12 @@ public struct buffer
 
 	public unsafe void append<T>				(ulong _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if(this.m_buffer == null)
@@ -812,6 +860,12 @@ public struct buffer
 
 	public unsafe void append<T>				(float _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if(this.m_buffer == null)
@@ -837,6 +891,12 @@ public struct buffer
 
 	public unsafe void		append<T>				(double _object) where T : unmanaged
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if(this.m_buffer == null)
@@ -2630,6 +2690,9 @@ public struct buffer
 		}
 		else
 		{
+			// check)
+			Debug.Assert(_object != null);
+
 			// - Element Type에 따라 처리...
 			var temp_enum = _object.GetEnumerator();
 			while (temp_enum.MoveNext())
