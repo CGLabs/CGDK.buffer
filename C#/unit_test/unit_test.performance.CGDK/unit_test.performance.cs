@@ -8,7 +8,7 @@ namespace CGDBuffer_CSharp_UnitTest
 	[TestClass]
 	public class CGDbuffer_CSharp_UnitTest_Performance
 	{
-		public const int _TEST_COUNT = 1;
+		public const int _TEST_COUNT = 1000000;
 
 		int[] array_int = 
 		{
@@ -210,16 +210,16 @@ namespace CGDBuffer_CSharp_UnitTest
 				bufferTemp.append<double>(2.0);
 
 				// 3) 값 읽기
-				var value0	 = bufferTemp.extract<sbyte>();
-				var value1	 = bufferTemp.extract<byte>();
-				var value2	 = bufferTemp.extract<short>();
-				var value3	 = bufferTemp.extract<ushort>();
-				var value4	 = bufferTemp.extract<int>();
-				var value5	 = bufferTemp.extract<uint>();
-				var value6	 = bufferTemp.extract<long>();
-				var value7	 = bufferTemp.extract<ulong>();
-				var value8	 = bufferTemp.extract<float>();
-				var value9	 = bufferTemp.extract<double>();
+				var value0 = bufferTemp.extract<sbyte>();
+				var value1 = bufferTemp.extract<byte>();
+				var value2 = bufferTemp.extract<short>();
+				var value3 = bufferTemp.extract<ushort>();
+				var value4 = bufferTemp.extract<int>();
+				var value5 = bufferTemp.extract<uint>();
+				var value6 = bufferTemp.extract<long>();
+				var value7 = bufferTemp.extract<ulong>();
+				var value8 = bufferTemp.extract<float>();
+				var value9 = bufferTemp.extract<double>();
 			}
 		}
 		[TestMethod]
@@ -227,18 +227,18 @@ namespace CGDBuffer_CSharp_UnitTest
 		{
 			// 1) Buffer 할당
 			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
-			TEST		tempData	 = new TEST();
+			TEST tempData = new TEST();
 			
-			tempData.v0	 = 	(sbyte)3;
-			tempData.v1	 = 	(byte)4;
-			tempData.v2	 = 	(short)4100;
-			tempData.v3	 = 	(ushort)32210;
-			tempData.v4	 = 	123310;
-			tempData.v5	 = 	121234;
-			tempData.v6	 = 	-1000443L;
-			tempData.v7	 = 	12233094310UL;
-			tempData.v8	 = 	1.0f;
-			tempData.v9	 = 	2.0;
+			tempData.v0 = (sbyte)3;
+			tempData.v1 = (byte)4;
+			tempData.v2 = (short)4100;
+			tempData.v3 = (ushort)32210;
+			tempData.v4 = 123310;
+			tempData.v5 = 121234;
+			tempData.v6 = -1000443L;
+			tempData.v7 = 12233094310UL;
+			tempData.v8 = 1.0f;
+			tempData.v9 = 2.0;
 			
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -256,8 +256,8 @@ namespace CGDBuffer_CSharp_UnitTest
 		public void TestMethod_String_append_extract()
 		{
 			// 1) Buffer 할당
-			CGDK.buffer	bufferCreate	 = new CGDK.buffer(2048);
-			string[]	stringExtract	 = new string[8];
+			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
+			string[] stringExtract = new string[8];
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -301,7 +301,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				bufferTemp.append(list_int);
 
 				// 4) 값 읽기
-				var	temp = bufferTemp.extract<List<int>>();
+				var temp = bufferTemp.extract<List<int>>();
 			}
 		}
 
@@ -317,10 +317,10 @@ namespace CGDBuffer_CSharp_UnitTest
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// 3) 값 써넣기
-				bufferTemp.append(list_int);
+				bufferTemp.append(list_string);
 
 				// 4) 값 읽기
-				var temp = bufferTemp.extract<List<int>>();
+				var temp = bufferTemp.extract<List<string>>();
 			}
 		}
 

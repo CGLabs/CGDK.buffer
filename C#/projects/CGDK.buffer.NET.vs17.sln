@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.NET", "buffer.NET\CGDK.buffer.NET.csproj", "{AB23C59E-11E8-4788-B31E-31137CDD0DDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.NET", "..\..\CGDK.buffer.github\C#\projects\buffer.NET\CGDK.buffer.NET.csproj", "{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "buffer", "buffer\buffer.shproj", "{9F90C8CB-17EE-4F63-8AE0-FCAD54CC782F}"
 EndProject
@@ -15,14 +15,14 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Debug|x64.ActiveCfg = Debug|x64
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Debug|x64.Build.0 = Debug|x64
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Release|x64.ActiveCfg = Release|x64
-		{AB23C59E-11E8-4788-B31E-31137CDD0DDB}.Release|x64.Build.0 = Release|x64
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Debug|x64.ActiveCfg = Debug|x64
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Debug|x64.Build.0 = Debug|x64
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Release|x64.ActiveCfg = Release|x64
+		{5EA0BAB7-D372-44F4-9A2B-8B5030CBD48C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -31,7 +31,7 @@ Global
 		SolutionGuid = {764A3190-AB9C-4EC4-B3F2-D8D252AB5689}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		buffer\buffer.projitems*{5ea0bab7-d372-44f4-9a2b-8b5030cbd48c}*SharedItemsImports = 5
 		buffer\buffer.projitems*{9f90c8cb-17ee-4f63-8ae0-fcad54cc782f}*SharedItemsImports = 13
-		buffer\buffer.projitems*{ab23c59e-11e8-4788-b31e-31137cdd0ddb}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

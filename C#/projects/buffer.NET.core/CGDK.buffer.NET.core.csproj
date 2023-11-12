@@ -1,28 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>CGDK.buffer.NET.core</AssemblyName>
     <RootNamespace>CGDK</RootNamespace>
     <BaseOutputPath></BaseOutputPath>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\dll\NET.core\AnyCPU\Debug</OutputPath>
     <Optimize>False</Optimize>
+    <WarningLevel>9999</WarningLevel>
+    <NoWarn>8981</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutputPath>..\..\dll\NET.core\x64\Debug</OutputPath>
+    <WarningLevel>9999</WarningLevel>
+    <NoWarn>8981</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\dll\NET.core\AnyCPU\Release</OutputPath>
+    <WarningLevel>9999</WarningLevel>
+    <NoWarn>8981</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutputPath>..\..\dll\NET.core\x64\Release</OutputPath>
+    <WarningLevel>9999</WarningLevel>
+    <NoWarn>8981</NoWarn>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
