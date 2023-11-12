@@ -4,6 +4,8 @@
      - unsafe를 사용해 일부 기능 성능 향상
    * Warning 수정
      - .NET과 .NET core 컴파일 시 발생하던 Warning 수정
+   * 디렉토리 재조정
+     - unit_test는 디렉토리를 따로 만들어 분리
 
 ## CGDK 3.03.(3) (2023.11.10)
    #### (C#)
