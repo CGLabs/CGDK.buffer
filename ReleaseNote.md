@@ -6,6 +6,7 @@
      - .NET과 .NET core 컴파일 시 발생하던 Warning 수정
    * 디렉토리 재조정
      - unit_test는 디렉토리를 따로 만들어 분리
+   * CGDK.buffer의 직렬화/역직렬화시 size 저장 변수를 4Byte->8Byte (C++버전과의 호환을 위해)
 
 ## CGDK 3.03.(3) (2023.11.10)
    #### (C#)
