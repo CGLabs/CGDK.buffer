@@ -1451,9 +1451,9 @@ public struct buffer
 		else if (tmp == typeof(float)) *(float*)ptr = (float)_object;
 		else if (tmp == typeof(short)) *(short*)ptr = (short)_object;
 		else if (tmp == typeof(ushort)) *(ushort*)ptr = (ushort)_object;
+		else if (tmp == typeof(char)) *(char*)ptr = (char)_object; 
 		else if (tmp == typeof(sbyte)) *(sbyte*)ptr = (sbyte)_object;
 		else if (tmp == typeof(byte)) *(byte*)ptr = (byte)_object;
-		else if (tmp == typeof(char)) *(char*)ptr = (char)_object; 
 		else throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] buffer size is short");
 
 		// 3) m_iCount의 길이를 더한다.
@@ -2955,7 +2955,7 @@ public struct buffer
 		}
 	}
 	private unsafe object	_extract_primitive		(long _ptr, ref long _offset, Type _type)
-	{
+		{
 		// 1) Type의 크기를 구한다.
 		var	sizeType = Marshal.SizeOf(_type);
 
@@ -2993,45 +2993,23 @@ public struct buffer
 		// Return) 
 		return obj;
 	}
-	private unsafe T		_extract_primitive<T>	(long _ptr, ref long _offset)
+	private unsafe T		_extract_primitive<T>	(long _ptr, ref long _offset) where T:unmanaged
 	{
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) Type의 크기를 구한다.
-		var	sizeType = Marshal.SizeOf(type);
-
 		// check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
-		if (_offset+ sizeType > m_count)
+		if (_offset + sizeof(T) > m_count)
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
 
-		// 3) [버퍼]로 부터 [데이터]를 복사해 온다.
+		// 1) [버퍼]로 부터 [데이터]를 복사해 온다.
 		IntPtr ptr = new IntPtr(_ptr + _offset);
 
-		// 4) [버퍼]로 부터 [데이터]를 복사해 온다.
-		object obj;
+		// 2) [버퍼]로 부터 [데이터]를 복사해 온다.
+		var obj = *(T*)ptr;
 
-		if (type == typeof(long)) obj = *(long*)ptr;
-		else if (type == typeof(ulong)) obj = *(ulong*)ptr;
-		else if (type == typeof(double)) obj = *(double*)ptr;
-		else if (type == typeof(int)) obj = *(int*)ptr;
-		else if (type == typeof(uint)) obj = *(uint*)ptr;
-		else if (type == typeof(float)) obj = *(float*)ptr;
-		else if (type == typeof(short)) obj = *(short*)ptr;
-		else if (type == typeof(ushort)) obj = *(ushort*)ptr;
-		else if (type == typeof(sbyte)) obj = *(sbyte*)ptr;
-		else if (type == typeof(byte)) obj = *(byte*)ptr;
-		else if (type == typeof(char)) obj = *(char*)ptr; 
-		else throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] buffer size is short");
-
-		// check) 
-		Debug.Assert(obj != null);
-
-		// 5) [버퍼_길이]와 [버퍼_어프셋]을 업데이트한다.
-		_offset += sizeType;
+		// 3) [버퍼_길이]와 [버퍼_어프셋]을 업데이트한다.
+		_offset += sizeof(T);
 
 		// Return) 
-		return (T)obj;
+		return obj;
 	}
 	private object	_extract_enum			(long _ptr, ref long _offset, Type _type)
 	{
@@ -3205,7 +3183,7 @@ public struct buffer
 		Debug.Assert((length_string * sizeof(char) + sizeof(int)) <= this.m_count);
 
 	#if _USE_BOUND_CHECK
-		// Check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
+		// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
 		if((length_string * sizeof(char) + sizeof(int)) > this.m_count) 
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
 	#endif
@@ -3324,8 +3302,8 @@ public struct buffer
 
 			for (int i = 0; i < temp_count; ++i)
 			{
-					// - [데이터 갯수]를 읽어들인다.
-					int count_item = _extract_primitive<int>(_ptr, ref _offset);
+				// - [데이터 갯수]를 읽어들인다.
+				int count_item = _extract_primitive<int>(_ptr, ref _offset);
 
 				// Check) temp_count가 -1이면 null을 리턴한다.
 				if (count_item == -1)
@@ -4949,18 +4927,335 @@ public struct buffer
 	public string	extract_string()											{ return extract<string>();}
 
 // 3) set_front (값 써넣기)
-    public void		set_front<T>(char _object, int _offset = 0) where T : System.IComparable<char> { this.set_front(_object, _offset); }
-	public void		set_front<T>(sbyte _object, int _offset = 0) where T : System.IComparable<sbyte> { this.set_front(_object, _offset); }
-	public void		set_front<T>(byte _object, int _offset = 0) where T : System.IComparable<byte> { this.set_front(_object, _offset); }
-	public void		set_front<T>(short _object, int _offset = 0) where T : System.IComparable<short> { this.set_front(_object, _offset); }
-	public void		set_front<T>(ushort _object, int _offset = 0) where T : System.IComparable<ushort> { this.set_front(_object, _offset); }
-	public void		set_front<T>(int _object, int _offset = 0) where T : System.IComparable<int> { this.set_front(_object, _offset); }
-	public void		set_front<T>(uint _object, int _offset = 0) where T : System.IComparable<uint> { this.set_front(_object, _offset); }
-	public void		set_front<T>(long _object, int _offset = 0) where T : System.IComparable<long> { this.set_front(_object, _offset); }
-	public void		set_front<T>(ulong _object, int _offset = 0) where T : System.IComparable<ulong> { this.set_front(_object, _offset); }
-	public void		set_front<T>(float _object, int _offset = 0) where T : System.IComparable<float> {this.set_front(_object, _offset); }
-	public void		set_front<T>(double _object, int _offset = 0) where T : System.IComparable<double> { this.set_front(_object, _offset); }
-	public void		set_front<T>(T _object, int _offset = 0) where T:struct		{ this.set_front((T)_object, _offset);}
+	private unsafe void set_front_primitive(object _object, int _offset, Type _type)
+		{
+		// - [버퍼] Pinned 시킨다.
+		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
+
+		// - [버퍼_포인터]를 얻는다.
+		var ptr = pinnedArray.AddrOfPinnedObject() + this.m_offset + _offset;
+
+		try
+		{
+			// - casting
+			object temp = Convert.ChangeType(_object, _type);
+
+			// - write
+			Marshal.StructureToPtr(temp, ptr, false);
+
+			// - Pinned된 [버퍼]를 Free한다.
+			pinnedArray.Free();
+		}
+		catch (System.Exception _e)
+		{
+			// Trace) 
+			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
+
+			// - Pinned된 [버퍼]를 Free한다.
+			pinnedArray.Free();
+
+			// Reraise) 
+			throw;
+		}
+	}
+
+    public unsafe void	set_front<T>(char _object, int _offset = 0) where T : unmanaged 
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(char))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void set_front<T>(sbyte _object, int _offset = 0) where T : unmanaged
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(sbyte))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void set_front<T>(byte _object, int _offset = 0) where T : unmanaged
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(byte))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void set_front<T>(short _object, int _offset = 0) where T : unmanaged 
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(short))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void set_front<T>(ushort _object, int _offset = 0) where T : unmanaged 
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(ushort))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void set_front<T>(int _object, int _offset = 0) where T : unmanaged 
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(int))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void set_front<T>(uint _object, int _offset = 0) where T : unmanaged 
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(uint))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void set_front<T>(long _object, int _offset = 0) where T : unmanaged
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(long))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void		set_front<T>(ulong _object, int _offset = 0) where T : unmanaged
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(ulong))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void		set_front<T>(float _object, int _offset = 0) where T : unmanaged 
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(float))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
+	public unsafe void		set_front<T>(double _object, int _offset = 0) where T : unmanaged 
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
+
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+	#endif
+
+		// 1) get type
+		var type = typeof(T);
+
+		// 2) copy
+		if (type == typeof(double))
+			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
+		else
+			this.set_front_primitive(_object, _offset, type);
+	}
 
 	public void		set_front(byte[] _object, int _offset_src, int _count, int _offset = 0) 
 	{
@@ -5203,17 +5498,17 @@ public struct buffer
 // 4) get_front( 값 읽기)
 	public T		get_front<T>(int _offset = 0)								{ buffer temp = new buffer(this.m_buffer, this.m_offset+_offset, m_count-_offset); return temp.extract<T>();}
 	public void		get_front<T>(ref T _object, int _offset = 0)				{ _object = this.get_front<T>(_offset); }
-	public void		get_front<T>(ref char _object, int _offset = 0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_char(_offset); }
-	public void		get_front<T>(ref sbyte _object, int _offset = 0)			{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_sbyte(_offset); }
-    public void		get_front<T>(ref byte _object, int _offset = 0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_byte(_offset); }
-    public void		get_front<T>(ref short _object, int _offset = 0)			{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_short(_offset); }
-    public void		get_front<T>(ref ushort _object, int _offset = 0)			{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ushort(_offset); }
-    public void		get_front<T>(ref int _object, int _offset = 0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_int(_offset); }
-    public void		get_front<T>(ref uint _object, int _offset = 0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_uint(_offset); }
-    public void		get_front<T>(ref long _object, int _offset=0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_long(_offset); }
-    public void		get_front<T>(ref ulong _object, int _offset=0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ulong(_offset); }
-    public void		get_front<T>(ref float _object, int _offset=0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_float(_offset); }
-    public void		get_front<T>(ref double _object, int _offset=0)				{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_double(_offset); }
+	public void		get_front<T>(ref char _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_char(_offset); }
+	public void		get_front<T>(ref sbyte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_sbyte(_offset); }
+    public void		get_front<T>(ref byte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_byte(_offset); }
+    public void		get_front<T>(ref short _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_short(_offset); }
+    public void		get_front<T>(ref ushort _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ushort(_offset); }
+    public void		get_front<T>(ref int _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_int(_offset); }
+    public void		get_front<T>(ref uint _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_uint(_offset); }
+    public void		get_front<T>(ref long _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_long(_offset); }
+    public void		get_front<T>(ref ulong _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ulong(_offset); }
+    public void		get_front<T>(ref float _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_float(_offset); }
+    public void		get_front<T>(ref double _object, int _offset=0) where T : unmanaged	{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_double(_offset); }
 
     public char		get_front_char(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(char)) <= this.m_buffer.Length); return BitConverter.ToChar(this.m_buffer, this.m_offset + _offset);}
 	public sbyte	get_front_sbyte(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(sbyte)) <= this.m_buffer.Length); return (sbyte)this.m_buffer[this.m_offset + _offset];}
