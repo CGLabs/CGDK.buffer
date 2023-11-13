@@ -1055,8 +1055,8 @@ public struct buffer
 		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
 
 		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject();
-		long offset = this.m_offset + this.m_count;
+		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
+		long offset = this.m_count;
 
 		try
 		{
