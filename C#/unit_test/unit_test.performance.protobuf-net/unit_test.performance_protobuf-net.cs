@@ -552,8 +552,10 @@ namespace UnitTest_Performance_Protobuf
 				// 2) 값 읽기
 				var tempDeserialize = Serializer.Deserialize<TEST6>(memSerialize);
 
-				Assert.IsTrue(tempObject.value0==tempDeserialize.value0);
-				Assert.IsTrue(tempObject.value1.value0==tempDeserialize.value1.value0);
+				Assert.IsTrue(tempObject.value0 == tempDeserialize.value0);
+				Assert.IsTrue(tempObject.value1 != null);
+				Assert.IsTrue(tempObject.value1 != null);
+				Assert.IsTrue(tempObject.value1?.value0 == tempDeserialize.value1?.value0);
 			}
 		}
 
