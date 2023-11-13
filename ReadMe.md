@@ -138,7 +138,7 @@ bufTemp.append(mapTemp);
 bufTemp.append(maplistTemp);
 	    
 .................
-	    
+// 역직렬화
 auto temp1 = bufTemp.extract<std::vector<int>>();
 auto temp2 = bufTemp.extract<std::list<std::string>>();
 auto temp3 = bufTemp.extract<std::map<int, std::string>>();
@@ -161,7 +161,7 @@ bufTemp.append(dicTest);
 bufTemp.append(dicListTest);
        
 .................
-       
+// 역직렬화
 var temp1 = bufTemp.extract<List<int>> ();
 var temp2 = bufTemp.extract<List<string>> ();
 var temp3 = bufTemp.extract<Dictionary<string,int>> ();
@@ -252,7 +252,7 @@ auto bufTemp = alloc_shared_buffer(get_size_of(tempData));
 bufTemp.append<TEST2>(tempData);
 	    
 .................
-	    
+// 역직렬화
 var temp1 = bufTemp.extract<TEST2>();
 
 ```
