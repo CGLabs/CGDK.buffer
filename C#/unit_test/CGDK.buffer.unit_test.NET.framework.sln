@@ -1,0 +1,65 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGDK.buffer.unit_test.performance_protobuf-net.NET.framework", "unit_test.performance.protobuf-net\NET.framework\CGDK.buffer.unit_test.performance_protobuf-net.NET.framework.csproj", "{3333FFCF-891C-43B9-9497-E590843D0E0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGDK.buffer.unit_test.functional.NET.framework", "unit_test.functional\NET.framework\CGDK.buffer.unit_test.functional.NET.framework.csproj", "{02DE1B82-279B-4CFB-A177-07DBB7353A4C}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.functional", "unit_test.functional\CGDK.buffer.unit_test.functional.shproj", "{D52D57AD-D303-4F59-A918-0F6D1458E543}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGDK.buffer.unit_test.performance.CGDK.NET.framework", "unit_test.performance.CGDK\NET.framework\CGDK.buffer.unit_test.performance.CGDK.NET.framework.csproj", "{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance.CGDK", "unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.shproj", "{047D3A5B-4233-4E5D-A5DA-B6A6389D962C}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance_protobuf-net", "unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.shproj", "{3DFAB9A5-71D0-49C6-9A5F-6CA630AE2262}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Debug|x64.ActiveCfg = Debug|x64
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Debug|x64.Build.0 = Debug|x64
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Release|x64.ActiveCfg = Release|x64
+		{3333FFCF-891C-43B9-9497-E590843D0E0A}.Release|x64.Build.0 = Release|x64
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Debug|x64.ActiveCfg = Debug|x64
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Debug|x64.Build.0 = Debug|x64
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Release|x64.ActiveCfg = Release|x64
+		{02DE1B82-279B-4CFB-A177-07DBB7353A4C}.Release|x64.Build.0 = Release|x64
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Debug|x64.ActiveCfg = Debug|x64
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Debug|x64.Build.0 = Debug|x64
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Release|x64.ActiveCfg = Release|x64
+		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C17070B4-16EB-4E46-A52A-DDA2843FBF3D}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		unit_test.functional\CGDK.buffer.unit_test.functional.projitems*{02de1b82-279b-4cfb-a177-07dbb7353a4c}*SharedItemsImports = 4
+		unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.projitems*{047d3a5b-4233-4e5d-a5da-b6a6389d962c}*SharedItemsImports = 13
+		unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.projitems*{3333ffcf-891c-43b9-9497-e590843d0e0a}*SharedItemsImports = 4
+		unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.projitems*{3dfab9a5-71d0-49c6-9a5f-6ca630ae2262}*SharedItemsImports = 13
+		unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.projitems*{a72a28be-5d6b-4a86-b601-a9eb1e11fb47}*SharedItemsImports = 4
+		unit_test.functional\CGDK.buffer.unit_test.functional.projitems*{d52d57ad-d303-4f59-a918-0f6d1458e543}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal

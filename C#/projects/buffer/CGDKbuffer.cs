@@ -305,7 +305,7 @@ public struct buffer
 		this.m_buffer[this.m_offset+this.m_count]=(byte)_object; 
 			
 		// 2) add size
-		this.m_count+=sizeof(sbyte); 
+		this.m_count += sizeof(sbyte); 
 	}
 	public void		append					(byte _object)						
 	{
@@ -932,8 +932,8 @@ public struct buffer
 		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
 
 		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject();
-		long offset = this.m_offset + this.m_count;
+		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
+		long offset = this.m_count;
 
 		try
 		{
@@ -944,7 +944,7 @@ public struct buffer
 			pinnedArray.Free();
 
 			// 5) 크기차를 구한다.
-			this.m_count = (int)offset - this.m_offset;
+			this.m_count = (int)offset;
 		}
 		catch (System.Exception _e)
 		{
@@ -970,8 +970,8 @@ public struct buffer
 		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
 
 		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject();
-		long offset = this.m_offset + this.m_count;
+		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
+		long offset = this.m_count;
 
 		try
 		{
@@ -1013,8 +1013,8 @@ public struct buffer
 		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
 
 		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject();
-		long offset = this.m_offset + this.m_count;
+		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
+		long offset = this.m_count;
 
 		try
 		{
@@ -1163,8 +1163,8 @@ public struct buffer
 		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
 
 		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject();
-		long offset = this.m_offset + this.m_count;
+		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
+		long offset = this.m_count;
 
 		try
 		{
@@ -1182,7 +1182,7 @@ public struct buffer
 			pinnedArray.Free();
 
 			// 5) 크기차를 구한다.
-			this.m_count = (int)offset - this.m_offset;
+			this.m_count = (int)offset;
 		}
 		catch (System.Exception _e)
 		{
@@ -1297,7 +1297,7 @@ public struct buffer
 		Marshal.StructureToPtr(_object, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(typeof(T));
 	}
 #if NET
-	private void	_append<T>				(long _ptr,ref long _offset, string? _object) 
+	private void	_append<T>				(long _ptr,ref long _offset, string _object) 
 #else
 	private void	_append<T>				(long _ptr,ref long _offset, string _object) 
 #endif
@@ -1469,7 +1469,7 @@ public struct buffer
 		Debug.Assert(_object != null);
 
         // 1) Get Type ( 재귀용 _base_type 이 존재한다면 그걸쓰고 아니라면 Data 를 쓴다.  )
-        Type temp_type = _base_type != null ? _base_type : _object.GetType();
+        Type temp_type = _base_type ?? _object.GetType();
 
 		// Check) Serializable이 아니면 리턴한다.
 		if (_is_serializable_type(temp_type) == false)
@@ -1646,10 +1646,10 @@ public struct buffer
 		{
 			if (_types[1].IsPrimitive)
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0]);
 				int size_1 = Marshal.SizeOf(_types[1]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					// - append key
@@ -1664,10 +1664,10 @@ public struct buffer
 			}
 			else if (_types[1].IsEnum)
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0]);
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					// - append key
@@ -1682,9 +1682,9 @@ public struct buffer
 			}
 			else if(_types[1].IsValueType)
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					// - append key
@@ -1700,9 +1700,9 @@ public struct buffer
 			else if(_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1711,9 +1711,9 @@ public struct buffer
 			}
 			else if (typeof(string).Equals(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1723,10 +1723,9 @@ public struct buffer
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
-				var temp_enum = _object.GetEnumerator();
-
 				int	size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1736,9 +1735,9 @@ public struct buffer
 			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1747,9 +1746,9 @@ public struct buffer
 			}
 			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1769,10 +1768,10 @@ public struct buffer
 		{
 			if (_types[1].IsPrimitive)
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 				int size_1 = Marshal.SizeOf(_types[1]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					// - append key
@@ -1787,10 +1786,10 @@ public struct buffer
 			}
 			else if (_types[1].IsEnum)
 			{
-				var temp_enum = _object.GetEnumerator();
 				var	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 				var size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					// - append key
@@ -1805,9 +1804,9 @@ public struct buffer
 			}
 			else if(_types[1].IsValueType)
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					// - append key
@@ -1823,9 +1822,9 @@ public struct buffer
 			else if(_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1834,9 +1833,9 @@ public struct buffer
 			}
 			else if (typeof(string).Equals(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
 				var	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1846,9 +1845,9 @@ public struct buffer
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
-				var temp_enum = _object.GetEnumerator();
 				var	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1858,9 +1857,9 @@ public struct buffer
 			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1869,9 +1868,9 @@ public struct buffer
 			}
 			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
 				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -1891,9 +1890,9 @@ public struct buffer
 		{
 			if (_types[1].IsPrimitive)
 			{
-				var temp_enum = _object.GetEnumerator();
 				var	size_1 = Marshal.SizeOf(_types[1]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
@@ -1908,9 +1907,9 @@ public struct buffer
 			}
 			else if (_types[1].IsEnum)
 			{
-				var temp_enum = _object.GetEnumerator();
 				var	size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
@@ -1926,7 +1925,6 @@ public struct buffer
 			else if(_types[1].IsValueType)
 			{
 				var temp_enum = _object.GetEnumerator();
-
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
@@ -1942,8 +1940,8 @@ public struct buffer
 			else if(_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_struct(_ptr, ref _offset, temp_enum.Key);
@@ -1953,7 +1951,6 @@ public struct buffer
 			else if (typeof(string).Equals(_types[1]))
 			{
 				var temp_enum = _object.GetEnumerator();
-
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_struct(_ptr, ref _offset, temp_enum.Key);
@@ -1963,8 +1960,8 @@ public struct buffer
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_struct(_ptr, ref _offset, temp_enum.Key);
@@ -1974,8 +1971,8 @@ public struct buffer
 			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_struct(_ptr, ref _offset, temp_enum.Key);
@@ -1985,7 +1982,6 @@ public struct buffer
 			if (_types[1].IsClass && _is_serializable_type(_types[1]))
 			{
 				var temp_enum = _object.GetEnumerator();
-
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_struct(_ptr, ref _offset, temp_enum.Key);
@@ -2006,9 +2002,9 @@ public struct buffer
 			if (_types[1].IsPrimitive)
 			{
 				var temp_type_0 = _types[0].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 				int size_1 = Marshal.SizeOf(_types[1]);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
@@ -2024,10 +2020,9 @@ public struct buffer
 			else if (_types[1].IsEnum)
 			{
 				var temp_type_0 = _types[0].GetElementType();
-				var temp_enum = _object.GetEnumerator();
-
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
@@ -2043,8 +2038,8 @@ public struct buffer
 			else if(_types[1].IsValueType)
 			{
 				var temp_type_0 = _types[0].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
@@ -2060,8 +2055,8 @@ public struct buffer
 			else if(_types[1].IsArray)
 			{
 				var temp_type_0 = _types[0].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
@@ -2071,8 +2066,8 @@ public struct buffer
 			else if (typeof(string).Equals(_types[1]))
 			{
 				var temp_type_0 = _types[0].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
@@ -2095,8 +2090,8 @@ public struct buffer
 			{
 				var temp_type_0 = _types[0].GetElementType();
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
@@ -2106,8 +2101,8 @@ public struct buffer
 			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
 			{
 				var temp_type_0 = _types[0].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 
+				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
@@ -2128,6 +2123,7 @@ public struct buffer
 			if (_types[1].IsPrimitive)
 			{
 				int size_1 = Marshal.SizeOf(_types[1]);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2144,6 +2140,7 @@ public struct buffer
 			else if (_types[1].IsEnum)
 			{
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2175,6 +2172,7 @@ public struct buffer
 			else if(_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2194,6 +2192,7 @@ public struct buffer
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2204,6 +2203,7 @@ public struct buffer
 			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2235,6 +2235,7 @@ public struct buffer
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
 				int size_1 = Marshal.SizeOf(_types[1]);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2252,6 +2253,7 @@ public struct buffer
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2268,6 +2270,7 @@ public struct buffer
 			else if(_types[1].IsValueType)
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2285,6 +2288,7 @@ public struct buffer
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
 				var temp_type_1 = _types[1].GetElementType();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2295,6 +2299,7 @@ public struct buffer
 			else if (typeof(string).Equals(_types[1]))
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2306,6 +2311,7 @@ public struct buffer
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
 				var temp_type_1 = _types[1].GetGenericArguments();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2317,6 +2323,7 @@ public struct buffer
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2327,6 +2334,7 @@ public struct buffer
 			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2349,6 +2357,7 @@ public struct buffer
 			{
 				var temp_type_0 = _types[0].GetGenericArguments()[0];
 				int size_1 = Marshal.SizeOf(_types[1]);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2366,6 +2375,7 @@ public struct buffer
 			{
 				var	temp_type_0 = _types[0].GetGenericArguments()[0];
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2382,6 +2392,7 @@ public struct buffer
 			else if(_types[1].IsValueType)
 			{
 				var temp_type_0 = _types[0].GetGenericArguments()[0];
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2463,6 +2474,7 @@ public struct buffer
 			if (_types[1].IsPrimitive)
 			{
 				int	size_1 = Marshal.SizeOf(_types[1]);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2479,6 +2491,7 @@ public struct buffer
 			else if (_types[1].IsEnum)
 			{
 				var size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2511,6 +2524,7 @@ public struct buffer
 			else if(_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2530,6 +2544,7 @@ public struct buffer
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2540,6 +2555,7 @@ public struct buffer
 			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
+
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
@@ -2601,6 +2617,7 @@ public struct buffer
 			if (_type.IsPrimitive)
 			{
 				int size_0 = Marshal.SizeOf(_type);
+
 				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
@@ -2609,10 +2626,9 @@ public struct buffer
 			}
 			else if (_type.IsEnum)
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_0 = Marshal.SizeOf(_type.GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Current, _type.GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_0;
@@ -2665,6 +2681,7 @@ public struct buffer
 			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_type))
 			{
 				var tmp_type =	_type.GetGenericArguments()[0];
+
 				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
@@ -2710,10 +2727,10 @@ public struct buffer
 #endif
 	{
 		// 1) [버퍼]를 고정(Pinned) 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(m_buffer, GCHandleType.Pinned);
+		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
 
 		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject()+m_offset;
+		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
 		long offset = 0;
 
 		try
@@ -5522,7 +5539,7 @@ public struct buffer
 	public float	get_front_float(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(float)) <= this.m_buffer.Length); return BitConverter.ToSingle(this.m_buffer, this.m_offset + _offset);}
 	public double	get_front_double(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(double)) <= this.m_buffer.Length); return BitConverter.ToDouble(this.m_buffer, this.m_offset + _offset);}
 	public void		get_front_array(byte[] _object, int _offset_src, int _count, int _offset = 0) { Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.Length) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset+_offset, _object, _offset_src, _count);}
-	public void		get_front_buffer(buffer _object, int _offset = 0)			{ Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.m_count) <= this.m_buffer.Length); Debug.Assert(_object.m_buffer != null); System.Buffer.BlockCopy(this.m_buffer, this.m_offset + _offset, _object.m_buffer, _object.m_offset, _object.m_count); }
+	public void		get_front_buffer(buffer _object, int _offset = 0)			{ Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.m_count) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset + _offset, _object.m_buffer, _object.m_offset, _object.m_count); }
 	public uint		get_front_CRC()												{ return 0;}
 
 	public static int	get_size_of(object _object)								{ return _size_of(_object);}
@@ -5632,7 +5649,6 @@ public struct buffer
 		// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 		if (_object == null)
 		{
-			// - -1을 쓰고 끝낸다.
 			return sizeof(int);
 		}
 
@@ -5661,9 +5677,9 @@ public struct buffer
 			}
 			else if (_types[1].IsValueType)
 			{
-				var temp_enum = _object.GetEnumerator();
 				int size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5673,12 +5689,12 @@ public struct buffer
 			else if (_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 				int size_0 = Marshal.SizeOf(_types[0]);
 
 				// debug)
 				Debug.Assert(temp_type_1 != null);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5687,9 +5703,9 @@ public struct buffer
 			}
 			else if (typeof(string).Equals(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
 				int size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5699,9 +5715,9 @@ public struct buffer
 			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
-				var temp_enum = _object.GetEnumerator();
 				int size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5711,9 +5727,9 @@ public struct buffer
 			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
 				int size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5722,9 +5738,9 @@ public struct buffer
 			}
 			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
 				int size_0 = Marshal.SizeOf(_types[0]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5758,10 +5774,9 @@ public struct buffer
 			}
 			else if (_types[1].IsValueType)
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5771,14 +5786,12 @@ public struct buffer
 			else if (_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
+				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
 				// debug)
 				Debug.Assert(temp_type_1 != null);
 
 				var temp_enum = _object.GetEnumerator();
-
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5787,10 +5800,9 @@ public struct buffer
 			}
 			else if (typeof(string).Equals(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5800,11 +5812,9 @@ public struct buffer
 			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-
 				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5814,11 +5824,9 @@ public struct buffer
 			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-
 				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5827,10 +5835,9 @@ public struct buffer
 			}
 			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += size_0;
@@ -5850,10 +5857,9 @@ public struct buffer
 		{
 			if (_types[1].IsPrimitive)
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_1 = Marshal.SizeOf(_types[1]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_value(temp_enum.Key);
@@ -5862,10 +5868,9 @@ public struct buffer
 			}
 			else if (_types[1].IsEnum)
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_value(temp_enum.Key);
@@ -5949,14 +5954,12 @@ public struct buffer
 			if (_types[1].IsPrimitive)
 			{
 				var temp_type_0 = _types[0].GetElementType();
+				int size_1 = Marshal.SizeOf(_types[1]);
 
 				// debug)
 				Debug.Assert(temp_type_0 != null);
 
 				var temp_enum = _object.GetEnumerator();
-
-				int size_1 = Marshal.SizeOf(_types[1]);
-
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
@@ -5966,14 +5969,12 @@ public struct buffer
 			else if (_types[1].IsEnum)
 			{
 				var temp_type_0 = _types[0].GetElementType();
+				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
 				// debug)
 				Debug.Assert(temp_type_0 != null);
 
 				var temp_enum = _object.GetEnumerator();
-
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
@@ -6034,6 +6035,9 @@ public struct buffer
 				// debug)
 				Debug.Assert(temp_type_0 != null);
 
+				// debug)
+				Debug.Assert(temp_type_1 != null);
+
 				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
@@ -6048,6 +6052,9 @@ public struct buffer
 
 				// debug)
 				Debug.Assert(temp_type_0 != null);
+
+				// debug)
+				Debug.Assert(temp_type_1 != null);
 
 				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
@@ -6083,10 +6090,9 @@ public struct buffer
 		{
 			if (_types[1].IsPrimitive)
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_1 = Marshal.SizeOf(_types[1]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_string(temp_enum.Key as string);
@@ -6095,10 +6101,9 @@ public struct buffer
 			}
 			else if (_types[1].IsEnum)
 			{
-				var temp_enum = _object.GetEnumerator();
-
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_string(temp_enum.Key as string);
@@ -6108,7 +6113,6 @@ public struct buffer
 			else if (_types[1].IsValueType)
 			{
 				var temp_enum = _object.GetEnumerator();
-
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_string(temp_enum.Key as string);
@@ -6118,11 +6122,11 @@ public struct buffer
 			else if (_types[1].IsArray)
 			{
 				var temp_type_1 = _types[1].GetElementType();
-				var temp_enum = _object.GetEnumerator();
 
 				// debug)
 				Debug.Assert(temp_type_1 != null);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_string(temp_enum.Key as string);
@@ -6132,7 +6136,6 @@ public struct buffer
 			else if (typeof(string).Equals(_types[1]))
 			{
 				var temp_enum = _object.GetEnumerator();
-
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_string(temp_enum.Key as string);
@@ -6142,8 +6145,11 @@ public struct buffer
 			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments();
-				var temp_enum = _object.GetEnumerator();
 
+				// debug)
+				Debug.Assert(temp_type_1 != null);
+
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_string(temp_enum.Key as string);
@@ -6153,6 +6159,9 @@ public struct buffer
 			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
 			{
 				var temp_type_1 = _types[1].GetGenericArguments()[0];
+
+				// debug)
+				Debug.Assert(temp_type_1 != null);
 
 				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
@@ -6184,11 +6193,9 @@ public struct buffer
 			if (_types[1].IsPrimitive)
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-
 				int size_1 = Marshal.SizeOf(_types[1]);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
@@ -6198,11 +6205,9 @@ public struct buffer
 			else if (_types[1].IsEnum)
 			{
 				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-
 				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
 
+				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
 					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
@@ -6640,7 +6645,7 @@ public struct buffer
             throw new System.Exception("[CGDK.buffer] _object is null");
 
         // 1) Get Type ( 재귀용 _base_type 이 존재한다면 그걸쓰고 아니라면 Data 를 쓴다.  )
-        Type temp_type = _base_type != null ? _base_type : _object.GetType();
+        Type temp_type = _base_type ?? _object.GetType();
 
 		// Check) Serializable이 아니면 리턴한다.
 		if (_is_serializable_type(temp_type) == false)
@@ -6740,7 +6745,6 @@ public struct buffer
 		// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 		if (_string == null)
 		{
-			// Return) -1을 쓰고 끝낸다.
 			return sizeof(int);
 		}
 

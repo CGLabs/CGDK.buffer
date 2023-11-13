@@ -91,7 +91,11 @@ namespace UnitTest_Performance_Protobuf
 		class TEST_STRING
 		{
 			[ProtoMember(1)]
+		#if NET
+			public	string?	value0 {	get; set;}
+		#else
 			public	string	value0 {	get; set;}
+		#endif
 		}
 
 
@@ -149,28 +153,44 @@ namespace UnitTest_Performance_Protobuf
 		class TEST2
 		{
 			[ProtoMember(1)]
+		#if NET
+			public	string?	value0;
+		#else
 			public	string	value0;
+		#endif
 		};
 
 		[ProtoContract]
 		class TEST3
 		{
 			[ProtoMember(1)]
+		#if NET
+			public	List<int>?	value0;
+		#else
 			public	List<int>	value0;
+		#endif
 		};
 
 		[ProtoContract]
 		class TEST4
 		{
 			[ProtoMember(1)]
+		#if NET
+			public	List<string>?	value0;
+		#else
 			public	List<string>	value0;
+		#endif
 		};
 
 		[ProtoContract]
 		class TEST5
 		{
 			[ProtoMember(1)]
+		#if NET
+			public	Dictionary<string, List<int>>?	value0;
+		#else
 			public	Dictionary<string, List<int>>	value0;
+		#endif
 		};
 
 		[ProtoContract]
@@ -180,7 +200,11 @@ namespace UnitTest_Performance_Protobuf
 			public int		value0;
 
 			[ProtoMember(2)]
+		#if NET
+			public	TEST2?	value1;
+		#else
 			public	TEST2	value1;
+		#endif
 		};
 
 

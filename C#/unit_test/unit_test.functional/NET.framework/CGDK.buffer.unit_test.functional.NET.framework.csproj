@@ -74,8 +74,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="unit_test_functional.cs" />
   </ItemGroup>
+  <Import Project="..\CGDK.buffer.unit_test.functional.projitems" Label="Shared" />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

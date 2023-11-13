@@ -77,9 +77,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="unit_test.performance.cs" />
   </ItemGroup>
   <ItemGroup />
+  <Import Project="..\CGDK.buffer.unit_test.performance.CGDK.projitems" Label="Shared" />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
