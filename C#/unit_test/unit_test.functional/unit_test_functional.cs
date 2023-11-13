@@ -1698,9 +1698,23 @@ namespace CGDBuffer_CSharp_UnitTest
 				buf_temp.append(list_list_int);
 
 				// Check) 
-				Assert.IsTrue(size_source == buf_temp.Count);
+				Assert.IsTrue(buf_temp.Count == size_source);
 
-				var temp = buf_temp.extract<List<List<int>>>();
+				// - 값 써넣기
+				buf_temp.append(list_list_int);
+
+				// Check) 
+				Assert.IsTrue(buf_temp.Count == size_source + size_source);
+
+				var temp1 = buf_temp.extract<List<List<int>>>();
+
+				// Check) 
+				Assert.IsTrue(buf_temp.Count == size_source);
+
+				var temp2 = buf_temp.extract<List<List<int>>>();
+
+				// Check) 
+				Assert.IsTrue(buf_temp.Count == 0);
 			}
 		}
 
