@@ -25,10 +25,16 @@
     <ClInclude Include="flatbuffers\messages_test_3_generated.h">
       <Filter>flatbuffers</Filter>
     </ClInclude>
-    <ClInclude Include="flatbuffers\messages_test_4_generated.h">
+    <ClInclude Include="flatbuffers\messages_test_5_generated.h">
       <Filter>flatbuffers</Filter>
     </ClInclude>
-    <ClInclude Include="flatbuffers\messages_test_5_generated.h">
+    <ClInclude Include="flatbuffers\messages_test_6_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\messages_test_7_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\messages_test_4_generated.h">
       <Filter>flatbuffers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -46,10 +52,19 @@
     <None Include="flatbuffers\messages_test_3.fbs">
       <Filter>flatbuffers</Filter>
     </None>
-    <None Include="flatbuffers\messages_test_4.fbs">
+    <None Include="flatbuffers\messages_test_5.fbs">
       <Filter>flatbuffers</Filter>
     </None>
-    <None Include="flatbuffers\messages_test_5.fbs">
+    <None Include="flatbuffers\messages_test_6.fbs">
+      <Filter>flatbuffers</Filter>
+    </None>
+    <None Include="flatbuffers\messages_test_7.fbs">
+      <Filter>flatbuffers</Filter>
+    </None>
+    <None Include="flatbuffers\generate_messages.bat">
+      <Filter>flatbuffers</Filter>
+    </None>
+    <None Include="flatbuffers\messages_test_4.fbs">
       <Filter>flatbuffers</Filter>
     </None>
   </ItemGroup>

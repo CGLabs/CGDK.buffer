@@ -4,36 +4,112 @@
 
 namespace protobuf
 {
-	TEST(CGDK_buffer_benchmakr_basic, pb_append_extract_primitive)
+	TEST(CGDK_buffer_benchmakr_basic, pb_benchmark_01_primitive)
+	{
+		char buf_array[4096];
+
+		for (int i = 0; i < _TEST_COUNT; ++i)
+		{
+			size_t size_serialize[6]{ 0,0,0,0,0,0 };
+
+			// 직렬화
+			{
+				size_t pos_serialize = 0;
+
+				test::protobuf_message_primitive_sint32 source_message_1;
+				source_message_1.set_value(1);
+				source_message_1.SerializeToArray(buf_array + pos_serialize, 4096 - pos_serialize);
+				pos_serialize += size_serialize[0] = source_message_1.ByteSizeLong();
+
+				test::protobuf_message_primitive_uint32 source_message_2;
+				source_message_2.set_value(1);
+				source_message_2.SerializeToArray(buf_array + pos_serialize, 4096 - pos_serialize);
+				pos_serialize += size_serialize[1] = source_message_2.ByteSizeLong();
+
+				test::protobuf_message_primitive_sint64 source_message_3;
+				source_message_3.set_value(1);
+				source_message_3.SerializeToArray(buf_array + pos_serialize, 4096 - pos_serialize);
+				pos_serialize += size_serialize[2] = source_message_3.ByteSizeLong();
+
+				test::protobuf_message_primitive_uint64 source_message_4;
+				source_message_4.set_value(1);
+				source_message_4.SerializeToArray(buf_array + pos_serialize, 4096 - pos_serialize);
+				pos_serialize += size_serialize[3] = source_message_4.ByteSizeLong();
+
+				test::protobuf_message_primitive_float source_message_5;
+				source_message_5.set_value(1);
+				source_message_5.SerializeToArray(buf_array + pos_serialize, 4096 - pos_serialize);
+				pos_serialize += size_serialize[4] = source_message_5.ByteSizeLong();
+
+				test::protobuf_message_primitive_double source_message_6;
+				source_message_6.set_value(1);
+				source_message_6.SerializeToArray(buf_array + pos_serialize, 4096 - pos_serialize);
+				pos_serialize += size_serialize[5] = source_message_6.ByteSizeLong();
+			}
+
+			// 역직렬화
+			{
+				size_t pos_deserialize = 0;
+
+				test::protobuf_message_primitive_sint32 message_1;
+				message_1.ParseFromArray(buf_array + pos_deserialize, size_serialize[0]);
+				pos_deserialize += size_serialize[0];
+				[[maybe_unused]] auto value_1 = message_1.value();
+
+				test::protobuf_message_primitive_sint64 message_2;
+				message_2.ParseFromArray(buf_array + pos_deserialize, size_serialize[1]);
+				pos_deserialize += size_serialize[1];
+				[[maybe_unused]] auto value_2 = message_2.value();
+
+				test::protobuf_message_primitive_sint64 message_3;
+				message_3.ParseFromArray(buf_array + pos_deserialize, size_serialize[2]);
+				pos_deserialize += size_serialize[2];
+				[[maybe_unused]] auto value_3 = message_3.value();
+
+				test::protobuf_message_primitive_uint64 message_4;
+				message_4.ParseFromArray(buf_array + pos_deserialize, size_serialize[3]);
+				pos_deserialize += size_serialize[3];
+				[[maybe_unused]] auto value_4 = message_4.value();
+
+				test::protobuf_message_primitive_float message_5;
+				message_5.ParseFromArray(buf_array + pos_deserialize, size_serialize[4]);
+				pos_deserialize += size_serialize[4];
+				[[maybe_unused]] auto value_5 = message_5.value();
+
+				test::protobuf_message_primitive_double message_6;
+				message_6.ParseFromArray(buf_array + pos_deserialize, size_serialize[5]);
+				pos_deserialize += size_serialize[5];
+				[[maybe_unused]] auto value_6 = message_6.value();
+			}
+		}
+	}
+
+	TEST(CGDK_buffer_benchmakr_basic, pb_benchmark_02_list_int)
 	{
 		char buf_array[4096];
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			// 직렬화
-			test::protobuf_message_GENERAL source_message;
-			source_message.set_value_1(1);
-			source_message.set_value_2(101);
-			source_message.set_value_3(-12345);
-			source_message.set_value_4(123456);
-			source_message.set_value_5(1.0f);
-			source_message.set_value_6(10.0);
+			test::protobuf_message_list_int source_message;
+
+			for (auto& iter : array_int)
+				source_message.add_value_1(iter);
 			source_message.SerializeToArray(buf_array, 4096);
 			auto size_serialize = source_message.ByteSizeLong();
 
 			// 역직렬화
-			test::protobuf_message_GENERAL message;
+			test::protobuf_message_list_int message;
+			std::vector<int> value_1;
 			message.ParseFromArray(buf_array, size_serialize);
-			[[maybe_unused]] auto value_1 = message.value_1();
-			[[maybe_unused]] auto value_2 = message.value_2();
-			[[maybe_unused]] auto value_3 = message.value_3();
-			[[maybe_unused]] auto value_4 = message.value_4();
-			[[maybe_unused]] auto value_5 = message.value_5();
-			[[maybe_unused]] auto value_6 = message.value_6();
+			auto temp_1 = message.value_1();
+			value_1.reserve(temp_1.size());
+			for (int i = 0; i < temp_1.size(); ++i)
+				value_1.push_back(temp_1.Get(i));
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, pb_append_extract_string)
+	TEST(CGDK_buffer_benchmakr_basic, pb_benchmark_03_string)
 	{
 		char buf_array[4096];
 
@@ -68,32 +144,31 @@ namespace protobuf
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, pb_append_extract_std_list_int)
+	TEST(CGDK_buffer_benchmakr_basic, pb_benchmark_04_list_string)
 	{
 		char buf_array[4096];
 
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			// 직렬화
-			test::protobuf_message_list_int source_message;
-
-			for(auto& iter: array_int)
+			test::protobuf_message_list_string source_message;
+			for(const auto& iter: array_string_char)
 				source_message.add_value_1(iter);
 			source_message.SerializeToArray(buf_array, 4096);
 			auto size_serialize = source_message.ByteSizeLong();
 
 			// 역직렬화
-			test::protobuf_message_list_int message;
-			std::vector<int> value_1;
-			message.ParseFromArray(buf_array, size_serialize);
-			auto temp_1 = message.value_1();
-			value_1.reserve(temp_1.size());
-			for (int i = 0; i < temp_1.size(); ++i)
-				value_1.push_back(temp_1.Get(i));
+			test::protobuf_message_list_string message;
+			auto result = message.ParseFromArray(buf_array, size_serialize);
+			EXPECT_TRUE(result);
+
+			std::vector<std::string> list_result;
+			for (const auto& iter : message.value_1())
+				list_result.push_back(iter);
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, pb_append_extract_std_map_std_string_int)
+	TEST(CGDK_buffer_benchmakr_basic, pb_benchmark_05_key_value_string_int)
 	{
 		char buf_array[4096];
 
@@ -119,7 +194,37 @@ namespace protobuf
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, pb_append_extract_struct)
+	TEST(CGDK_buffer_benchmakr_basic, pb_benchmark_06_struct_primitive)
+	{
+		char buf_array[4096];
+
+		for (int i = 0; i < _TEST_COUNT; ++i)
+		{
+			// 직렬화
+			test::protobuf_message_struct_primitive source_message;
+			source_message.set_value_1(1);
+			source_message.set_value_2(101);
+			source_message.set_value_3(-12345);
+			source_message.set_value_4(123456);
+			source_message.set_value_5(1.0f);
+			source_message.set_value_6(10.0);
+			source_message.SerializeToArray(buf_array, 4096);
+			auto size_serialize = source_message.ByteSizeLong();
+
+			// 역직렬화
+			test::protobuf_message_struct_primitive message;
+			message.ParseFromArray(buf_array, size_serialize);
+			FOO dest;
+			[[maybe_unused]] auto v1 = message.value_1();
+			[[maybe_unused]] auto v2 = message.value_2();
+			[[maybe_unused]] auto v3 = message.value_3();
+			[[maybe_unused]] auto v4 = message.value_4();
+			[[maybe_unused]] auto v5 = message.value_5();
+			[[maybe_unused]] auto v6 = message.value_6();
+		}
+	}
+
+	TEST(CGDK_buffer_benchmakr_basic, pb_benchmark_07_struct_complex)
 	{
 		char buf_array[4096];
 
@@ -133,7 +238,7 @@ namespace protobuf
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
 			// 직렬화
-			test::protobuf_message_struct source_message;
+			test::protobuf_message_struct_complex source_message;
 			source_message.set_value_1(foo.v1);
 			source_message.set_value_2(foo.v2);
 			for (auto& iter : foo.v3)
@@ -146,7 +251,7 @@ namespace protobuf
 			auto size_serialize = source_message.ByteSizeLong();
 
 			// 역직렬화
-			test::protobuf_message_struct message;
+			test::protobuf_message_struct_complex message;
 			message.ParseFromArray(buf_array, size_serialize);
 			FOO dest;
 			dest.v1 = message.value_1();

@@ -5,11 +5,12 @@
 #include "flatbuffers/messages_test_3_generated.h"
 #include "flatbuffers/messages_test_4_generated.h"
 #include "flatbuffers/messages_test_5_generated.h"
-
+#include "flatbuffers/messages_test_6_generated.h"
+#include "flatbuffers/messages_test_7_generated.h"
 
 namespace flatbuffers
 {
-	TEST(CGDK_buffer_benchmakr_basic, fb_append_extract_primitive)
+	TEST(CGDK_buffer_benchmakr_basic, fb_benchmark_01_primitive)
 	{
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -23,12 +24,12 @@ namespace flatbuffers
 			uint64_t value_4{ 123456 };
 			float value_5{ 1.0f };
 			double value_6{ 10.0 };
-			builder.Finish(Createflatbufers_message_GENERAL(builder, value_1, value_2, value_3, value_4, value_5, value_6)); // 직렬화 되었다!
+			builder.Finish(Createflatbufers_message_primitive(builder, value_1, value_2, value_3, value_4, value_5, value_6)); // 직렬화 되었다!
 
 			const uint8_t* data = builder.GetBufferPointer();
 
 			// 역직렬화
-			auto deserialized = Getflatbufers_message_GENERAL(data);
+			auto deserialized = Getflatbufers_message_primitive(data);
 			[[maybe_unused]] auto de_value_1 = deserialized->value_1();
 			[[maybe_unused]] auto de_value_2 = deserialized->value_2();
 			[[maybe_unused]] auto de_value_3 = deserialized->value_3();
@@ -38,7 +39,30 @@ namespace flatbuffers
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, fb_append_extract_string)
+	TEST(CGDK_buffer_benchmakr_basic, fb_benchmark_02_list_int)
+	{
+		for (int i = 0; i < _TEST_COUNT; ++i)
+		{
+			// 1) builder
+			flatbuffers::FlatBufferBuilder builder;
+
+			// 2) 직렬화
+			std::vector<int32_t> temp_vector;
+			for (auto iter : array_int) temp_vector.push_back(iter);
+			auto temp_pos_list = builder.CreateVector(temp_vector);
+			builder.Finish(Createmessage_list_int(builder, temp_pos_list));
+
+			const uint8_t* data = builder.GetBufferPointer();
+
+			// 3) 역직렬화 
+			auto deserialized = Getmessage_list_int(data);
+			[[maybe_unused]] std::vector<int32_t> de_value_1;
+			de_value_1.reserve(deserialized->a()->size());
+			for (auto iter : *deserialized->a()) de_value_1.push_back(iter);
+		}
+	}
+
+	TEST(CGDK_buffer_benchmakr_basic, fb_benchmark_03_string)
 	{
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -71,7 +95,7 @@ namespace flatbuffers
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, fb_append_extract_std_list_int)
+		TEST(CGDK_buffer_benchmakr_basic, fb_benchmark_04_list_string)
 	{
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -79,10 +103,13 @@ namespace flatbuffers
 			flatbuffers::FlatBufferBuilder builder;
 
 			// 2) 직렬화
-			std::vector<int32_t> temp_vector;
-			for(auto iter:array_int) temp_vector.push_back(iter);
-			auto temp_pos_list = builder.CreateVector(temp_vector);
-			builder.Finish(Createmessage_list_int(builder, temp_pos_list));
+			std::vector<::flatbuffers::Offset<::flatbuffers::String>> temp_vector;
+			for (auto& iter : array_std_string)
+			{
+				temp_vector.push_back(builder.CreateString(iter));
+			}
+			auto pos_vector = builder.CreateVector(temp_vector);
+			builder.Finish(Createmessage_list_string(builder, pos_vector));
 
 			const uint8_t* data = builder.GetBufferPointer();
 
@@ -90,11 +117,10 @@ namespace flatbuffers
 			auto deserialized = Getmessage_list_int(data);
 			[[maybe_unused]] std::vector<int32_t> de_value_1;
 			de_value_1.reserve(deserialized->a()->size());
-			for(auto iter: *deserialized->a()) de_value_1.push_back(iter);
+			for (auto iter : *deserialized->a()) de_value_1.push_back(iter);
 		}
 	}
-
-	TEST(CGDK_buffer_benchmakr_basic, fb_append_extract_std_map_std_string_int)
+	TEST(CGDK_buffer_benchmakr_basic, fb_benchmark_05_map_string_int)
 	{
 		for (int i = 0; i < _TEST_COUNT; ++i)
 		{
@@ -119,7 +145,37 @@ namespace flatbuffers
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, fb_append_extract_struct)
+	TEST(CGDK_buffer_benchmakr_basic, fb_benchmark_06_struct_primitive)
+	{
+		TEST_PRIMITIVE test_struct;
+		test_struct.value_1 = 1;
+		test_struct.value_2 = 101;
+		test_struct.value_3 = -12345;
+		test_struct.value_4 = 123456;
+		test_struct.value_5 = 1.0f;
+		test_struct.value_6 = 10.0;
+
+		for (int i = 0; i < _TEST_COUNT; ++i)
+		{
+			// 1) builder
+			flatbuffers::FlatBufferBuilder builder;
+
+			// 2) 직렬화
+			builder.Finish(Createflatbufers_message_struct_primitive(builder, test_struct.value_1, test_struct.value_2, test_struct.value_3, test_struct.value_4, test_struct.value_5, test_struct.value_6));
+			const uint8_t* data = builder.GetBufferPointer();
+
+			// 3) 역직렬화 
+			auto deserialized = Getflatbufers_message_struct_primitive(data);
+			[[maybe_unused]] TEST_PRIMITIVE dest;
+			dest.value_1 = deserialized->value_1();
+			dest.value_2 = deserialized->value_2();
+			dest.value_3 = deserialized->value_3();
+			dest.value_4 = deserialized->value_4();
+			dest.value_5 = deserialized->value_5();
+			dest.value_6 = deserialized->value_6();
+		}
+	}
+	TEST(CGDK_buffer_benchmakr_basic, fb_benchmark_07_struct_complex)
 	{
 		FOO foo;
 		foo.v1 = 100;
@@ -144,12 +200,12 @@ namespace flatbuffers
 				vector_map_data.push_back(Createmap_data(builder, builder.CreateString(iter.first), iter.second));
 			}
 			auto temp_pos_v5 = builder.CreateVector(vector_map_data);
-			builder.Finish(Createmessage_message_struct(builder, foo.v1, temp_pos_v2, temp_pos_v3, foo.v4, temp_pos_v5));
+			builder.Finish(Createmessage_message_struct_complex(builder, foo.v1, temp_pos_v2, temp_pos_v3, foo.v4, temp_pos_v5));
 
 			const uint8_t* data = builder.GetBufferPointer();
 
 			// 3) 역직렬화 
-			auto deserialized = Getmessage_message_struct(data);
+			auto deserialized = Getmessage_message_struct_complex(data);
 			[[maybe_unused]] FOO dest;
 			dest.v1 = deserialized->v1();
 			dest.v2 = deserialized->v2()->c_str();

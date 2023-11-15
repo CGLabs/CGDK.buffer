@@ -1,14 +1,10 @@
 // [Message] flatbuffers
-table map_data {
+table map_node_string_int {
 	key:string(key);
-	value:int;
+	value:int32;
 }
 
-table message_message_struct {
-	v1:int32;
-	v2:string;
-	v3:[int];
-	v4:uint64;
-	v5:[map_data];
+table message_map_std_string_int {
+	a:[map_node_string_int];
 }
-root_type message_message_struct;
+root_type message_map_std_string_int;

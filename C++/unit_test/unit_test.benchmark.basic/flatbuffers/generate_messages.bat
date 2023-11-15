@@ -4,3 +4,5 @@
 ..\..\vcpkg_installed\x64-windows\x64-windows\tools\flatbuffers\flatc -c messages_test_3.fbs
 ..\..\vcpkg_installed\x64-windows\x64-windows\tools\flatbuffers\flatc -c messages_test_4.fbs
 ..\..\vcpkg_installed\x64-windows\x64-windows\tools\flatbuffers\flatc -c messages_test_5.fbs
+..\..\vcpkg_installed\x64-windows\x64-windows\tools\flatbuffers\flatc -c messages_test_6.fbs
+..\..\vcpkg_installed\x64-windows\x64-windows\tools\flatbuffers\flatc -c messages_test_7.fbs

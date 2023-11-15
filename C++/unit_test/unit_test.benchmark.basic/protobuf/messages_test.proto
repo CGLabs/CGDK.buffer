@@ -51,18 +51,39 @@ option csharp_namespace		 = "Google.Protobuf.Examples.tutorial";
 //-----------------------------------------------------------------------------
 // Message definitions
 //-----------------------------------------------------------------------------
-// [Message] protobuf_message_GENERAL
-message protobuf_message_GENERAL
+// [Message] benchmark 01
+message protobuf_message_primitive_sint32
 {
-	sint32				value_1 = 1;
-	uint32				value_2 = 2;
-	sint64				value_3 = 3;
-	uint64				value_4 = 4;
-	float				value_5 = 5;
-	double				value_6 = 6;
+	sint32				value = 1;
 }
 
-// [Message] protobuf_message_string
+message protobuf_message_primitive_uint32
+{
+	uint32				value = 1;
+}
+
+message protobuf_message_primitive_sint64
+{
+	sint64				value = 1;
+}
+
+message protobuf_message_primitive_uint64
+{
+	uint64				value = 1;
+}
+
+message protobuf_message_primitive_float
+{
+	float				value = 1;
+}
+
+message protobuf_message_primitive_double
+{
+	double				value = 1;
+}
+
+
+// [Message] benchmark 02
 message protobuf_message_string
 {
 	bytes				value_1 = 1;
@@ -75,20 +96,37 @@ message protobuf_message_string
 	bytes				value_8 = 8;
 }
 
-// [Message] protobuf_message_list_int
+// [Message] benchmark 03
 message protobuf_message_list_int
 {
 	repeated int32		value_1 = 1;
 }
 
-// [Message] protobuf_message_map_std_string_int
+// [Message] benchmark 04
+message protobuf_message_list_string
+{
+	repeated bytes		value_1 = 1;
+}
+
+// [Message] benchmark 05
 message protobuf_message_map_std_string_int
 {
 	map<string, int32>	value_1 = 1;
 }
 
-// [Message] SendC
-message protobuf_message_struct
+// [Message] benchmark 06
+message protobuf_message_struct_primitive
+{
+	sint32				value_1 = 1;
+	uint32				value_2 = 2;
+	sint64				value_3 = 3;
+	uint64				value_4 = 4;
+	float				value_5 = 5;
+	double				value_6 = 6;
+}
+
+// [Message] benchmark_07
+message protobuf_message_struct_complex
 {
 	sint32				value_1 = 1;
 	bytes				value_2 = 2;

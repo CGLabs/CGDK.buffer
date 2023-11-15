@@ -32,6 +32,16 @@ extern std::unordered_map<std::string, int>							std_unordered_map_std_string_i
 extern std::unordered_map<std::string, std::vector<int>>			std_unordered_map_std_string_std_vector_int;
 extern std::unordered_map<std::string, std::vector<const char*>>	std_unordered_map_std_vector_std_string;
 
+struct TEST_PRIMITIVE
+{
+	int32_t		value_1;
+	uint32_t	value_2;
+	int64_t		value_3;
+	uint64_t	value_4;
+	float		value_5;
+	double		value_6;
+};
+
 struct FOO
 {
 	ENABLE_STRUCT_SERIALIZABLE

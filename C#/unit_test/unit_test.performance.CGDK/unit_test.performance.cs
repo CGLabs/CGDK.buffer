@@ -188,7 +188,192 @@ namespace CGDBuffer_CSharp_UnitTest
 		}
 
 		[TestMethod]
-		public void TestMethod_General_append_extract()
+		public void cb_benchmark_01_primitive()
+		{
+			// 1) Buffer 할당
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 1) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// 2) 값 써넣기
+				bufferTemp.append<Int32>(1);
+				bufferTemp.append<UInt32>(101);
+				bufferTemp.append<Int64>(-12345);
+				bufferTemp.append<UInt64>(123456);
+				bufferTemp.append<float>(1.0f);
+				bufferTemp.append<double>(10.0);
+
+				// 3) 값 읽기
+				var value_1 = bufferTemp.extract<Int32>();
+				var value_2 = bufferTemp.extract<UInt32>();
+				var value_3 = bufferTemp.extract<Int64>();
+				var value_4 = bufferTemp.extract<UInt64>();
+				var value_5 = bufferTemp.extract<float>();
+				var value_6 = bufferTemp.extract<double>();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_02_list_int()
+		{
+			// 1) Buffer 할당
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 2) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// 3) 값 써넣기
+				bufferTemp.append(list_int);
+
+				// 4) 값 읽기
+				var temp = bufferTemp.extract<List<int>>();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_03_string()
+		{
+			// 1) Buffer 할당
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 2) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// 3) 값 써넣기
+				bufferTemp.append<string>(array_string[0]);
+				bufferTemp.append<string>(array_string[1]);
+				bufferTemp.append<string>(array_string[2]);
+				bufferTemp.append<string>(array_string[3]);
+				bufferTemp.append<string>(array_string[4]);
+				bufferTemp.append<string>(array_string[5]);
+				bufferTemp.append<string>(array_string[6]);
+				bufferTemp.append<string>(array_string[7]);
+
+				// 4) 값 읽기
+				var value_1 = bufferTemp.extract<string>();
+				var value_2 = bufferTemp.extract<string>();
+				var value_3 = bufferTemp.extract<string>();
+				var value_4 = bufferTemp.extract<string>();
+				var value_5 = bufferTemp.extract<string>();
+				var value_6 = bufferTemp.extract<string>();
+				var value_7 = bufferTemp.extract<string>();
+				var value_8 = bufferTemp.extract<string>();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_04_list_string()
+		{
+			// 1) Buffer 할당
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 2) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// 3) 값 써넣기
+				bufferTemp.append(list_string);
+
+				// 4) 값 읽기
+				var temp = bufferTemp.extract<List<string>>();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_05_key_value_string_list_int()
+		{
+			// 1) Buffer 할당
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 2) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// 3) 값 써넣기
+				bufferTemp.append(dictionary_string_List_int);
+
+				// 4) 값 읽기
+				var temp = bufferTemp.extract<Dictionary<string, List<int>>>();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_06_struct_primitive()
+		{
+			// 1) Buffer 할당
+			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
+			TEST tempData = new TEST();
+			
+			tempData.v0 = (sbyte)3;
+			tempData.v1 = (byte)4;
+			tempData.v2 = (short)4100;
+			tempData.v3 = (ushort)32210;
+			tempData.v4 = 123310;
+			tempData.v5 = 121234;
+			tempData.v6 = -1000443L;
+			tempData.v7 = 12233094310UL;
+			tempData.v8 = 1.0f;
+			tempData.v9 = 2.0;
+			
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 1) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// 2) 값 써넣기
+				bufferTemp.append<TEST>(tempData);
+
+				// 3) 값 읽기
+				var value2 = bufferTemp.extract<TEST>();
+			}
+		}
+
+		struct TEST_EX
+		{
+			public int v1;
+			public string v2;
+			public List<int> v3;
+			public UInt64 v4;
+			public Dictionary<string, int> v5;
+		};
+
+		[TestMethod]
+		public void cb_benchmark_07_struct_composite()
+		{
+			// 1) Buffer 할당
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			var foo = new TEST_EX();
+			foo.v1 = 100;
+			foo.v2 = "test_string";
+			foo.v3 = new List<int> { 1, 2, 3, 4, 5 };
+			foo.v4 = 10000;
+			foo.v5 = new Dictionary<string, int> { { "a", 1 }, { "b", 2 }, { "c", 3 } };
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 1) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// 2) 값 써넣기
+				bufferTemp.append<TEST_EX>(foo);
+
+				// 3) 값 읽기
+				var value2 = bufferTemp.extract<TEST>();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_extra_01_general()
 		{
 			// 1) Buffer 할당
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
@@ -221,126 +406,6 @@ namespace CGDBuffer_CSharp_UnitTest
 				var value7 = bufferTemp.extract<ulong>();
 				var value8 = bufferTemp.extract<float>();
 				var value9 = bufferTemp.extract<double>();
-			}
-		}
-		[TestMethod]
-		public void TestMethod_General_append_extract_struct()
-		{
-			// 1) Buffer 할당
-			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
-			TEST tempData = new TEST();
-			
-			tempData.v0 = (sbyte)3;
-			tempData.v1 = (byte)4;
-			tempData.v2 = (short)4100;
-			tempData.v3 = (ushort)32210;
-			tempData.v4 = 123310;
-			tempData.v5 = 121234;
-			tempData.v6 = -1000443L;
-			tempData.v7 = 12233094310UL;
-			tempData.v8 = 1.0f;
-			tempData.v9 = 2.0;
-			
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 1) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// 2) 값 써넣기
-				bufferTemp.append<TEST>(tempData);
-
-				// 3) 값 읽기
-				var value2 = bufferTemp.extract<TEST>();
-			}
-		}
-		[TestMethod]
-		public void TestMethod_String_append_extract()
-		{
-			// 1) Buffer 할당
-			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
-			string[] stringExtract = new string[8];
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 2) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// 3) 값 써넣기
-				bufferTemp.append<string>(array_string[0]);
-				bufferTemp.append<string>(array_string[1]);
-				bufferTemp.append<string>(array_string[2]);
-				bufferTemp.append<string>(array_string[3]);
-				bufferTemp.append<string>(array_string[4]);
-				bufferTemp.append<string>(array_string[5]);
-				bufferTemp.append<string>(array_string[6]);
-				bufferTemp.append<string>(array_string[7]);
-
-				// 4) 값 읽기
-				stringExtract[0] = bufferTemp.extract<string>();
-				stringExtract[1] = bufferTemp.extract<string>();
-				stringExtract[2] = bufferTemp.extract<string>();
-				stringExtract[3] = bufferTemp.extract<string>();
-				stringExtract[4] = bufferTemp.extract<string>();
-				stringExtract[5] = bufferTemp.extract<string>();
-				stringExtract[6] = bufferTemp.extract<string>();
-				stringExtract[7] = bufferTemp.extract<string>();
-			}
-		}
-
-		[TestMethod]
-		public void TestMethod_List_int_append_extract()
-		{
-			// 1) Buffer 할당
-			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 2) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// 3) 값 써넣기
-				bufferTemp.append(list_int);
-
-				// 4) 값 읽기
-				var temp = bufferTemp.extract<List<int>>();
-			}
-		}
-
-		[TestMethod]
-		public void TestMethod_List_string_append_extract()
-		{
-			// 1) Buffer 할당
-			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 2) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// 3) 값 써넣기
-				bufferTemp.append(list_string);
-
-				// 4) 값 읽기
-				var temp = bufferTemp.extract<List<string>>();
-			}
-		}
-
-		[TestMethod]
-		public void TestMethod_Associated_string_list_int_append_extract()
-		{
-			// 1) Buffer 할당
-			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 2) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// 3) 값 써넣기
-				bufferTemp.append(dictionary_string_List_int);
-
-				// 4) 값 읽기
-				var temp = bufferTemp.extract<Dictionary<string, List<int>> >();
 			}
 		}
 
