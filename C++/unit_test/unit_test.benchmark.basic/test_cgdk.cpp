@@ -2,7 +2,7 @@
 
 namespace CGDK
 {
-	TEST(CGDK_buffer_benchmakr_basic, cb_append_extract_primitive)
+	TEST(CGDK_buffer_benchmakr_basic, cb_benchmark_01_primitive)
 	{
 		char buf_array[4096];
 
@@ -30,7 +30,25 @@ namespace CGDK
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, cb_append_extract_string)
+	TEST(CGDK_buffer_benchmakr_basic, cb_benchmark_02_list_int)
+	{
+		char buf_array[4096];
+
+		CGDK::buffer buf_create{ buf_array };
+
+		for (int i = 0; i < _TEST_COUNT; ++i)
+		{
+			CGDK::buffer buf_temp = buf_create;
+
+			// 직렬화
+			buf_temp.append(array_int);
+
+			// 역직렬화
+			[[maybe_unused]] auto temp = buf_temp.extract<std::vector<int>>();
+		}
+	}
+
+	TEST(CGDK_buffer_benchmakr_basic, cb_benchmark_03_string)
 	{
 		char buf_array[4096];
 
@@ -62,7 +80,7 @@ namespace CGDK
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, cb_append_extract_std_list_int)
+	TEST(CGDK_buffer_benchmakr_basic, cb_benchmark_04_list_string)
 	{
 		char buf_array[4096];
 
@@ -73,14 +91,14 @@ namespace CGDK
 			CGDK::buffer buf_temp = buf_create;
 
 			// 직렬화
-			buf_temp.append(array_int);
+			buf_temp.append(array_std_string);
 
 			// 역직렬화
-			[[maybe_unused]] auto temp = buf_temp.extract<std::vector<int>>();
+			[[maybe_unused]] auto temp = buf_temp.extract<std::vector<std::string_view>>();
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, cb_append_extract_std_map_std_string_int)
+	TEST(CGDK_buffer_benchmakr_basic, cb_benchmark_05_key_value_string_int)
 	{
 		char buf_array[4096];
 
@@ -98,7 +116,33 @@ namespace CGDK
 		}
 	}
 
-	TEST(CGDK_buffer_benchmakr_basic, cb_append_extract_struct)
+	TEST(CGDK_buffer_benchmakr_basic, cb_benchmark_06_struct_primitive)
+	{
+		char buf_array[4096];
+
+		CGDK::buffer buf_create{ buf_array };
+
+		TEST_PRIMITIVE test_struct;
+		test_struct.value_1 = 1;
+		test_struct.value_2 = 101;
+		test_struct.value_3 = -12345;
+		test_struct.value_4 = 123456;
+		test_struct.value_5 = 1.0f;
+		test_struct.value_6 = 10.0;
+
+		for (int i = 0; i < _TEST_COUNT; ++i)
+		{
+			CGDK::buffer buf_temp = buf_create;
+
+			// 직렬화
+			buf_temp.append(test_struct);
+
+			// 역직렬화
+			[[maybe_unused]] auto dest = buf_temp.extract<TEST_PRIMITIVE>();
+		}
+	}
+
+	TEST(CGDK_buffer_benchmakr_basic, cb_benchmark_07_struct_complex)
 	{
 		char buf_array[4096];
 
