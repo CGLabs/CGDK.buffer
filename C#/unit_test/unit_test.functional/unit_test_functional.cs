@@ -2164,17 +2164,4 @@ namespace CGDBuffer_CSharp_UnitTest
 			}
 		}
 	}
-
-
-
-	public struct sTEST
-	{
-		public int a;
-		public float b;
-		public String c;
-		public List<String> d;
-		public Dictionary<int, String> e;
-	}
-
-
 }
