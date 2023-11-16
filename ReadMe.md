@@ -292,7 +292,7 @@ bufTemp.append<string>("Test String");	// 문자열도 가능
 
 // - get_front를 사용해 값을 읽을 수 있습니다.
 var value1 = bufTemp.get_front<byte>(); //
-var value2 = bufTemp.get_front<char>(1); //
+var value2 = bufTemp.get_front<sbyte>(1); //
 var value3 = bufTemp.get_front<int>(2); //
 var value4 = bufTemp.get_front<uint>(10); // 
 var value5 = bufTemp.get_front<string>(14); // 
