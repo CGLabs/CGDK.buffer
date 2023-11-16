@@ -5,10 +5,10 @@ using System.IO;
 using MessagePack;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-namespace UnitTest_Performance_Protobuf
+namespace UnitTest_Performance_MessagePack
 {
 	[TestClass]
-	public class UnitTest_Performance_Protobuf
+	public class Performance
 	{
 		public const int _TEST_COUNT = 1000000;
 
@@ -179,7 +179,7 @@ namespace UnitTest_Performance_Protobuf
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 직렬화
+				// - 직렬화
 				var serialize_1 = MessagePackSerializer.Serialize(value_1);
 				var serialize_2 = MessagePackSerializer.Serialize(value_2);
 				var serialize_3 = MessagePackSerializer.Serialize(value_3);
@@ -187,7 +187,7 @@ namespace UnitTest_Performance_Protobuf
 				var serialize_5 = MessagePackSerializer.Serialize(value_5);
 				var serialize_6 = MessagePackSerializer.Serialize(value_6);
 
-				// 역직렬화
+				// - 역직렬화
 				var de_value_1 = MessagePackSerializer.Deserialize<Int32>(serialize_1);
 				var de_value_2 = MessagePackSerializer.Deserialize<UInt32>(serialize_2);
 				var de_value_3 = MessagePackSerializer.Deserialize<Int64>(serialize_3);
@@ -201,10 +201,10 @@ namespace UnitTest_Performance_Protobuf
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 직렬화
+				// - 직렬화
 				var serialize = MessagePackSerializer.Serialize(list_int);
 
-				// 역직렬화
+				// - 역직렬화
 				var de_value = MessagePackSerializer.Deserialize<List<int>>(serialize);
 			}
 		}
@@ -213,7 +213,7 @@ namespace UnitTest_Performance_Protobuf
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 직렬화
+				// - 직렬화
 				var serialize_1 = MessagePackSerializer.Serialize(array_string[0]);
 				var serialize_2 = MessagePackSerializer.Serialize(array_string[1]);
 				var serialize_3 = MessagePackSerializer.Serialize(array_string[2]);
@@ -223,7 +223,7 @@ namespace UnitTest_Performance_Protobuf
 				var serialize_7 = MessagePackSerializer.Serialize(array_string[6]);
 				var serialize_8 = MessagePackSerializer.Serialize(array_string[7]);
 
-				// 역직렬화
+				// - 역직렬화
 				var de_value_1 = MessagePackSerializer.Deserialize<string>(serialize_1);
 				var de_value_2 = MessagePackSerializer.Deserialize<string>(serialize_2);
 				var de_value_3 = MessagePackSerializer.Deserialize<string>(serialize_3);
@@ -239,10 +239,10 @@ namespace UnitTest_Performance_Protobuf
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 직렬화
+				// - 직렬화
 				var serialize = MessagePackSerializer.Serialize(list_string);
 
-				// 역직렬화
+				// - 역직렬화
 				var de_value = MessagePackSerializer.Deserialize<List<string>>(serialize);
 			}
 		}
@@ -251,10 +251,10 @@ namespace UnitTest_Performance_Protobuf
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 직렬화
+				// - 직렬화
 				var serialize = MessagePackSerializer.Serialize(dictionary_string_List_int);
 
-				// 역직렬화
+				// - 역직렬화
 				var de_value = MessagePackSerializer.Deserialize<Dictionary<string, List<int>>>(serialize);
 			}
 		}
@@ -277,10 +277,10 @@ namespace UnitTest_Performance_Protobuf
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 직렬화
+				// - 직렬화
 				var serialize = MessagePackSerializer.Serialize(tempObject);
 
-				// 역직렬화
+				// - 역직렬화
 				var de_value = MessagePackSerializer.Deserialize<TEST>(serialize);
 			}
 		}
@@ -296,10 +296,10 @@ namespace UnitTest_Performance_Protobuf
 
 			for (int i = 0;i<_TEST_COUNT;++i) 
 			{
-				// 직렬화
+				// - 직렬화
 				var serialize = MessagePackSerializer.Serialize(tempObject);
 
-				// 역직렬화
+				// - 역직렬화
 				var de_value = MessagePackSerializer.Deserialize<TEST_EX>(serialize);
 			}
 		}

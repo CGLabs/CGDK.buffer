@@ -7,7 +7,7 @@ using ProtoBuf;
 namespace UnitTest_Performance_Protobuf
 {
 	[TestClass]
-	public class UnitTest_Performance_Protobuf
+	public class Performance
 	{
 		public const int _TEST_COUNT = 1000000;
 
@@ -530,7 +530,6 @@ namespace UnitTest_Performance_Protobuf
 				ProtoBuf.Serializer.Serialize<float>((Stream)memSerialize, 1.0f);
 				ProtoBuf.Serializer.Serialize<double>((Stream)memSerialize, 2.0);
 
-
 				// 2) 값 읽기
 				var tempDeserialize0 = Serializer.Deserialize<byte>(memSerialize);
 				var tempDeserialize1 = Serializer.Deserialize<sbyte>(memSerialize);
@@ -599,9 +598,6 @@ namespace UnitTest_Performance_Protobuf
 
 				// 2) 값 읽기
 				var tempDeserialize = Serializer.Deserialize<TEST_X>(memSerialize);
-
-				//Assert.IsTrue(tempObject.value0==tempDeserialize.value0);
-				//Assert.IsTrue(tempObject.value1.value0==tempDeserialize.value1.value0);
 			}
 		}
 
