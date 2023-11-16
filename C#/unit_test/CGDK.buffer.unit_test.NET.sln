@@ -19,6 +19,12 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.perfo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance.msgpack.NET", "unit_test.performance.msgpack\NET\CGDK.buffer.unit_test.performance.msgpack.NET.csproj", "{136C421D-FE37-4759-AFEB-B9981A1BB162}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protobuf", "protobuf", "{FAA39C3B-E28E-4965-973C-9D7DEDF9F645}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "messagepack", "messagepack", "{0AA991B4-AE5C-47D8-A2B5-D4DB72BF3A66}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CGDK.buffer", "CGDK.buffer", "{1F66C439-2B0B-4F51-970C-CB272F8A96C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +50,14 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{047D3A5B-4233-4E5D-A5DA-B6A6389D962C} = {1F66C439-2B0B-4F51-970C-CB272F8A96C6}
+		{3DFAB9A5-71D0-49C6-9A5F-6CA630AE2262} = {FAA39C3B-E28E-4965-973C-9D7DEDF9F645}
+		{A81EC3E3-6288-4415-BC57-FD7844B35C64} = {1F66C439-2B0B-4F51-970C-CB272F8A96C6}
+		{034762B5-F44A-460C-BF36-D70BC8787BC2} = {FAA39C3B-E28E-4965-973C-9D7DEDF9F645}
+		{B093C521-1A6C-4E21-8744-BFA63981C9A0} = {0AA991B4-AE5C-47D8-A2B5-D4DB72BF3A66}
+		{136C421D-FE37-4759-AFEB-B9981A1BB162} = {0AA991B4-AE5C-47D8-A2B5-D4DB72BF3A66}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FB1F9CF7-D0D4-4111-B75F-C7BC625E7295}

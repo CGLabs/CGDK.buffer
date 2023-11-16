@@ -15,9 +15,11 @@
 //*****************************************************************************
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 
 //----------------------------------------------------------------------------
@@ -122,10 +124,10 @@ public struct buffer
 	}
 	public void		set_buffer(byte[] _buffer, int _offset, int _length)
 	{
-		// Check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
+		// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
 		Debug.Assert((_offset+_length) <= _buffer.Length);
 
-		// Check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
+		// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
 		if ((_offset+_length) > _buffer.Length)
 		{
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
@@ -138,10 +140,10 @@ public struct buffer
 	}
 	public void		set_buffer(byte[] _buffer, int _offset)
 	{
-		// Check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
+		// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
 		Debug.Assert(_offset <= _buffer.Length);
 
-		// Check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
+		// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
 		if (_offset>_buffer.Length)
 		{
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
@@ -263,9 +265,9 @@ public struct buffer
 	}
 
 // 3) append(붙이기)
-	public void		append_skip				(int _amount)						{ Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _amount);	this.m_count += _amount; }
-	public void		append					(buffer _object)					{ this._append_buffer(_object);}
-	public void		append					(char _object)						
+	public void			append_skip				(int _amount)						{ Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _amount);	this.m_count += _amount; }
+	public void			append					(buffer _object)					{ this._append_buffer(_object);}
+	public void			append					(char _object)						
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(char));
@@ -286,7 +288,7 @@ public struct buffer
 		// 2) add size
 		this.m_count += sizeof(char);
 	}
-	public void		append					(sbyte _object)
+	public void			append					(sbyte _object)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(sbyte));
@@ -307,7 +309,7 @@ public struct buffer
 		// 2) add size
 		this.m_count += sizeof(sbyte); 
 	}
-	public void		append					(byte _object)						
+	public void			append					(byte _object)						
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(byte));
@@ -328,7 +330,7 @@ public struct buffer
 		// 2) add size
 		this.m_count += sizeof(byte); 
 	}
-	public void		append					(short _object)
+	public unsafe void	append					(short _object)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(short)); 
@@ -344,12 +346,15 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count); 
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(short*)(dest + this.m_offset + this.m_count) = _object;
+		}
 		
 		// 2) add size
 		this.m_count += sizeof(short); 
 	}
-	public void		append					(ushort _object)
+	public unsafe void	append					(ushort _object)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(ushort));
@@ -365,12 +370,15 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count); 
-			
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(ushort*)(dest + this.m_offset + this.m_count) = _object;
+		}
+
 		// 2) add size
 		this.m_count += sizeof(ushort); 
 	}
-	public void		append					(int _object)
+	public unsafe void	append					(int _object)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(int));
@@ -386,12 +394,15 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(int*)(dest + this.m_offset + this.m_count) = _object;
+		}
 
 		// 2) add size
 		this.m_count += sizeof(int); 
 	}
-	public void		append					(uint _object)
+	public unsafe void	append					(uint _object)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(uint));
@@ -407,12 +418,15 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count); 
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(uint*)(dest + this.m_offset + this.m_count) = _object;
+		}
 			
 		// 2) add size
 		this.m_count += sizeof(uint);
 	}
-	public void		append					(long _object)						
+	public unsafe void	append					(long _object)						
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(long));
@@ -428,12 +442,15 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count); 
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(long*)(dest + this.m_offset + this.m_count) = _object;
+		}
 
 		// 2) add size
 		this.m_count += sizeof(long); 
 	}
-	public void		append					(ulong _object)
+	public unsafe void	append					(ulong _object)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(ulong));
@@ -449,12 +466,15 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count); 
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(ulong*)(dest + this.m_offset + this.m_count) = _object;
+		}
 			
 		// 2) add size
 		this.m_count += sizeof(ulong);
 	}
-	public void		append					(float _object)						
+	public unsafe void	append					(float _object)						
 	{
 		// check) 
 		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(float));
@@ -470,12 +490,15 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count); 
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(float*)(dest + this.m_offset + this.m_count) = _object;
+		}
 			
 		// 2) add size
 		this.m_count += sizeof(float); 
 	}
-	public void		append					(double _object)
+	public unsafe void	append					(double _object)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(double));
@@ -491,17 +514,20 @@ public struct buffer
 	#endif
 			
 		// 1) copy 
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count); 
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(double*)(dest + this.m_offset + this.m_count) = _object;
+		}
 
 		// 2) add size
 		this.m_count += sizeof(double);
 	}
-	public void		append					(DateTime _object)
+	public void			append					(DateTime _object)
 	{
 		this.append(_object.Ticks);
 	}
 
-	public void		append<T>()													
+	public void			append<T>()
 	{
 		// 1) make temporary object
 		var temp = default(T);
@@ -509,74 +535,11 @@ public struct buffer
 		// check) 
 		Debug.Assert(temp != null);
 
-		// 2) append
-		this.append<T>(temp);
+		//// 2) append
+		//this.append<T>(temp);
 	}
-	public unsafe void		append<T>(char _object) where T : unmanaged
+	private unsafe void	append_primitive(object _object, Type _type)
 	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) write 
-		if (type == typeof(char))
-		{ 
-			// - copy
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-
-			// - add count
-			this.m_count += sizeof(T);
-		}
-		else
-		{ 
-			// - [버퍼] Pinned 시킨다.
-			GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-			// - [버퍼_포인터]를 얻는다.
-			var ptr = pinnedArray.AddrOfPinnedObject();
-
-			try
-			{
-				// - casting
-				object temp = Convert.ChangeType(_object, type);
-
-				// - write
-				Marshal.StructureToPtr(temp, ptr, false);
-
-				// - Pinned된 [버퍼]를 Free한다.
-				pinnedArray.Free();
-
-				// - add count
-				this.m_count += sizeof(T);
-			}
-			catch (System.Exception _e)
-			{
-				// Trace) 
-				Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
-
-				// - Pinned된 [버퍼]를 Free한다.
-				pinnedArray.Free();
-
-				// Reraise) 
-				throw;
-			}
-		}
-
-	}
-	private unsafe void append_primitive(object _object, Type _type)
-		{
 		// - [버퍼] Pinned 시킨다.
 		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
 
@@ -607,393 +570,158 @@ public struct buffer
 		}
 	}
 
-	public unsafe void append<T>				(sbyte _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(sbyte))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void append<T>				(byte _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(byte))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void		append<T>				(short _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(short))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void		append<T>				(ushort _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(ushort))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void		append<T>				(int _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(ushort))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void		append<T>				(uint _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(uint))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void		append<T>				(long _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(long))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void append<T>				(ulong _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(ulong))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void append<T>				(float _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(float))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void		append<T>				(double _object) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(double))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
-		else
-			this.append_primitive(_object, type);
-
-		// 3) add count
-		this.m_count += sizeof(T);
-	}
-
-	public void		append<T>				(string _object) where T: System.IComparable<string>
-	{
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		// 1) [버퍼] Pinned 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
-		long offset = this.m_count;
-
-		try
+	public unsafe void	append<T>			(T _object) where T : unmanaged, IComparable, IFormattable, IConvertible, IComparable<T>
 		{
-			// 3) 추가한다.
-			this._append<string>(ptr, ref offset, _object);
+		// check)
+		Debug.Assert(this.m_buffer != null);
 
-			// 4) Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
 
-			// 5) 크기차를 구한다.
-			this.m_count = (int)offset;
+		// check)
+		Debug.Assert(typeof(T) == _object.GetType());
+
+	#if _USE_BOUND_CHECK
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+	#endif
+
+		// 1) write
+		fixed (byte* dest = this.m_buffer)
+		{
+			*(T*)(dest + this.m_offset + this.m_count) = _object;
 		}
-		catch (System.Exception _e)
+		// 2) add count
+		this.m_count += sizeof(T);
+	}
+
+	public unsafe void	append<T,V>			(V _object) where T:unmanaged
+	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
+		// check)
+		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
+
+#if _USE_BOUND_CHECK
+
+		// check)
+		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
+			throw new System.OverflowException("buffer overflow");
+
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+#endif
+
+		// 1) casting
+		var object_t = (T)Convert.ChangeType(_object, typeof(T));
+
+		// 2) write
+		fixed (byte* dest = this.m_buffer)
 		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
+			*(T*)(dest + this.m_offset + this.m_count) = object_t;
+		}
+		// 2) add count
+		this.m_count += sizeof(T);
+	}
 
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
+	public unsafe void	append<T>				(string _object) where T: System.IComparable<string>
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null);
 
-			// Reraise) 
-			throw;
+	#if _USE_BOUND_CHECK
+		// check)
+		if(this.m_buffer == null)
+			throw new System.NullReferenceException("buffer is not allocated");
+	#endif
+
+		fixed (byte* ptr = this.m_buffer)
+		fixed (char* str = _object)
+		{
+			// - get now ptr
+			var ptr_now = ptr + this.m_offset + this.m_count;
+
+			// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+			if (_object == null)
+			{
+				// - -1을 쓰고 끝낸다.
+				*(Int32*)ptr_now = -1;
+				this.m_count += sizeof(Int32);
+				return;
+			}
+
+			// 1) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
+			var string_length = _object.Length * sizeof(char);
+
+			// check)
+			Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= (sizeof(Int32) + string_length + sizeof(char)));
+
+			// 2) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+			*(Int32*)ptr_now = _object.Length + 1;
+
+			// 3) add size
+			ptr_now += sizeof(Int32);
+
+			// 4) [문자열]을 복사해 넣는다.
+			System.Buffer.MemoryCopy(str, ptr_now, this.m_buffer.Length - this.m_offset - this.m_count - sizeof(Int32), string_length + sizeof(char)); // NULL 포함 복사
+
+			// 5) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+			this.m_count += sizeof(Int32) + string_length + sizeof(char);
 		}
 	}
-	public void		append<T>				(ICollection<T> _object) where T: struct
+	public unsafe void	append<T>				(ICollection<T> _object) where T: unmanaged, IComparable, IFormattable, IConvertible, IComparable<T>
 	{
+		// check)
+		Debug.Assert(this.m_buffer != null);
+
 	#if _USE_BOUND_CHECK
 		// check)
 		if(this.m_buffer == null)
 			throw new System.NullReferenceException("buffer is not allocated");
 	#endif
 
-		// 1) [버퍼] Pinned 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
-		long offset = this.m_count;
-
-		try
+		fixed (byte* ptr = this.m_buffer)
 		{
-			// 3) 추가한다.
-			this._append_Collection(ptr, ref offset, _object as System.Collections.ICollection, typeof(T));
+			var ptr_now = ptr + this.m_offset + this.m_count;
 
-			// 4) Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
+			if (_object == null)
+			{
+				// - -1을 쓰고 끝낸다.
+				*(Int32*)ptr_now = -1;
+				this.m_count += sizeof(Int32);
+				return;
+			}
 
-			// 5) 크기차를 구한다.
-			this.m_count = (int)offset;
-		}
-		catch (System.Exception _e)
-		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
+			// - get size
+			var total_size = sizeof(Int32) + sizeof(T) * _object.Count;
 
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
+			// check)
+			Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= total_size);
 
-			// Reraise) 
-			throw;
+			// check)
+			if((this.m_buffer.Length - this.m_offset - this.m_count) < total_size)
+				throw new System.OverflowException("buffer overflow");
+
+			// - write size
+			*(Int32*)ptr_now = _object.Count;
+			ptr_now += sizeof(Int32);
+
+			// - copy values
+			foreach (var iter in _object)
+			{
+				*(T*)ptr_now = iter;
+				ptr_now += sizeof(T);
+			}
+
+			this.m_count += total_size;
 		}
 	}
 #if NET
@@ -1039,7 +767,7 @@ public struct buffer
 			throw;
 		}
 	}
-
+			
 	public void		append<T>				(object _object)
 	{
 		// check) 
@@ -1060,15 +788,18 @@ public struct buffer
 
 		try
 		{
-			Type tmp = _object.GetType();
-                
+			Type tmp = typeof(T);
+
 			if (tmp.IsPrimitive)
 			{
-				Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)");
+				// - convert type
+				var  t = Convert.ChangeType(_object, tmp);
 
-				Marshal.StructureToPtr(_object, new IntPtr(ptr + offset), false);
+				// - write
+				Marshal.StructureToPtr(t, new IntPtr(ptr + offset), false);
 
-				offset += Marshal.SizeOf(tmp);
+				// - add offset
+				offset += (tmp != typeof(char)) ? Marshal.SizeOf(tmp) : 2;
 			}
 			else if (tmp.IsEnum)
 			{
@@ -1099,7 +830,7 @@ public struct buffer
 			}
 			else if (typeof(string).Equals(tmp))
 			{
-                this._append<string>(ptr, ref offset, _object as string);
+                this._append(ptr, ref offset, _object as string);
 			}
 			else
 			{
@@ -1116,7 +847,6 @@ public struct buffer
 					if (tempObject2 != null)
 					{
 						this._append_Collection(ptr, ref offset, tempObject2, _object.GetType().GetGenericArguments()[0]);
-						return;
 					}
 					else if (tmp.IsClass)
 					{
@@ -1168,7 +898,7 @@ public struct buffer
 
 		try
 		{
-			// Check) null 일 경우 -1만 쓰고 끝냄
+			// check) null 일 경우 -1만 쓰고 끝냄
 			if (_object == null)
 			{
 				this.append((int) -1);
@@ -1222,7 +952,7 @@ public struct buffer
 		var temp_array = _object.ToCharArray();
 		var iStringLength = temp_array.Length;
 
-		// Check) 버퍼의 크기가 충분한가 확인한다.
+		// check) 버퍼의 크기가 충분한가 확인한다.
 		Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + iStringLength * sizeof(char)) <= this.m_buffer.Length);
 
 #if _USE_BOUND_CHECK
@@ -1297,47 +1027,52 @@ public struct buffer
 		Marshal.StructureToPtr(_object, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(typeof(T));
 	}
 #if NET
-	private void	_append<T>				(long _ptr,ref long _offset, string _object) 
+	private void	_append				(long _ptr,ref long _offset, string _object) 
 #else
-	private void	_append<T>				(long _ptr,ref long _offset, string _object) 
+	private unsafe void	_append				(long _ptr,ref long _offset, string _object) 
 #endif
 	{
 		// check) 
         Debug.Assert(this.m_buffer != null);
 
-        // Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-        if (_object == null)
+		fixed (char* str = _object)
 		{
-			// - -1을 쓰고 끝낸다.
-			Marshal.WriteInt32(new IntPtr(_ptr + _offset), (int) -1);
-			_offset += sizeof(int);
-			return;
+			// 1) get ptr
+			byte* ptr_now = (byte*)(_ptr + _offset);
+
+			// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+			if (_object == null)
+			{
+				// - -1을 쓰고 끝낸다.
+				*(Int32*)ptr_now = -1;
+				_offset += sizeof(Int32);
+				return;
+			}
+
+			// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
+			var string_length = _object.Length * sizeof(char);
+
+			// check)
+			Debug.Assert((this.m_buffer.Length - _offset) >= (sizeof(Int32) + string_length + sizeof(char)));
+
+			// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+			*(Int32*)ptr_now = _object.Length + 1;
+
+			// 4) add size
+			ptr_now += sizeof(Int32);
+
+			// 5) [문자열]을 복사해 넣는다.
+			System.Buffer.MemoryCopy(str, ptr_now, this.m_buffer.Length - _offset - sizeof(Int32) , string_length + sizeof(char)); // NULL 포함 복사
+
+			// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+			_offset += sizeof(Int32) + string_length + sizeof(char);
 		}
-
-		// 1) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
-		var temp_array = _object.ToCharArray();
-		var	iStringLength = temp_array.Length;
-
-		// Check) 버퍼의 크기가 충분한가 확인한다.
-		Debug.Assert((_offset+sizeof(int) +iStringLength*sizeof(char))<=this.m_buffer.Length);
-
-		// 2) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-		Marshal.WriteInt32(new IntPtr(_ptr + _offset), (int)(iStringLength+1));
-
-		// 3) [문자열]을 복사해 넣는다.
-		System.Buffer.BlockCopy(temp_array, 0, m_buffer, (int)_offset+sizeof(int), iStringLength*sizeof(char));
-
-		// 4) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-		_offset	+= (sizeof(int)+(iStringLength+1)*sizeof(char));
-
-		// 5) [NULL]을 넣는다.
-		Marshal.WriteInt16(new IntPtr(_ptr + _offset - sizeof(char)), (int)0);
 	}
-	private void	_append<T>				(long _ptr, ref long _offset, params string[] _Array)
+	private void	_append					(long _ptr, ref long _offset, params string[] _Array)
 	{
 		foreach (var iter in _Array)
 		{
-			this._append<string>(_ptr, ref _offset, iter);
+			this._append(_ptr, ref _offset, iter as string);
 		}
 	}
 	private void	_append					(long _ptr, ref long _offset, object _object)
@@ -1383,7 +1118,7 @@ public struct buffer
 		// 6) 문자열일 경우
 		else if (typeof(string).Equals(temp_type))
 		{
-			this._append<string>(_ptr, ref _offset, _object as string);
+			this._append(_ptr, ref _offset, _object as string);
 		}
 		// 7) 기다
 		else 
@@ -1413,7 +1148,7 @@ public struct buffer
 				}
 				else
 				{
-					// Check) 지원되지 않는 Type이다.
+					// check) 지원되지 않는 Type이다.
 					Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 					// Throw) 
@@ -1431,7 +1166,7 @@ public struct buffer
         Debug.Assert(this.m_buffer != null);
 
 	#if _USE_BOUND_CHECK
-        // Check) m_iCount가 남은 크기보다 작으면 Exception을 던진다.
+        // check) m_iCount가 남은 크기보다 작으면 Exception을 던진다.
         if (Marshal.SizeOf(_object)+_offset > this.m_buffer.Length)
 		{
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
@@ -1471,7 +1206,7 @@ public struct buffer
         // 1) Get Type ( 재귀용 _base_type 이 존재한다면 그걸쓰고 아니라면 Data 를 쓴다.  )
         Type temp_type = _base_type ?? _object.GetType();
 
-		// Check) Serializable이 아니면 리턴한다.
+		// check) Serializable이 아니면 리턴한다.
 		if (_is_serializable_type(temp_type) == false)
 			return;
 
@@ -1490,11 +1225,11 @@ public struct buffer
 		// 4) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
 		foreach (var iter in temp_field)
 		{
-			// Check) 
+			// check) 
 			if (iter.IsNotSerialized == true)
 				continue;
 
-			// Check)
+			// check)
 			if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
 				continue;
 
@@ -1524,7 +1259,7 @@ public struct buffer
 
 		foreach (var iter in temp_field)
 		{
-			// Check)
+			// check)
 			if(iter.IsNotSerialized == true)
 				continue;
 
@@ -1577,7 +1312,7 @@ public struct buffer
 			}
 			else if (typeof(string).Equals(field_type))
 			{
-				this._append<string>(_ptr, ref _offset, temp as string);
+				this._append(_ptr, ref _offset, temp as string);
 			}
 			else
 			{
@@ -1603,7 +1338,7 @@ public struct buffer
 					}
 					else
 					{
-						// Check) 지원되지 않는 Type이다.
+						// check) 지원되지 않는 Type이다.
 						Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 						// Throw) 
@@ -1629,7 +1364,7 @@ public struct buffer
 	private void	_append_Dictionary		(long _ptr,ref long _offset,System.Collections.IDictionary _object, Type[] _types) 
 #endif
 	{
-		// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 		if (_object == null)
 		{
 			// - -1을 쓰고 끝낸다.
@@ -1717,7 +1452,7 @@ public struct buffer
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -1757,7 +1492,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -1839,7 +1574,7 @@ public struct buffer
 				while(temp_enum.MoveNext())
 				{
 					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -1879,7 +1614,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -1954,7 +1689,7 @@ public struct buffer
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-					this._append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -1990,7 +1725,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -2071,7 +1806,7 @@ public struct buffer
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -2111,7 +1846,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -2128,7 +1863,7 @@ public struct buffer
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
 
 					// check) 
 					Debug.Assert(temp_enum.Value != null);
@@ -2145,7 +1880,7 @@ public struct buffer
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
 
 					// check) 
 					Debug.Assert(temp_enum.Value != null);
@@ -2160,7 +1895,7 @@ public struct buffer
 				while(temp_enum.MoveNext()) 
 				{
 					// - append key
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
 
 					// check) 
 					Debug.Assert(temp_enum.Value != null);
@@ -2176,7 +1911,7 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
 					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
 				}
 			}
@@ -2185,8 +1920,8 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
-					this._append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -2196,7 +1931,7 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
 					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
 				}
 			}
@@ -2207,7 +1942,7 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
 					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
 				}
 			}
@@ -2216,13 +1951,13 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					this._append<string>(_ptr, ref _offset, temp_enum.Key as string);
+					this._append(_ptr, ref _offset, temp_enum.Key as string);
 					this._append_class(_ptr,ref _offset,temp_enum.Value);
 				}
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -2304,7 +2039,7 @@ public struct buffer
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					this._append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -2344,7 +2079,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -2425,7 +2160,7 @@ public struct buffer
 				while(temp_enum.MoveNext()) 
 				{
 					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -2462,7 +2197,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -2528,8 +2263,8 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					_append_class(_ptr, ref _offset, temp_enum.Key);
-					_append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
+					this._append_class(_ptr, ref _offset, temp_enum.Key);
+					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
 				}
 			}
 			else if (typeof(string).Equals(_types[1]))
@@ -2537,8 +2272,8 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					_append_class(_ptr, ref _offset, temp_enum.Key);
-					_append<string>(_ptr, ref _offset, temp_enum.Value as string);
+					this._append_class(_ptr, ref _offset, temp_enum.Key);
+					this._append(_ptr, ref _offset, temp_enum.Value as string);
 				}
 			}
 			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
@@ -2548,8 +2283,8 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					_append_class(_ptr, ref _offset, temp_enum.Key);
-					_append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
+					this._append_class(_ptr, ref _offset, temp_enum.Key);
+					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
 				}
 			}
 			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
@@ -2559,8 +2294,8 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					_append_class(_ptr, ref _offset, temp_enum.Key);
-					_append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
+					this._append_class(_ptr, ref _offset, temp_enum.Key);
+					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
 				}
 			}
 			if (_types[1].IsClass && _is_serializable_type(_types[1]))
@@ -2568,13 +2303,13 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while(temp_enum.MoveNext()) 
 				{
-					_append_class(_ptr, ref _offset, temp_enum.Key);
-					_append_class(_ptr,ref _offset,temp_enum.Value);
+					this._append_class(_ptr, ref _offset, temp_enum.Key);
+					this._append_class(_ptr,ref _offset,temp_enum.Value);
 				}
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -2583,7 +2318,7 @@ public struct buffer
 		}
 		else
 		{
-			// Check) 지원되지 않는 Type이다.
+			// check) 지원되지 않는 Type이다.
 			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 			// Throw) 
@@ -2601,7 +2336,7 @@ public struct buffer
 
 		if (_type.IsArray == false)
 		{
-			// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+			// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 			if (_object == null)
 			{
 				// - -1을 쓰고 끝낸다.
@@ -2666,7 +2401,7 @@ public struct buffer
 				var temp_enum = _object.GetEnumerator();
 				while (temp_enum.MoveNext())
 				{
-					this._append<string>(_ptr, ref _offset, temp_enum.Current as string);
+					this._append(_ptr, ref _offset, temp_enum.Current as string);
 				}
 			}
 			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_type))
@@ -2698,7 +2433,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -2721,9 +2456,9 @@ public struct buffer
 
 // 5) extract관련(뽑아내기)
 #if NET
-	public object?	extract					(Type _type)
+	public object?		extract					(Type _type)
 #else
-	public object	extract					(Type _type)
+	public object		extract					(Type _type)
 #endif
 	{
 		// 1) [버퍼]를 고정(Pinned) 시킨다.
@@ -2761,7 +2496,7 @@ public struct buffer
 		}
 	}
 
-	public T		extract<T>				()
+	public T			extract<T>				()
 	{
 		Type tmp = typeof(T);
 			
@@ -2863,7 +2598,7 @@ public struct buffer
 				}
 				else
 				{
-					// Check) 지원되지 않는 Type이다.
+					// check) 지원되지 않는 Type이다.
 					Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 					// Throw) 
@@ -2898,9 +2633,9 @@ public struct buffer
 	}
 
 #if NET
-	private object?	_extract				(long _ptr, ref long _offset, Type _type, int[]? _static_size, int _dimension)
+	private object?		_extract			(long _ptr, ref long _offset, Type _type, int[]? _static_size, int _dimension)
 #else
-	private object	_extract				(long _ptr, ref long _offset, Type _type, int[] _static_size, int _dimension)
+	private object		_extract				(long _ptr, ref long _offset, Type _type, int[] _static_size, int _dimension)
 #endif
 	{
 		// Case) Primitive Type
@@ -2964,14 +2699,14 @@ public struct buffer
 		}
 		else
 		{
-			// Check) 지원되지 않는 Type이다.
+			// check) 지원되지 않는 Type이다.
 			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 			// Throw) 
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
 		}
 	}
-	private unsafe object	_extract_primitive		(long _ptr, ref long _offset, Type _type)
+	private unsafe object _extract_primitive	(long _ptr, ref long _offset, Type _type)
 		{
 		// 1) Type의 크기를 구한다.
 		var	sizeType = Marshal.SizeOf(_type);
@@ -3010,7 +2745,7 @@ public struct buffer
 		// Return) 
 		return obj;
 	}
-	private unsafe T		_extract_primitive<T>	(long _ptr, ref long _offset) where T:unmanaged
+	private unsafe T	_extract_primitive<T>	(long _ptr, ref long _offset) where T:unmanaged
 	{
 		// check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
 		if (_offset + sizeof(T) > m_count)
@@ -3028,13 +2763,13 @@ public struct buffer
 		// Return) 
 		return obj;
 	}
-	private object	_extract_enum			(long _ptr, ref long _offset, Type _type)
+	private object		_extract_enum			(long _ptr, ref long _offset, Type _type)
 	{
 		// 1) Enum의 Type을 얻는다.
 		var	type_enum = _type.GetFields()[0].FieldType;
 		var	size_enum = Marshal.SizeOf(type_enum);
 
-		// Check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
+		// check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
 		if (_offset + size_enum > m_count)
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
 
@@ -3050,16 +2785,16 @@ public struct buffer
 		// Return) 
 		return obj;
 	}
-	private object	_extract_struct			(long _ptr, ref long _offset, Type _type)
+	private object		_extract_struct			(long _ptr, ref long _offset, Type _type)
 	{
-		// 1) Field 정보를 얻는다.
-		var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
-
-		// 2) 객체를 생성한다.
+		// 1) 객체를 생성한다.
 		var temp_object = Activator.CreateInstance(_type);
 
 		// check) 
 		Debug.Assert(temp_object != null);
+
+		// 2) Field 정보를 얻는다.
+		var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
 
 		// 3) 각 Field값을 읽어 써넣는다.
 		foreach (var iter in temp_field)
@@ -3074,16 +2809,16 @@ public struct buffer
 		return temp_object;
 	}
 #if NET
-	private object?	_extract_class			(long _ptr, ref long _offset, Type _type, object? _instance_object=null)
+	private object?		_extract_class			(long _ptr, ref long _offset, Type _type, object? _instance_object=null)
 #else
-	private object	_extract_class			(long _ptr, ref long _offset, Type _type, object _instance_object=null)
+	private object		_extract_class			(long _ptr, ref long _offset, Type _type, object _instance_object=null)
 #endif
 	{
         // 1) 생성된 객체가 없다면 객체를 생성한다.
         if(_instance_object == null)
             _instance_object = Activator.CreateInstance(_type);
 
-        // Check) Serializable Attribute가 없으면 그냥 끝낸다.
+        // check) Serializable Attribute가 없으면 그냥 끝낸다.
         if (_is_serializable_type(_type) == false)
             return null;
 
@@ -3102,7 +2837,7 @@ public struct buffer
 		// 4) 각 Field값을 읽어 써넣는다.
 		foreach (var iter in temp_field)
 		{
-			// Check) NotSerialized일 경우는 진행하지 않는다.
+			// check) NotSerialized일 경우는 진행하지 않는다.
 			if (iter.IsNotSerialized==true)
 				continue;
 
@@ -3125,16 +2860,16 @@ public struct buffer
 		return new DateTime(*(long*)ptr);
 	}
 
-	private object _extract_buffer			(long _ptr, ref long _offset)
+	private object		_extract_buffer			(long _ptr, ref long _offset)
 	{
-		// Check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
+		// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
 		Debug.Assert(sizeof(UInt64)<=m_count);
 
 		// check) 
 		Debug.Assert(this.m_buffer != null);
 
 	#if _USE_BOUND_CHECK
-		// Check) Buffer의 길이가 UInt32 최소크기보다 작을 경우 Exception
+		// check) Buffer의 길이가 UInt32 최소크기보다 작을 경우 Exception
 		if(sizeof(UInt32) >m_count) 
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
 	#endif
@@ -3148,11 +2883,11 @@ public struct buffer
 		// 2) String의 길이를 설정한다.
 		temp_object.size = (int)temp_size;
 
-		// Check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
+		// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
 		Debug.Assert((temp_object.size + sizeof(UInt64))<=this.m_count);
 
 	#if _USE_BOUND_CHECK
-		// Check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
+		// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
 		if ((temp_object.size + sizeof(UInt64)) > this.m_count)
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
 	#endif
@@ -3169,63 +2904,64 @@ public struct buffer
 	}
 
 #if NET
-	private string?	_extract_string			(long _ptr, ref long _offset)
+	private string?		_extract_string			(long _ptr, ref long _offset)
 #else
-	private string	_extract_string			(long _ptr, ref long _offset)
+	private unsafe string		_extract_string			(long _ptr, ref long _offset)
 #endif
 	{
-		// Check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
+		// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
 		Debug.Assert(sizeof(int) <=this.m_count);
 
 		// check) 
 		Debug.Assert(this.m_buffer != null);
 
 	#if _USE_BOUND_CHECK
-		// Check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+		// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
 		if(sizeof(int)>this.m_count) 
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
 	#endif
 
-		// 1) extract  String length
-		var length_string = Marshal.ReadInt32(new IntPtr(_ptr + _offset));
+		// 1) get ptr
+		var ptr = (byte*)_ptr + _offset;
 
-		// Check) length가 -1이면 null을 리턴한다.
+		// 2) extract  string length
+		var length_string = *(Int32*)ptr;
+
+		// check) length가 -1이면 null을 리턴한다.
 		if (length_string == -1)
 		{
-			_offset	+= sizeof(int);
+			_offset	+= sizeof(Int32);
 			return null;
 		}
 
-		// Check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
-		Debug.Assert((length_string * sizeof(char) + sizeof(int)) <= this.m_count);
+		// 3) add size
+		ptr += sizeof(Int32);
 
-	#if _USE_BOUND_CHECK
+		// 4) 복사할 [문자열_길이]를 구한다. (NULL문자는 뺀다.)
+		int size_copy = length_string * sizeof(char);
+
+		// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
+		Debug.Assert((size_copy + sizeof(int)) <= this.m_count);
+
 		// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
-		if((length_string * sizeof(char) + sizeof(int)) > this.m_count) 
+		if((size_copy + sizeof(int)) > this.m_count) 
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-	#endif
 
-		// 3) 복사할 [문자열_길이]를 구한다. (NULL문자는 뺀다.)
-		int size_copy = (length_string - 1) * sizeof(char);
-
-		// Check) [문자열]의 제일 끝이 NULL인지 확인한다.
-		if(this.m_buffer[this.m_offset + _offset + sizeof(int) + size_copy] != 0 || this.m_buffer[this.m_offset + _offset + sizeof(int) + size_copy + 1] != 0) 
+		// check) [문자열]의 제일 끝이 NULL인지 확인한다.
+		if (*(char*)(ptr + size_copy - sizeof(char)) != 0)
 			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] string terminate No-'NULL' value");
 
-		// 4) [문자열]을 복사한다.
-		char[] charTemp = new char[length_string - 1];
-		System.Buffer.BlockCopy(this.m_buffer, this.m_offset + (int)_offset + sizeof(int), charTemp, 0, size_copy);
-
 		// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.		
-		_offset	+= (sizeof(int) + size_copy + sizeof(char));
+		_offset	+= (size_copy + sizeof(int));
 
 		// 6) [string]로 변환해 최종 리턴한다.
-		return new string(charTemp);
+		return new string((char*)ptr, 0, length_string-1);
 	}
+
 #if NET
-	private Array?	_extract_array			(long _ptr, ref long _offset, Type _type, int[]? _static_size, int _dimension)
+	private Array?		_extract_array			(long _ptr, ref long _offset, Type _type, int[]? _static_size, int _dimension)
 #else
-	private Array	_extract_array			(long _ptr, ref long _offset, Type _type, int[] _static_size, int _dimension)
+	private Array		_extract_array			(long _ptr, ref long _offset, Type _type, int[] _static_size, int _dimension)
 #endif
 	{
 		// Declare)
@@ -3236,7 +2972,7 @@ public struct buffer
 			// 1) [데이터 갯수]를 읽어들인다.
 			temp_count = _extract_primitive<int>(_ptr, ref _offset);
 
-			// Check) length가 -1이면 null을 리턴한다.
+			// check) length가 -1이면 null을 리턴한다.
 			if (temp_count == -1)
 				return null;
 		}
@@ -3322,7 +3058,7 @@ public struct buffer
 				// - [데이터 갯수]를 읽어들인다.
 				int count_item = _extract_primitive<int>(_ptr, ref _offset);
 
-				// Check) temp_count가 -1이면 null을 리턴한다.
+				// check) temp_count가 -1이면 null을 리턴한다.
 				if (count_item == -1)
 					continue;
 
@@ -3350,7 +3086,7 @@ public struct buffer
 				// - [데이터 갯수]를 읽어들인다.
 				int count_item = _extract_primitive<int>(_ptr, ref _offset);
 
-				// Check) temp_count가 -1이면 null을 리턴한다.
+				// check) temp_count가 -1이면 null을 리턴한다.
 				if(count_item == -1)
 					continue;
 
@@ -3377,7 +3113,7 @@ public struct buffer
 		}
 		else
 		{
-			// Check) 지원되지 않는 Type이다.
+			// check) 지원되지 않는 Type이다.
 			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 			// Throw) 
@@ -3387,15 +3123,15 @@ public struct buffer
 		return temp_array;
 	}
 #if NET
-	private object?	_extract_DictionaryX	(long _ptr, ref long _offset, Type _type_create, Type[] _types) 
+	private object?		_extract_DictionaryX	(long _ptr, ref long _offset, Type _type_create, Type[] _types) 
 #else
-	private object	_extract_DictionaryX	(long _ptr, ref long _offset, Type _type_create, Type[] _types) 
+	private object		_extract_DictionaryX	(long _ptr, ref long _offset, Type _type_create, Type[] _types) 
 #endif
 	{
 		// 1) [데이터 갯수]를 읽어들인다.
 		int count_item = _extract_primitive<int>(_ptr, ref _offset);
 
-		// Check) temp_count가 -1이면 null을 리턴한다.
+		// check) temp_count가 -1이면 null을 리턴한다.
 		if (count_item == -1)
 			return null;
 
@@ -3414,7 +3150,7 @@ public struct buffer
 		// Return) 생성된 객체를 Return한다.
 		return obj_value;
 	}
-	private void	_extract_Dictionary		(long _ptr, ref long _offset, System.Collections.IDictionary _object, int _count, Type[] _types) 
+	private void		_extract_Dictionary		(long _ptr, ref long _offset, System.Collections.IDictionary _object, int _count, Type[] _types) 
 	{
 		// 1) [데이터]들을 읽어들인다.
 		if (_types[0].IsPrimitive)
@@ -3522,7 +3258,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -3635,7 +3371,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -3740,7 +3476,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -3915,7 +3651,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -4108,7 +3844,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -4305,7 +4041,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -4500,7 +4236,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -4686,7 +4422,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 				// Throw) 
@@ -4695,7 +4431,7 @@ public struct buffer
 		}
 		else
 		{
-			// Check) 지원되지 않는 Type이다.
+			// check) 지원되지 않는 Type이다.
 			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 		
 			// Throw) 
@@ -4703,15 +4439,15 @@ public struct buffer
 		}
 	}
 #if NET
-	private object?	_extract_ListX			(long _ptr, ref long _offset, Type _type_create, Type _type)
+	private object?		_extract_ListX			(long _ptr, ref long _offset, Type _type_create, Type _type)
 #else
-	private object	_extract_ListX			(long _ptr, ref long _offset, Type _type_create, Type _type)
+	private object		_extract_ListX			(long _ptr, ref long _offset, Type _type_create, Type _type)
 #endif
 	{
 		// - [데이터 갯수]를 읽어들인다.
 		int count_item = _extract_primitive<int>(_ptr, ref _offset);
 
-		// Check) temp_count가 -1이면 null을 리턴한다.
+		// check) temp_count가 -1이면 null을 리턴한다.
 		if (count_item != -1)
 		{
 			// - get values
@@ -4921,7 +4657,7 @@ public struct buffer
 		}
 		else
 		{
-			// Check) 지원되지 않는 Type이다.
+			// check) 지원되지 않는 Type이다.
 			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 			// Throw) 
@@ -4929,19 +4665,225 @@ public struct buffer
 		}
 	}
 
-	public void		extract_skip(int _amount)									{ this.m_offset+=_amount; this.m_count-=_amount;}
-	public char		extract_char()												{ Debug.Assert(this.m_buffer != null && sizeof(char) <= this.m_count); if(sizeof(char) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(char); this.m_count -= sizeof(char); return (char)this.m_buffer[iPosition];}
-	public sbyte	extract_sbyte()												{ Debug.Assert(this.m_buffer != null && sizeof(sbyte) <= this.m_count); if(sizeof(sbyte) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(sbyte); this.m_count -= sizeof(sbyte); return (sbyte)this.m_buffer[iPosition];}
-	public byte		extract_byte()												{ Debug.Assert(this.m_buffer != null && sizeof(byte) <= this.m_count); if(sizeof(byte) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(byte); this.m_count -= sizeof(byte); return this.m_buffer[iPosition];}
-	public short	extract_short()												{ Debug.Assert(this.m_buffer != null && sizeof(short) <= this.m_count); if(sizeof(short) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(short); this.m_count -= sizeof(short); return BitConverter.ToInt16(m_buffer, iPosition);}
-	public ushort	extract_ushort()											{ Debug.Assert(this.m_buffer != null && sizeof(ushort) <= this.m_count); if(sizeof(ushort) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(ushort); this.m_count -= sizeof(ushort); return BitConverter.ToUInt16(m_buffer, iPosition);}
-	public int		extract_int()												{ Debug.Assert(this.m_buffer != null && sizeof(int) <= this.m_count); if(sizeof(int) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(int); this.m_count -= sizeof(int); return BitConverter.ToInt32(this.m_buffer, iPosition);}
-	public uint		extract_uint()												{ Debug.Assert(this.m_buffer != null && sizeof(uint) <= this.m_count); if(sizeof(uint) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(uint); this.m_count -= sizeof(uint); return BitConverter.ToUInt32(this.m_buffer, iPosition);}
-	public long		extract_long()												{ Debug.Assert(this.m_buffer != null && sizeof(long) <= this.m_count); if(sizeof(long) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(long); this.m_count -= sizeof(long); return BitConverter.ToInt64(this.m_buffer, iPosition);}
-	public ulong	extract_ulong()												{ Debug.Assert(this.m_buffer != null && sizeof(ulong) <= this.m_count); if(sizeof(ulong) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(ulong); this.m_count -= sizeof(ulong); return BitConverter.ToUInt64(this.m_buffer, iPosition);}
-	public float	extract_float()												{ Debug.Assert(this.m_buffer != null && sizeof(float) <= this.m_count); if(sizeof(float) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(float); this.m_count -= sizeof(float); return BitConverter.ToSingle(this.m_buffer, iPosition);}
-	public double	extract_double()											{ Debug.Assert(this.m_buffer != null && sizeof(double) <= this.m_count); if(sizeof(double) > this.m_count) throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); int iPosition = this.m_offset; this.m_offset += sizeof(double); this.m_count -= sizeof(double); return BitConverter.ToDouble(this.m_buffer, iPosition);}
-	public string	extract_string()											{ return extract<string>();}
+	public void			extract_skip(int _amount)									{ this.m_offset+=_amount; this.m_count-=_amount;}
+	public unsafe char		extract_char()												
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(char) <= this.m_count); 
+			
+		// check) 
+		if(sizeof(char) > this.m_count)
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		int position = this.m_offset;
+		this.m_offset += sizeof(char);
+		this.m_count -= sizeof(char);
+			
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(char*)(dest + position);
+		}
+	}
+	public unsafe sbyte		extract_sbyte()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(sbyte) <= this.m_count);
+			
+		// check) 
+		if(sizeof(sbyte) > this.m_count)
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		int position = this.m_offset;
+		this.m_offset += sizeof(sbyte);
+		this.m_count -= sizeof(sbyte);
+			
+		// 2) get valueand return
+		return (sbyte)this.m_buffer[position];
+	}
+	public unsafe byte		extract_byte()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(byte) <= this.m_count);
+
+		// check) 
+		if(sizeof(byte) > this.m_count)
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(byte);
+		this.m_count -= sizeof(byte);
+			
+		// 2) get valueand return
+		return this.m_buffer[position];
+	}
+	public unsafe short		extract_short()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(short) <= this.m_count);
+
+		// check) 
+		if(sizeof(short) > this.m_count) 
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(short);
+		this.m_count -= sizeof(short); 
+
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(short*)(dest + position);
+		}
+	}
+	public unsafe ushort	extract_ushort()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(ushort) <= this.m_count);
+
+		// check) 
+		if(sizeof(ushort) > this.m_count) 
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(ushort);
+		this.m_count -= sizeof(ushort); 
+			
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(ushort*)(dest + position);
+		}
+	}
+	public unsafe int	extract_int()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(int) <= this.m_count);
+
+		// check) 
+		if(sizeof(int) > this.m_count) 
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(int);
+		this.m_count -= sizeof(int);
+			
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(int*)(dest + position);
+		}
+	}
+	public unsafe uint		extract_uint()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(uint) <= this.m_count);
+
+		// check) 
+		if(sizeof(uint) > this.m_count) 
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(uint);
+		this.m_count -= sizeof(uint);
+
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(uint*)(dest + position);
+		}
+	}
+
+	public unsafe long		extract_long()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(long) <= this.m_count);
+
+		// check) 
+		if(sizeof(long) > this.m_count)
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(long);
+		this.m_count -= sizeof(long);
+			
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(long*)(dest + position);
+		}
+	}
+	public unsafe ulong		extract_ulong()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(ulong) <= this.m_count);
+
+		// check) 
+		if(sizeof(ulong) > this.m_count)
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); 
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(ulong);
+		this.m_count -= sizeof(ulong);
+			
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(ulong*)(dest + position);
+		}
+	}
+	public unsafe float		extract_float()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(float) <= this.m_count);
+
+		// check) 
+		if(sizeof(float) > this.m_count)
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(float);
+		this.m_count -= sizeof(float);
+			
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(float*)(dest + position);
+		}
+	}
+	public unsafe double	extract_double()
+	{
+		// check) 
+		Debug.Assert(this.m_buffer != null && sizeof(double) <= this.m_count);
+
+		// check) 
+		if(sizeof(double) > this.m_count)
+			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
+
+		// 1) update offset and count
+		var position = this.m_offset;
+		this.m_offset = position + sizeof(double);
+		this.m_count -= sizeof(double);
+			
+		// 2) get valueand return
+		fixed (byte* dest = this.m_buffer)
+		{
+			return *(double*)(dest + position);
+		}
+	}
+	public string		extract_string()
+	{
+		return extract<string>();
+	}
 
 // 3) set_front (값 써넣기)
 	private unsafe void set_front_primitive(object _object, int _offset, Type _type)
@@ -5003,7 +4945,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void set_front<T>(sbyte _object, int _offset = 0) where T : unmanaged
+	public unsafe void	set_front<T>(sbyte _object, int _offset = 0) where T : unmanaged
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5030,7 +4972,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void set_front<T>(byte _object, int _offset = 0) where T : unmanaged
+	public unsafe void	set_front<T>(byte _object, int _offset = 0) where T : unmanaged
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5057,7 +4999,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void set_front<T>(short _object, int _offset = 0) where T : unmanaged 
+	public unsafe void	set_front<T>(short _object, int _offset = 0) where T : unmanaged 
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5084,7 +5026,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void set_front<T>(ushort _object, int _offset = 0) where T : unmanaged 
+	public unsafe void	set_front<T>(ushort _object, int _offset = 0) where T : unmanaged 
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5111,7 +5053,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void set_front<T>(int _object, int _offset = 0) where T : unmanaged 
+	public unsafe void	set_front<T>(int _object, int _offset = 0) where T : unmanaged 
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5138,7 +5080,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void set_front<T>(uint _object, int _offset = 0) where T : unmanaged 
+	public unsafe void	set_front<T>(uint _object, int _offset = 0) where T : unmanaged 
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5165,7 +5107,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void set_front<T>(long _object, int _offset = 0) where T : unmanaged
+	public unsafe void	set_front<T>(long _object, int _offset = 0) where T : unmanaged
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5192,7 +5134,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void		set_front<T>(ulong _object, int _offset = 0) where T : unmanaged
+	public unsafe void	set_front<T>(ulong _object, int _offset = 0) where T : unmanaged
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5219,7 +5161,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void		set_front<T>(float _object, int _offset = 0) where T : unmanaged 
+	public unsafe void	set_front<T>(float _object, int _offset = 0) where T : unmanaged 
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5246,7 +5188,7 @@ public struct buffer
 		else
 			this.set_front_primitive(_object, _offset, type);
 	}
-	public unsafe void		set_front<T>(double _object, int _offset = 0) where T : unmanaged 
+	public unsafe void	set_front<T>(double _object, int _offset = 0) where T : unmanaged 
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null);
@@ -5274,7 +5216,7 @@ public struct buffer
 			this.set_front_primitive(_object, _offset, type);
 	}
 
-	public void		set_front(byte[] _object, int _offset_src, int _count, int _offset = 0) 
+	public void			set_front(byte[] _object, int _offset_src, int _count, int _offset = 0) 
 	{
 		// check) 
 		Debug.Assert(this.m_buffer != null && (this.m_offset+this.m_count+_count)<=this.m_buffer.Length);
@@ -5292,7 +5234,7 @@ public struct buffer
 		// 1) copy
 		System.Buffer.BlockCopy(_object, _offset_src, this.m_buffer, this.m_offset+_offset, _count);
 	}
-	public void		set_front(buffer _object, int _offset = 0)					
+	public void			set_front(buffer _object, int _offset = 0)					
 	{
 		// check)
 		Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.m_count) <= this.m_buffer.Length); 
@@ -5313,7 +5255,7 @@ public struct buffer
 		// 1) block copy
 		System.Buffer.BlockCopy(_object.m_buffer, _object.m_offset, this.m_buffer, this.m_offset + _offset, _object.m_count);
 	}
-    public void		set_front(char _object, int _offset = 0)
+    public void			set_front(char _object, int _offset = 0)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer != null && (this.m_offset + _offset + sizeof(char)) <= this.m_buffer.Length);
@@ -5331,7 +5273,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(sbyte _object, int _offset = 0)
+	public void			set_front(sbyte _object, int _offset = 0)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(sbyte)) <= this.m_buffer.Length);
@@ -5349,7 +5291,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(byte _object, int _offset = 0)
+	public void			set_front(byte _object, int _offset = 0)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(byte)) <= this.m_buffer.Length);
@@ -5367,7 +5309,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(short _object, int _offset = 0)
+	public void			set_front(short _object, int _offset = 0)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(short)) <= this.m_buffer.Length);
@@ -5385,7 +5327,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(ushort _object, int _offset = 0)
+	public void			set_front(ushort _object, int _offset = 0)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(ushort)) <= this.m_buffer.Length);
@@ -5403,7 +5345,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(int _object, int _offset = 0)
+	public void			set_front(int _object, int _offset = 0)
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(int)) <= this.m_buffer.Length);
@@ -5421,7 +5363,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(uint _object, int _offset = 0) 
+	public void			set_front(uint _object, int _offset = 0) 
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(uint)) <= this.m_buffer.Length);
@@ -5439,7 +5381,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(long _object, int _offset = 0) 
+	public void			set_front(long _object, int _offset = 0) 
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(long)) <= this.m_buffer.Length);
@@ -5457,7 +5399,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(ulong _object, int _offset = 0) 
+	public void			set_front(ulong _object, int _offset = 0) 
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(ulong)) <= this.m_buffer.Length);
@@ -5475,7 +5417,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(float _object, int _offset = 0) 
+	public void			set_front(float _object, int _offset = 0) 
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(float)) <= this.m_buffer.Length);
@@ -5493,7 +5435,7 @@ public struct buffer
 		// 1) copy
 		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
 	}
-	public void		set_front(double _object, int _offset = 0) 
+	public void			set_front(double _object, int _offset = 0) 
 	{
 		// check) 
 		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(double)) <= this.m_buffer.Length);
@@ -5513,36 +5455,36 @@ public struct buffer
 	}
 
 // 4) get_front( 값 읽기)
-	public T		get_front<T>(int _offset = 0)								{ buffer temp = new buffer(this.m_buffer, this.m_offset+_offset, m_count-_offset); return temp.extract<T>();}
-	public void		get_front<T>(ref T _object, int _offset = 0)				{ _object = this.get_front<T>(_offset); }
-	public void		get_front<T>(ref char _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_char(_offset); }
-	public void		get_front<T>(ref sbyte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_sbyte(_offset); }
-    public void		get_front<T>(ref byte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_byte(_offset); }
-    public void		get_front<T>(ref short _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_short(_offset); }
-    public void		get_front<T>(ref ushort _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ushort(_offset); }
-    public void		get_front<T>(ref int _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_int(_offset); }
-    public void		get_front<T>(ref uint _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_uint(_offset); }
-    public void		get_front<T>(ref long _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_long(_offset); }
-    public void		get_front<T>(ref ulong _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ulong(_offset); }
-    public void		get_front<T>(ref float _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_float(_offset); }
-    public void		get_front<T>(ref double _object, int _offset=0) where T : unmanaged	{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_double(_offset); }
+	public T			get_front<T>(int _offset = 0)								{ buffer temp = new buffer(this.m_buffer, this.m_offset+_offset, m_count-_offset); return temp.extract<T>();}
+	public void			get_front<T>(ref T _object, int _offset = 0)				{ _object = this.get_front<T>(_offset); }
+	public void			get_front<T>(ref char _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_char(_offset); }
+	public void			get_front<T>(ref sbyte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_sbyte(_offset); }
+    public void			get_front<T>(ref byte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_byte(_offset); }
+    public void			get_front<T>(ref short _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_short(_offset); }
+    public void			get_front<T>(ref ushort _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ushort(_offset); }
+    public void			get_front<T>(ref int _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_int(_offset); }
+    public void			get_front<T>(ref uint _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_uint(_offset); }
+    public void			get_front<T>(ref long _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_long(_offset); }
+    public void			get_front<T>(ref ulong _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ulong(_offset); }
+    public void			get_front<T>(ref float _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_float(_offset); }
+    public void			get_front<T>(ref double _object, int _offset=0) where T : unmanaged	{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_double(_offset); }
 
-    public char		get_front_char(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(char)) <= this.m_buffer.Length); return BitConverter.ToChar(this.m_buffer, this.m_offset + _offset);}
-	public sbyte	get_front_sbyte(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(sbyte)) <= this.m_buffer.Length); return (sbyte)this.m_buffer[this.m_offset + _offset];}
-	public byte		get_front_byte(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(byte)) <= this.m_buffer.Length); return this.m_buffer[this.m_offset + _offset]; }
-	public short	get_front_short(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(short)) <= this.m_buffer.Length); return BitConverter.ToInt16(this.m_buffer, this.m_offset + _offset);}
-	public ushort	get_front_ushort(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(ushort)) <= this.m_buffer.Length); return BitConverter.ToUInt16(this.m_buffer, this.m_offset + _offset);}
-	public int		get_front_int(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(int)) <= this.m_buffer.Length); return BitConverter.ToInt32(this.m_buffer, this.m_offset + _offset);}
-	public uint		get_front_uint(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(uint)) <= this.m_buffer.Length); return BitConverter.ToUInt32(this.m_buffer, this.m_offset + _offset);}
-	public long		get_front_long(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(long)) <= this.m_buffer.Length); return BitConverter.ToInt64(this.m_buffer, this.m_offset + _offset);}
-	public ulong	get_front_ulong(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(ulong)) <= this.m_buffer.Length); return BitConverter.ToUInt64(this.m_buffer, this.m_offset + _offset);}
-	public float	get_front_float(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(float)) <= this.m_buffer.Length); return BitConverter.ToSingle(this.m_buffer, this.m_offset + _offset);}
-	public double	get_front_double(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(double)) <= this.m_buffer.Length); return BitConverter.ToDouble(this.m_buffer, this.m_offset + _offset);}
-	public void		get_front_array(byte[] _object, int _offset_src, int _count, int _offset = 0) { Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.Length) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset+_offset, _object, _offset_src, _count);}
-	public void		get_front_buffer(buffer _object, int _offset = 0)			{ Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.m_count) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset + _offset, _object.m_buffer, _object.m_offset, _object.m_count); }
-	public uint		get_front_CRC()												{ return 0;}
+    public char			get_front_char(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(char)) <= this.m_buffer.Length); return BitConverter.ToChar(this.m_buffer, this.m_offset + _offset);}
+	public sbyte		get_front_sbyte(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(sbyte)) <= this.m_buffer.Length); return (sbyte)this.m_buffer[this.m_offset + _offset];}
+	public byte			get_front_byte(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(byte)) <= this.m_buffer.Length); return this.m_buffer[this.m_offset + _offset]; }
+	public short		get_front_short(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(short)) <= this.m_buffer.Length); return BitConverter.ToInt16(this.m_buffer, this.m_offset + _offset);}
+	public ushort		get_front_ushort(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(ushort)) <= this.m_buffer.Length); return BitConverter.ToUInt16(this.m_buffer, this.m_offset + _offset);}
+	public int			get_front_int(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(int)) <= this.m_buffer.Length); return BitConverter.ToInt32(this.m_buffer, this.m_offset + _offset);}
+	public uint			get_front_uint(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(uint)) <= this.m_buffer.Length); return BitConverter.ToUInt32(this.m_buffer, this.m_offset + _offset);}
+	public long			get_front_long(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(long)) <= this.m_buffer.Length); return BitConverter.ToInt64(this.m_buffer, this.m_offset + _offset);}
+	public ulong		get_front_ulong(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(ulong)) <= this.m_buffer.Length); return BitConverter.ToUInt64(this.m_buffer, this.m_offset + _offset);}
+	public float		get_front_float(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(float)) <= this.m_buffer.Length); return BitConverter.ToSingle(this.m_buffer, this.m_offset + _offset);}
+	public double		get_front_double(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(double)) <= this.m_buffer.Length); return BitConverter.ToDouble(this.m_buffer, this.m_offset + _offset);}
+	public void			get_front_array(byte[] _object, int _offset_src, int _count, int _offset = 0) { Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.Length) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset+_offset, _object, _offset_src, _count);}
+	public void			get_front_buffer(buffer _object, int _offset = 0)			{ Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.m_count) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset + _offset, _object.m_buffer, _object.m_offset, _object.m_count); }
+	public uint			get_front_CRC()												{ return 0;}
 
-	public static int	get_size_of(object _object)								{ return _size_of(_object);}
+	public static int	get_size_of(object _object)									{ return _size_of(_object);}
 
 	private static int	_size_of(object _object)
 	{
@@ -5646,7 +5588,7 @@ public struct buffer
 	private static int	_size_of_Dictionary(System.Collections.IDictionary _object, Type[] _types)
 #endif
 	{
-		// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 		if (_object == null)
 		{
 			return sizeof(int);
@@ -5749,7 +5691,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -5846,7 +5788,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -5942,7 +5884,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -6079,7 +6021,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -6181,7 +6123,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -6288,7 +6230,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -6399,7 +6341,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -6497,7 +6439,7 @@ public struct buffer
 			}
 			else
 			{
-				// Check) 지원되지 않는 Type이다.
+				// check) 지원되지 않는 Type이다.
 				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 				// Throw) 
@@ -6506,7 +6448,7 @@ public struct buffer
 		}
 		else
 		{
-			// Check) 지원되지 않는 Type이다.
+			// check) 지원되지 않는 Type이다.
 			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 			// Throw) 
@@ -6521,7 +6463,7 @@ public struct buffer
 	private static int	_size_of_Collection(System.Collections.ICollection _object, Type _type)
 #endif
 	{
-		// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 		if (_object == null)
 		{
 			return sizeof(int);
@@ -6624,7 +6566,7 @@ public struct buffer
 		}
 		else
 		{
-			// Check) 지원되지 않는 Type이다.
+			// check) 지원되지 않는 Type이다.
 			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
 
 			// Throw) 
@@ -6647,7 +6589,7 @@ public struct buffer
         // 1) Get Type ( 재귀용 _base_type 이 존재한다면 그걸쓰고 아니라면 Data 를 쓴다.  )
         Type temp_type = _base_type ?? _object.GetType();
 
-		// Check) Serializable이 아니면 리턴한다.
+		// check) Serializable이 아니면 리턴한다.
 		if (_is_serializable_type(temp_type) == false)
 			return 0;
 
@@ -6671,11 +6613,11 @@ public struct buffer
         // 4) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
 		foreach(var iter in temp_field)
 		{
-			// Check) 
+			// check) 
 			if (iter.IsNotSerialized==true)
 				continue;
 
-			// Check)
+			// check)
 			if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
 				continue;
 
@@ -6714,7 +6656,7 @@ public struct buffer
 
 		foreach(var iter in temp_field)
 		{
-			// Check)
+			// check)
 			if(iter.IsNotSerialized==true)
 				continue;
 
@@ -6742,7 +6684,7 @@ public struct buffer
 	private static int _size_of_string(string _string)
 #endif
 	{
-		// Check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 		if (_string == null)
 		{
 			return sizeof(int);

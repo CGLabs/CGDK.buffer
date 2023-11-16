@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 
-namespace CGDBuffer_CSharp_UnitTest
+namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 {
 	[TestClass]
-	public class CGDbuffer_CSharp_UnitTest_Performance
+	public class Performance
 	{
 		public const int _TEST_COUNT = 1000000;
 
@@ -132,16 +132,16 @@ namespace CGDBuffer_CSharp_UnitTest
 		void function_append_GENERAL(ref CGDK.buffer _Buffer)
 		{
 			_Buffer.append<char>((char)12);
-			_Buffer.append<sbyte>((byte)3);
-			_Buffer.append<byte>((sbyte)4);
+			_Buffer.append<sbyte>((sbyte)3);
+			_Buffer.append<byte>((byte)4);
 			_Buffer.append<short>((short)4100);
 			_Buffer.append<ushort>((ushort)32210);
-			_Buffer.append<int>(123310);
-			_Buffer.append<uint>(121234);
-			_Buffer.append<long>(-1000443L);
-			_Buffer.append<ulong>(12233094310UL);
-			_Buffer.append<float>(1.0f);
-			_Buffer.append<double>(2.0);
+			_Buffer.append<int>((int)123310);
+			_Buffer.append<uint>((uint)121234);
+			_Buffer.append<long>((long)-1000443L);
+			_Buffer.append<ulong>((ulong)12233094310UL);
+			_Buffer.append<float>((float)1.0f);
+			_Buffer.append<double>((double)2.0);
 		}
 
 		void function_extract_GENERAL(ref CGDK.buffer _Buffer)
@@ -190,47 +190,54 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void cb_benchmark_01_primitive()
 		{
-			// 1) Buffer 할당
+			Int32 value_1 = 1;
+			UInt32 value_2 = 101;
+			Int64 value_3 = -12345;
+			UInt64 value_4 = 123456;
+			float value_5 = 1.0f;
+			double value_6 = 10.0;
+
+			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 1) Buffer 준비
+				// - 버퍼 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 2) 값 써넣기
-				bufferTemp.append<Int32>(1);
-				bufferTemp.append<UInt32>(101);
-				bufferTemp.append<Int64>(-12345);
-				bufferTemp.append<UInt64>(123456);
-				bufferTemp.append<float>(1.0f);
-				bufferTemp.append<double>(10.0);
+				// - 직렬화
+				bufferTemp.append<int>(value_1);
+				bufferTemp.append<uint>(value_2);
+				bufferTemp.append<long>(value_3);
+				bufferTemp.append<ulong>(value_4);
+				bufferTemp.append<float>(value_5);
+				bufferTemp.append<double>(value_6);
 
-				// 3) 값 읽기
-				var value_1 = bufferTemp.extract<Int32>();
-				var value_2 = bufferTemp.extract<UInt32>();
-				var value_3 = bufferTemp.extract<Int64>();
-				var value_4 = bufferTemp.extract<UInt64>();
-				var value_5 = bufferTemp.extract<float>();
-				var value_6 = bufferTemp.extract<double>();
+				// - 역직렬화
+				var d_value_1 = bufferTemp.extract<Int32>();
+				var d_value_2 = bufferTemp.extract<UInt32>();
+				var d_value_3 = bufferTemp.extract<Int64>();
+				var d_value_4 = bufferTemp.extract<UInt64>();
+				var d_value_5 = bufferTemp.extract<float>();
+				var d_value_6 = bufferTemp.extract<double>();
 			}
 		}
 
 		[TestMethod]
 		public void cb_benchmark_02_list_int()
 		{
-			// 1) Buffer 할당
+			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 2) Buffer 준비
+				// - 버퍼 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 3) 값 써넣기
-				bufferTemp.append(list_int);
+				// - 직렬화
+				bufferTemp.append<List<int>>(list_int);
 
-				// 4) 값 읽기
+				// - 역직렬화
 				var temp = bufferTemp.extract<List<int>>();
 			}
 		}
@@ -238,15 +245,15 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void cb_benchmark_03_string()
 		{
-			// 1) Buffer 할당
+			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 2) Buffer 준비
+				// - 버퍼 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 3) 값 써넣기
+				// - 직렬화
 				bufferTemp.append<string>(array_string[0]);
 				bufferTemp.append<string>(array_string[1]);
 				bufferTemp.append<string>(array_string[2]);
@@ -256,7 +263,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				bufferTemp.append<string>(array_string[6]);
 				bufferTemp.append<string>(array_string[7]);
 
-				// 4) 값 읽기
+				// - 역직렬화
 				var value_1 = bufferTemp.extract<string>();
 				var value_2 = bufferTemp.extract<string>();
 				var value_3 = bufferTemp.extract<string>();
@@ -271,18 +278,18 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void cb_benchmark_04_list_string()
 		{
-			// 1) Buffer 할당
+			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 2) Buffer 준비
+				// - 버퍼 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 3) 값 써넣기
+				// - 직렬화
 				bufferTemp.append(list_string);
 
-				// 4) 값 읽기
+				// - 역직렬화
 				var temp = bufferTemp.extract<List<string>>();
 			}
 		}
@@ -290,18 +297,18 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void cb_benchmark_05_key_value_string_list_int()
 		{
-			// 1) Buffer 할당
+			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				// 2) Buffer 준비
+				// - 버퍼 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 3) 값 써넣기
+				// - 직렬화
 				bufferTemp.append(dictionary_string_List_int);
 
-				// 4) 값 읽기
+				// - 역직렬화
 				var temp = bufferTemp.extract<Dictionary<string, List<int>>>();
 			}
 		}
@@ -309,7 +316,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void cb_benchmark_06_struct_primitive()
 		{
-			// 1) Buffer 할당
+			// - 버퍼 준비
 			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
 			TEST tempData = new TEST();
 			
@@ -329,10 +336,10 @@ namespace CGDBuffer_CSharp_UnitTest
 				// 1) Buffer 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 2) 값 써넣기
+				// - 직렬화
 				bufferTemp.append<TEST>(tempData);
 
-				// 3) 값 읽기
+				// - 역직렬화
 				var value2 = bufferTemp.extract<TEST>();
 			}
 		}
@@ -349,7 +356,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void cb_benchmark_07_struct_composite()
 		{
-			// 1) Buffer 할당
+			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
 			var foo = new TEST_EX();
@@ -364,18 +371,18 @@ namespace CGDBuffer_CSharp_UnitTest
 				// 1) Buffer 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 2) 값 써넣기
+				// - 직렬화
 				bufferTemp.append<TEST_EX>(foo);
 
-				// 3) 값 읽기
+				// - 역직렬화
 				var value2 = bufferTemp.extract<TEST>();
 			}
 		}
 
 		[TestMethod]
-		public void cb_benchmark_extra_01_general()
+		public void cb_benchmark_extra_01_general_1()
 		{
-			// 1) Buffer 할당
+			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
@@ -383,19 +390,19 @@ namespace CGDBuffer_CSharp_UnitTest
 				// 1) Buffer 준비
 				CGDK.buffer bufferTemp = bufferCreate;
 
-				// 2) 값 써넣기
+				// - 직렬화
 				bufferTemp.append<sbyte>((sbyte)3);
-				bufferTemp.append<byte>((byte)4);
+				bufferTemp.append<byte>(4);
 				bufferTemp.append<short>((short)4100);
 				bufferTemp.append<ushort>((ushort)32210);
-				bufferTemp.append<int>(123310);
-				bufferTemp.append<uint>(121234);
-				bufferTemp.append<long>(-1000443L);
-				bufferTemp.append<ulong>(12233094310UL);
-				bufferTemp.append<float>(1.0f);
-				bufferTemp.append<double>(2.0);
+				bufferTemp.append<int>((int)123310);
+				bufferTemp.append<uint>((uint)121234);
+				bufferTemp.append<long>((long)-1000443L);
+				bufferTemp.append<ulong>((ulong)12233094310UL);
+				bufferTemp.append<float>((float)1.0f);
+				bufferTemp.append<double>((double)2.0);
 
-				// 3) 값 읽기
+				// - 역직렬화
 				var value0 = bufferTemp.extract<sbyte>();
 				var value1 = bufferTemp.extract<byte>();
 				var value2 = bufferTemp.extract<short>();
@@ -406,6 +413,72 @@ namespace CGDBuffer_CSharp_UnitTest
 				var value7 = bufferTemp.extract<ulong>();
 				var value8 = bufferTemp.extract<float>();
 				var value9 = bufferTemp.extract<double>();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_extra_01_general_1_ex()
+		{
+			// - 버퍼 준비
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 1) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// - 직렬화
+				bufferTemp.append((int)1);
+				bufferTemp.append((uint)101);
+				bufferTemp.append((long)-12345);
+				bufferTemp.append((ulong)123456);
+				bufferTemp.append((float)1.0f);
+				bufferTemp.append((double)10.0);
+
+				// - 역직렬화
+				var value_1 = bufferTemp.extract_int();
+				var value_2 = bufferTemp.extract_uint();
+				var value_3 = bufferTemp.extract_long();
+				var value_4 = bufferTemp.extract_ulong();
+				var value_5 = bufferTemp.extract_float();
+				var value_6 = bufferTemp.extract_double();
+			}
+		}
+
+		[TestMethod]
+		public void cb_benchmark_extra_01_general_2()
+		{
+			// - 버퍼 준비
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 1) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// - 직렬화
+				bufferTemp.append((sbyte)3);
+				bufferTemp.append((byte)4);
+				bufferTemp.append((short)4100);
+				bufferTemp.append((ushort)32210);
+				bufferTemp.append((int)123310);
+				bufferTemp.append((uint)121234);
+				bufferTemp.append((long)-1000443L);
+				bufferTemp.append((ulong)12233094310UL);
+				bufferTemp.append((float)1.0f);
+				bufferTemp.append((double)2.0);
+
+				// - 역직렬화
+				var value0 = bufferTemp.extract_sbyte();
+				var value1 = bufferTemp.extract_byte();
+				var value2 = bufferTemp.extract_short();
+				var value3 = bufferTemp.extract_ushort();
+				var value4 = bufferTemp.extract_int();
+				var value5 = bufferTemp.extract_uint();
+				var value6 = bufferTemp.extract_long();
+				var value7 = bufferTemp.extract_ulong();
+				var value8 = bufferTemp.extract_float();
+				var value9 = bufferTemp.extract_double();
 			}
 		}
 
