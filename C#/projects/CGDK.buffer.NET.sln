@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "buffer", "buffer\buffer.shproj", "{9F90C8CB-17EE-4F63-8AE0-FCAD54CC782F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.NET", "buffer.NET\CGDK.buffer.NET.csproj", "{7EADFE77-3545-4EC2-831E-0C6AB9C9F6F0}"
 EndProject
 Global
@@ -29,9 +27,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {764A3190-AB9C-4EC4-B3F2-D8D252AB5689}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		buffer\buffer.projitems*{7eadfe77-3545-4ec2-831e-0c6ab9c9f6f0}*SharedItemsImports = 5
-		buffer\buffer.projitems*{9f90c8cb-17ee-4f63-8ae0-fcad54cc782f}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
