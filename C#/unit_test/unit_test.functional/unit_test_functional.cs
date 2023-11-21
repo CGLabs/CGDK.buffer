@@ -127,12 +127,12 @@ namespace CGDBuffer_CSharp_UnitTest
 
 		public Dictionary<string, List<string>>	dictionary_string_List_string = new Dictionary<string, List<string>>
 		{
-			{"zero",	new List<string> {"zero", "zero", "zero", "zero"}},
-			{"two",		new List<string> {"zero", "zero", "zero", "zero"}},
-			{"tree",	new List<string> {"zero", "zero", "zero", "zero"}},
-			{"fifteen",	new List<string> {"zero", "zero", "zero", "zero"}},
-			{"five",	new List<string> {"zero", "zero", "zero", "zero"}},
-			{"eleven",	new List<string> {"zero", "zero", "zero", "zero"}}
+			{"zero",	new List<string> {"zero", "one", "two", "four"}},
+			{"two",		new List<string> {"five", "six", "seven", "eight"}},
+			{"tree",	new List<string> {"nine", "ten", "eleven", "twelve"}},
+			{"fifteen",	new List<string> {"thirteen", "fourteen", "fifteen", "sixteen"}},
+			{"five",	new List<string> {"seventeen", "eighteen", "nineteen", "twenty"}},
+			{"eleven",	new List<string> {"twenthone", "twentytwo", "twentythree", "twentyfour"}}
 		};
 
 		void function_append_GENERAL_1(ref CGDK.buffer _buffer)

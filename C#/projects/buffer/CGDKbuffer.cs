@@ -13,6 +13,7 @@
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
+using Microsoft.VisualBasic;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1370,7 +1371,7 @@ namespace CGDK
 
 		public class SerializerString : IBase<string>
 		{
-			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, string? _object)
+			public static unsafe void _process_append(ref byte* _ptr, byte* _ptr_bound, string? _object)
 			{
 				// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
 				if (_object == null)
@@ -1381,38 +1382,38 @@ namespace CGDK
 					return;
 				}
 
+				// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
+				var string_length = _object.Length * sizeof(char);
+
+				// check)
+				Debug.Assert(_ptr + sizeof(Int32) + string_length + sizeof(char) <= _ptr_bound);
+
+				// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+				Unsafe.AsRef<Int32>(_ptr) = _object.Length + 1;
+
+				// 4) add size
+				_ptr += sizeof(Int32);
+
+				// 5) [문자열]을 복사해 넣는다.
 				fixed (char* str = (string?)_object)
 				{
-					// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
-					var string_length = _object.Length * sizeof(char);
 
-					// check)
-					Debug.Assert(_ptr + sizeof(Int32) + string_length + sizeof(char) <= _ptr_bound);
-
-					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-					Unsafe.AsRef<Int32>(_ptr) = _object.Length + 1;
-
-					// 4) add size
-					_ptr += sizeof(Int32);
-
-					// 5) [문자열]을 복사해 넣는다.
 					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length + sizeof(char)); // NULL 포함 복사
-
-					// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-					_ptr += string_length + sizeof(char);
 				}
+				// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+				_ptr += string_length + sizeof(char);
 			}
-			public unsafe string? process_extract(ref byte* _ptr, ref int _count)
+
+			public static unsafe string? _process_extract(ref byte* _ptr, ref int _count)
 			{
 				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
 				Debug.Assert(sizeof(Int32) <= _count);
 
-#if _USE_BOUND_CHECK
-			// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
-			if(sizeof(int)>this.m_count) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-#endif
-
+		#if _USE_BOUND_CHECK
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+				if(sizeof(int)>this.m_count) 
+					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+		#endif
 				// 1) extract  string length
 				var length_string = Unsafe.AsRef<Int32>(_ptr);
 
@@ -1448,7 +1449,7 @@ namespace CGDK
 				// 6) [string]로 변환해 최종 리턴한다.
 				return new string((char*)p, 0, length_string - 1);
 			}
-			public unsafe int process_get_size_of(string? _object)
+			public static unsafe int _process_get_size_of(string? _object)
 			{
 				// check)
 				if (_object == null)
@@ -1456,6 +1457,19 @@ namespace CGDK
 
 				// 1) process get size of
 				return sizeof(Int32) + (_object.Length + 1) * sizeof(char);
+			}
+
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, string? _object)
+			{
+				_process_append(ref _ptr, _ptr_bound, _object);
+			}
+			public unsafe string? process_extract(ref byte* _ptr, ref int _count)
+			{
+				return _process_extract(ref _ptr, ref _count);
+			}
+			public unsafe int process_get_size_of(string? _object)
+			{
+				return _process_get_size_of(_object);
 			}
 		}
 		public class SerializerString_object : IBase<object>
@@ -2318,6 +2332,141 @@ namespace CGDK
 			public static IBase<K>? serializer_key;
 			public static IBase<V>? serializer_value;
 		}
+		public class SerializerDictionary_primitive_primitive<K,V> : IBase<Dictionary<K, V>> where K : unmanaged where V : unmanaged
+		{
+			public static unsafe void _process_append(ref byte* _ptr, byte* _ptr_bound, Dictionary<K,V>? _object)
+			{
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+
+				// check)
+				Debug.Assert((_ptr + sizeof(Int32) + (sizeof(K) + sizeof(V)) * _object.Count) <= _ptr_bound);
+
+			#if _USE_BOUND_CHECK
+				// check)
+				if((_ptr + sizeof(Int32) + (sizeof(K) + sizeof(V)) * _object.Count) > _ptr_bound)
+					throw new System.OverflowException("buffer overflow");
+			#endif
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// 4) write items
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					// - write key & value
+					*(K*)_ptr = iter_item.Current.Key;
+					_ptr += sizeof(K);
+
+					*(V*)_ptr = iter_item.Current.Value;
+					_ptr += sizeof(V);
+				}
+			}
+
+			public static unsafe Dictionary<K,V>? _process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj_create = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+
+				// check)
+				Debug.Assert(obj_create != null);
+
+				// check)
+				Debug.Assert((sizeof(K) + sizeof(V)) * item_count <= _count);
+
+			#if _USE_BOUND_CHECK
+				// check)
+				if(((sizeof(K) + sizeof(V)) * item_count > _count)
+					throw new System.OverflowException("buffer overflow");
+			#endif
+				// 4) count
+				_count -= (sizeof(K) + sizeof(V)) * item_count;
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get key & value
+					var item_key = *(K*)_ptr; 
+					_ptr += sizeof(K);
+
+					var item_value = *(V*)_ptr;
+					_ptr += sizeof(V);
+
+					// - add item(key & value)
+					obj_create.Add((K)item_key, item_value);
+
+					// - count down!
+					--item_count;
+				}
+
+				// return) 
+				return obj_create;
+			}
+			public static unsafe int _process_get_size_of(Dictionary<K, V>? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) get Dictionary
+				return sizeof(UInt32) + (sizeof(K) + sizeof(V)) * _object.Count();
+			}
+
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Dictionary<K, V>? _object)
+			{
+				_process_append(ref _ptr, _ptr_bound, _object);
+			}
+			public unsafe Dictionary<K,V>? process_extract(ref byte* _ptr, ref int _count)
+			{
+				return _process_extract(ref _ptr, ref _count);
+			}
+			public unsafe int process_get_size_of(Dictionary<K,V>? _object)
+			{
+				return _process_get_size_of(_object);
+			}
+		}
+
+		public class SerializerDictionary_object_primitive_primitive<K,V> : IBase<object> where K : unmanaged where V : unmanaged
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				SerializerDictionary_primitive_primitive<K,V>._process_append(ref _ptr, _ptr_bound, (Dictionary<K,V>?)_object);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				return SerializerDictionary_primitive_primitive <K,V>._process_extract(ref _ptr, ref _count);
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				return SerializerDictionary_primitive_primitive<K, V>._process_get_size_of((Dictionary<K,V>?)_object);
+			}
+		}
+
 		public class SerializerDictionary<T, K, V> : IBase<T> where K : notnull
 		{
 			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
@@ -2581,7 +2730,7 @@ namespace CGDK
 			public IBase<K>? serializer_key;
 			public IBase<V>? serializer_value;
 		}
-		public class SerializerDictionary_object_no_tuped<K, V> : IBase<object>
+		public class SerializerDictionary_object_no_typed<K, V> : IBase<object>
 		{
 			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
 			{
@@ -3090,6 +3239,105 @@ namespace CGDK
 				return sizeof(Int32) + _object.Count() * sizeof(V);
 			}
 		}
+		public class SerializerList_string : IBase<List<string>>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, List<string>? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+
+				// 2) update ptr
+				_ptr += sizeof(Int32);
+
+				// 3) write
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					SerializerString._process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe List<string>? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(typeof(List<string>));
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<string>>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get 
+					var item_string = SerializerString._process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item_string);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// return) 
+				return obj_list;
+			}
+			public unsafe int process_get_size_of(List<string>? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'item count'
+				int size = sizeof(Int32);
+
+				// 2) add size of 'items'
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += SerializerString._process_get_size_of(iter_item.Current);
+				}
+
+				return size;
+			}
+		}
 		public class SerializerList_no_typed<T> : IBase<T>
 		{
 			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
@@ -3438,6 +3686,112 @@ namespace CGDK
 				return sizeof(Int32) + obj_list.Count() * sizeof(V);
 			}
 		}
+		public class SerializerList_obejct_string : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<List<string>>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// 4) write
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					SerializerString._process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(typeof(List<string>));
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<string>>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get 
+					var item_string = SerializerString._process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item_string);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// return) 
+				return obj_list;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'item count'
+				int size = sizeof(Int32);
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<string>>(_object);
+
+				// 2) add size of 'items'
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += SerializerString._process_get_size_of(iter_item.Current);
+				}
+
+				return size;
+			}
+		}
+
 		public class SerializerList_object_no_typed : IBase<object>
 		{
 			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
@@ -4124,56 +4478,56 @@ namespace CGDK
 				var type_value = types[1];
 
 				if (type_key == typeof(char))
-					return BuildSerializer_Dictionary_typed_key<T, char>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, char>(type_value);
 				else if (type_key == typeof(sbyte))
-					return BuildSerializer_Dictionary_typed_key<T, sbyte>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, sbyte>(type_value);
 				else if (type_key == typeof(byte))
-					return BuildSerializer_Dictionary_typed_key<T, byte>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, byte>(type_value);
 				else if (type_key == typeof(short))
-					return BuildSerializer_Dictionary_typed_key<T, short>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, short>(type_value);
 				else if (type_key == typeof(ushort))
-					return BuildSerializer_Dictionary_typed_key<T, ushort>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, ushort>(type_value);
 				else if (type_key == typeof(int))
-					return BuildSerializer_Dictionary_typed_key<T, int>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, int>(type_value);
 				else if (type_key == typeof(uint))
-					return BuildSerializer_Dictionary_typed_key<T, uint>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, uint>(type_value);
 				else if (type_key == typeof(long))
-					return BuildSerializer_Dictionary_typed_key<T, long>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, long>(type_value);
 				else if (type_key == typeof(ulong))
-					return BuildSerializer_Dictionary_typed_key<T, ulong>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, ulong>(type_value);
 				else if (type_key == typeof(float))
-					return BuildSerializer_Dictionary_typed_key<T, float>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, float>(type_value);
 				else if (type_key == typeof(double))
-					return BuildSerializer_Dictionary_typed_key<T, double>(type_value);
+					return BuildSerializer_Dictionary_typed_key_primitive<T, double>(type_value);
 				else if (type_key == typeof(string))
-					return BuildSerializer_Dictionary_typed_key<T, string>(type_value);
+					return BuildSerializer_Dictionary_typed_key_string<T>(type_value);
 				else
 					return BuildSerializer_Dictionary_typed_o<T>(type_value);
 			}
-			private static object? BuildSerializer_Dictionary_typed_key<T, K>(Type _type_second) where K : notnull
+			private static object? BuildSerializer_Dictionary_typed_key_primitive<T, K>(Type _type_second) where K : unmanaged
 			{
 				if (_type_second == typeof(char))
-					return BuildSerializer_Dictionary_typed_key_value<K, char>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, char>();
 				else if (_type_second == typeof(sbyte))
-					return BuildSerializer_Dictionary_typed_key_value<K, sbyte>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, sbyte>();
 				else if (_type_second == typeof(byte))
-					return BuildSerializer_Dictionary_typed_key_value<K, byte>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, byte>();
 				else if (_type_second == typeof(short))
-					return BuildSerializer_Dictionary_typed_key_value<K, short>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, short>();
 				else if (_type_second == typeof(ushort))
-					return BuildSerializer_Dictionary_typed_key_value<K, ushort>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, ushort>();
 				else if (_type_second == typeof(int))
-					return BuildSerializer_Dictionary_typed_key_value<K, int>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, int>();
 				else if (_type_second == typeof(uint))
-					return BuildSerializer_Dictionary_typed_key_value<K, uint>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, uint>();
 				else if (_type_second == typeof(long))
-					return BuildSerializer_Dictionary_typed_key_value<K, long>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, long>();
 				else if (_type_second == typeof(ulong))
-					return BuildSerializer_Dictionary_typed_key_value<K, ulong>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, ulong>();
 				else if (_type_second == typeof(float))
-					return BuildSerializer_Dictionary_typed_key_value<K, float>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, float>();
 				else if (_type_second == typeof(double))
-					return BuildSerializer_Dictionary_typed_key_value<K, double>();
+					return BuildSerializer_Dictionary_typed_key_value_primitive<K, double>();
 				else if (_type_second == typeof(string))
 					return BuildSerializer_Dictionary_typed_key_value<K, string>();
 				else if (typeof(System.Collections.IList).IsAssignableFrom(_type_second))
@@ -4182,6 +4536,39 @@ namespace CGDK
 					return BuildSerializer_Dictionary_typed_key_Directory<T, K>(_type_second);
 				else
 					return BuildSerializer_Dictionary_typed_key_o<T, K>();
+			}
+			private static object? BuildSerializer_Dictionary_typed_key_string<T>(Type _type_second)
+			{
+				if (_type_second == typeof(char))
+					return BuildSerializer_Dictionary_typed_key_value<string, char>();
+				else if (_type_second == typeof(sbyte))
+					return BuildSerializer_Dictionary_typed_key_value<string, sbyte>();
+				else if (_type_second == typeof(byte))
+					return BuildSerializer_Dictionary_typed_key_value<string, byte>();
+				else if (_type_second == typeof(short))
+					return BuildSerializer_Dictionary_typed_key_value<string, short>();
+				else if (_type_second == typeof(ushort))
+					return BuildSerializer_Dictionary_typed_key_value<string, ushort>();
+				else if (_type_second == typeof(int))
+					return BuildSerializer_Dictionary_typed_key_value<string, int>();
+				else if (_type_second == typeof(uint))
+					return BuildSerializer_Dictionary_typed_key_value<string, uint>();
+				else if (_type_second == typeof(long))
+					return BuildSerializer_Dictionary_typed_key_value<string, long>();
+				else if (_type_second == typeof(ulong))
+					return BuildSerializer_Dictionary_typed_key_value<string, ulong>();
+				else if (_type_second == typeof(float))
+					return BuildSerializer_Dictionary_typed_key_value<string, float>();
+				else if (_type_second == typeof(double))
+					return BuildSerializer_Dictionary_typed_key_value<string, double>();
+				else if (_type_second == typeof(string))
+					return BuildSerializer_Dictionary_typed_key_value<string, string>();
+				else if (typeof(System.Collections.IList).IsAssignableFrom(_type_second))
+					return BuildSerializer_Dictionary_typed_key_List<T, string>(_type_second);
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_type_second))
+					return BuildSerializer_Dictionary_typed_key_Directory<T, string>(_type_second);
+				else
+					return BuildSerializer_Dictionary_typed_key_o<T, string>();
 			}
 			private static object? BuildSerializer_Dictionary_typed_key_List<T, K>(Type _type_second) where K : notnull
 			{
@@ -4275,60 +4662,60 @@ namespace CGDK
 				var type_key = types[0];
 
 				if (type_key == typeof(char))
-					return BuildSerializer_Dictionary_object_typed_key<char>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<char>(_type_object);
 				else if (type_key == typeof(sbyte))
-					return BuildSerializer_Dictionary_object_typed_key<sbyte>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<sbyte>(_type_object);
 				else if (type_key == typeof(byte))
-					return BuildSerializer_Dictionary_object_typed_key<byte>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<byte>(_type_object);
 				else if (type_key == typeof(short))
-					return BuildSerializer_Dictionary_object_typed_key<short>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<short>(_type_object);
 				else if (type_key == typeof(ushort))
-					return BuildSerializer_Dictionary_object_typed_key<ushort>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<ushort>(_type_object);
 				else if (type_key == typeof(int))
-					return BuildSerializer_Dictionary_object_typed_key<int>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<int>(_type_object);
 				else if (type_key == typeof(uint))
-					return BuildSerializer_Dictionary_object_typed_key<uint>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<uint>(_type_object);
 				else if (type_key == typeof(long))
-					return BuildSerializer_Dictionary_object_typed_key<long>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<long>(_type_object);
 				else if (type_key == typeof(ulong))
-					return BuildSerializer_Dictionary_object_typed_key<ulong>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<ulong>(_type_object);
 				else if (type_key == typeof(float))
-					return BuildSerializer_Dictionary_object_typed_key<float>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<float>(_type_object);
 				else if (type_key == typeof(double))
-					return BuildSerializer_Dictionary_object_typed_key<double>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_primitive<double>(_type_object);
 				else if (type_key == typeof(string))
-					return BuildSerializer_Dictionary_object_typed_key<string>(_type_object);
+					return BuildSerializer_Dictionary_object_typed_key_string(_type_object);
 				else
 					return null;
 			}
-			private static object? BuildSerializer_Dictionary_object_typed_key<K>(Type _type_object) where K : notnull
+			private static object? BuildSerializer_Dictionary_object_typed_key_primitive<K>(Type _type_object) where K : unmanaged
 			{
 				// 2) get argument type
 				var types = _type_object.GetGenericArguments();
 				var type_value = types[1];
 
 				if (type_value == typeof(char))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, char>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, char>();
 				else if (type_value == typeof(sbyte))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, sbyte>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, sbyte>();
 				else if (type_value == typeof(byte))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, byte>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, byte>();
 				else if (type_value == typeof(short))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, short>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, short>();
 				else if (type_value == typeof(ushort))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, ushort>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, ushort>();
 				else if (type_value == typeof(int))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, int>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, int>();
 				else if (type_value == typeof(uint))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, uint>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, uint>();
 				else if (type_value == typeof(long))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, long>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, long>();
 				else if (type_value == typeof(ulong))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, ulong>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, ulong>();
 				else if (type_value == typeof(float))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, float>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, float>();
 				else if (type_value == typeof(double))
-					return BuildSerializer_Dictionary_object_typed_key_value<K, double>();
+					return BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, double>();
 				else if (type_value == typeof(string))
 					return BuildSerializer_Dictionary_object_typed_key_value<K, string>();
 				else if (typeof(System.Collections.IList).IsAssignableFrom(type_value))
@@ -4337,6 +4724,43 @@ namespace CGDK
 					return BuildSerializer_Dictionary_object_typed_key_Directory<K>(_type_object);
 				else
 					return BuildSerializer_Dictionary_object_key_o<K>(type_value); ;
+			}
+			private static object? BuildSerializer_Dictionary_object_typed_key_string(Type _type_object)
+			{
+				// 2) get argument type
+				var types = _type_object.GetGenericArguments();
+				var type_value = types[1];
+
+				if (type_value == typeof(char))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, char>();
+				else if (type_value == typeof(sbyte))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, sbyte>();
+				else if (type_value == typeof(byte))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, byte>();
+				else if (type_value == typeof(short))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, short>();
+				else if (type_value == typeof(ushort))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, ushort>();
+				else if (type_value == typeof(int))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, int>();
+				else if (type_value == typeof(uint))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, uint>();
+				else if (type_value == typeof(long))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, long>();
+				else if (type_value == typeof(ulong))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, ulong>();
+				else if (type_value == typeof(float))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, float>();
+				else if (type_value == typeof(double))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, double>();
+				else if (type_value == typeof(string))
+					return BuildSerializer_Dictionary_object_typed_key_value<string, string>();
+				else if (typeof(System.Collections.IList).IsAssignableFrom(type_value))
+					return BuildSerializer_Dictionary_object_typed_key_List<string>(_type_object);
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(type_value))
+					return BuildSerializer_Dictionary_object_typed_key_Directory<string>(_type_object);
+				else
+					return BuildSerializer_Dictionary_object_key_o<string>(type_value); ;
 			}
 			private static object? BuildSerializer_Dictionary_object_typed_key_List<K>(Type _type_object) where K : notnull
 			{
@@ -4382,6 +4806,10 @@ namespace CGDK
 				SerializerDictionary<K, V>.serializer_value = ProcessGetSerializer<V>();
 				return created;
 			}
+			private static SerializerDictionary_primitive_primitive<K, V> BuildSerializer_Dictionary_typed_key_value_primitive<K, V>() where K:unmanaged where V:unmanaged
+			{
+				return new SerializerDictionary_primitive_primitive<K, V>();
+			}
 			private static SerializerDictionary<T, K, object> BuildSerializer_Dictionary_typed_key_o<T, K>() where K : notnull
 			{
 				// 1) create Builder
@@ -4409,7 +4837,6 @@ namespace CGDK
 				SerializerDictionary<T, object, object>.serializer_value = (IBase<object>?)ProcessGetSerializer_object(types_argument[1]);
 				return created;
 			}
-
 			private static SerializerDictionary_object_typed<K, V> BuildSerializer_Dictionary_object_typed_key_value<K, V>() where K : notnull
 			{
 				var created = new SerializerDictionary_object_typed<K, V>();
@@ -4417,18 +4844,22 @@ namespace CGDK
 				created.serializer_value = ProcessGetSerializer<V>();
 				return created;
 			}
-			private static SerializerDictionary_object_no_tuped<K, object> BuildSerializer_Dictionary_object_key_o<K>(Type _type) where K : notnull
+			private static SerializerDictionary_object_primitive_primitive<K, V> BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, V>() where K : unmanaged where V : unmanaged
 			{
-				var created = new SerializerDictionary_object_no_tuped<K, object>();
+				return new SerializerDictionary_object_primitive_primitive<K, V>();
+			}
+			private static SerializerDictionary_object_no_typed<K, object> BuildSerializer_Dictionary_object_key_o<K>(Type _type) where K : notnull
+			{
+				var created = new SerializerDictionary_object_no_typed<K, object>();
 				created.type_create = _type;
 				var types_argument = _type.GetGenericArguments();
 				created.serializer_key = ProcessGetSerializer<K>();
 				created.serializer_value = (IBase<object>?)ProcessGetSerializer_object(types_argument[1]);
 				return created;
 			}
-			private static SerializerDictionary_object_no_tuped<object, V> BuildSerializer_Dictionary_object_key_value<V>(Type _type)
+			private static SerializerDictionary_object_no_typed<object, V> BuildSerializer_Dictionary_object_key_value<V>(Type _type)
 			{
-				var created = new SerializerDictionary_object_no_tuped<object, V>();
+				var created = new SerializerDictionary_object_no_typed<object, V>();
 				var types_argument = _type.GetGenericArguments();
 				created.type_create = _type;
 				created.serializer_key = (IBase<object>?)ProcessGetSerializer_object(types_argument[0]);
@@ -4696,7 +5127,7 @@ namespace CGDK
 				else if (type_param == typeof(double))
 					return BuildSerailizer_List_typed_primitive<double>();
 				else if (type_param == typeof(string))
-					return BuildSerailizer_List_typed<string>();
+					return BuildSerailizer_List_string();
 				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(type_param))
 					return BuildSerailizer_List_typed_Dictionary(_type);
 				else if (typeof(System.Collections.IList).IsAssignableFrom(type_param))
@@ -4774,7 +5205,7 @@ namespace CGDK
 				else if (type_param == typeof(double))
 					return BuildSerailizer_List_object_typed_primitive<double>();
 				else if (type_param == typeof(string))
-					return BuildSerailizer_List_object_typed<string>();
+					return BuildSerailizer_List_object_string();
 				else
 					return null;
 			}
@@ -4784,6 +5215,11 @@ namespace CGDK
 				SerializerList_typed<V>.serializer_value = ProcessGetSerializer<V>();
 				return created;
 			}
+			private static SerializerList_string BuildSerailizer_List_string()
+			{
+				return new SerializerList_string();
+			}
+
 			private static SerializerList_typed_primitive<V> BuildSerailizer_List_typed_primitive<V>() where V : unmanaged
 			{
 				var created = new SerializerList_typed_primitive<V>();
@@ -4806,6 +5242,11 @@ namespace CGDK
 				var created = new SerializerList_object_typed_primitive<V>();
 				return created;
 			}
+			private static SerializerList_obejct_string BuildSerailizer_List_object_string()
+			{
+				return new SerializerList_obejct_string();
+			}
+
 			private static SerializerList_object_no_typed BuildSerailizer_List_object_no_typed(Type _type)
 			{
 				var created = new SerializerList_object_no_typed();
@@ -4960,7 +5401,7 @@ namespace CGDK
 				}
 
 				// 4) casting
-				var result_casted = Unsafe.As<IBase<T>>(result);
+				var result_casted = (IBase<T>?)result;
 
 				// check)
 				Debug.Assert(result_casted != null);
@@ -5097,7 +5538,7 @@ namespace CGDK
 		}
 		public static class Get_Dictionary<K,V> where K : notnull
 		{
-			static readonly public IBase<Dictionary<K,V>> instance = (SerializerDictionary<K, V>)Builder.ProcessGetSerializer_Dictionary<K, V>();
+			static readonly public IBase<Dictionary<K,V>> instance = Builder.ProcessGetSerializer_Dictionary<K, V>();
 		}
 		public static class Get_List<V>
 		{
