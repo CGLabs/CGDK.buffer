@@ -38,6 +38,4 @@
     <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;..\..\dll\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;..\..\dll\&quot; /y" />
   </Target>
 
-  <Import Project="..\buffer\buffer.projitems" Label="Shared" />
-
 </Project>

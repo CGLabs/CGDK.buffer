@@ -3,12 +3,11 @@
   <PropertyGroup>
     <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
-    <SharedGUID>82785382-b830-4f2c-bb62-6b50144a173a</SharedGUID>
+    <SharedGUID>e8124391-1eaa-4a6b-a713-cc49a8b6a173</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>CGDK.buffer.unit_test.performance.msgpack</Import_RootNamespace>
+    <Import_RootNamespace>CGDK.buffer.unit_test.performance.memorypack</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)unit_test.performance_msgpack.cs" />
   </ItemGroup>
 </Project>

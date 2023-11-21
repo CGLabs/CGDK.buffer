@@ -15,7 +15,13 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.perfo
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance_protobuf-net", "unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.shproj", "{3DFAB9A5-71D0-49C6-9A5F-6CA630AE2262}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance_magpack.NET.framework", "unit_test.performance.msgpack\NET.framework\CGDK.buffer.unit_test.performance_magpack.NET.framework.csproj", "{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance.memorypack", "unit_test.performance.memorypack\CGDK.buffer.unit_test.performance.memorypack.shproj", "{DA495701-8DC6-4339-9057-B3B60677A67E}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance.msgpack", "unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.shproj", "{B093C521-1A6C-4E21-8744-BFA63981C9A0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance_msgpack.NET.framework", "unit_test.performance.msgpack\NET.framework\CGDK.buffer.unit_test.performance_msgpack.NET.framework.csproj", "{CA376937-4AD4-47A4-A9AB-63734A98A947}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGDK.buffer.unit_test.performance.memorypack.NET.framework", "unit_test.performance.memorypack\NET.framework\CGDK.buffer.unit_test.performance.memorypack.NET.framework.csproj", "{F36D6DEE-71A8-4459-A492-73FC83AA0903}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,14 +55,22 @@ Global
 		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Release|x64.ActiveCfg = Release|x64
 		{A72A28BE-5D6B-4A86-B601-A9EB1E11FB47}.Release|x64.Build.0 = Release|x64
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Debug|x64.Build.0 = Debug|Any CPU
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Release|x64.ActiveCfg = Release|Any CPU
-		{A20BEE18-CBBC-4B52-BFAA-5220867E9C5A}.Release|x64.Build.0 = Release|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Debug|x64.Build.0 = Debug|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Release|x64.ActiveCfg = Release|Any CPU
+		{CA376937-4AD4-47A4-A9AB-63734A98A947}.Release|x64.Build.0 = Release|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Debug|x64.Build.0 = Debug|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Release|x64.ActiveCfg = Release|Any CPU
+		{F36D6DEE-71A8-4459-A492-73FC83AA0903}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -70,6 +84,9 @@ Global
 		unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.projitems*{3333ffcf-891c-43b9-9497-e590843d0e0a}*SharedItemsImports = 4
 		unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.projitems*{3dfab9a5-71d0-49c6-9a5f-6ca630ae2262}*SharedItemsImports = 13
 		unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.projitems*{a72a28be-5d6b-4a86-b601-a9eb1e11fb47}*SharedItemsImports = 4
+		unit_test.performance.memorypack\CGDK.buffer.unit_test.performance.memorypack.projitems*{b093c521-1a6c-4e21-8744-bfa63981c9a0}*SharedItemsImports = 13
+		unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.projitems*{b093c521-1a6c-4e21-8744-bfa63981c9a0}*SharedItemsImports = 13
 		unit_test.functional\CGDK.buffer.unit_test.functional.projitems*{d52d57ad-d303-4f59-a918-0f6d1458e543}*SharedItemsImports = 13
+		unit_test.performance.memorypack\CGDK.buffer.unit_test.performance.memorypack.projitems*{da495701-8dc6-4339-9057-b3b60677a67e}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

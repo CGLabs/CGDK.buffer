@@ -2083,6 +2083,7 @@ namespace CGDBuffer_CSharp_UnitTest
 			}
 		}
 
+	#if NET
 		[TestMethod]
 		public void test_buffer_append_Numeric()
 		{
@@ -2118,7 +2119,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				var value6 = bufferTemp.extract<Matrix4x4>();
 			}
 		}
-
+	#endif
 
 		public struct TEST
 		{
@@ -2306,11 +2307,11 @@ namespace CGDBuffer_CSharp_UnitTest
 		public class TEST_CLASS1
 		{
 			public int a;
-		#if NET
+#if NET
 			public List<int>? b;
-		#else
+#else
 			public List<int> b;
-		#endif
+#endif
 
 			[CGDK.Attribute.Serializable]
 			int c { get { return 100;} set { } }
@@ -2329,11 +2330,11 @@ namespace CGDBuffer_CSharp_UnitTest
 			public UInt32 f;
 
 			[CGDK.Attribute.Serializable]
-		#if NET
+#if NET
 			public int[]? g;
-		#else
+#else
 			public int[] g;
-		#endif
+#endif
 		};
 
 		[TestMethod]
@@ -2553,7 +2554,7 @@ namespace CGDBuffer_CSharp_UnitTest
 
 				var result = buf_temp.extract<List<ENUM_A>>();
 
-				Assert.IsTrue(result.Count() == 3);
+				Assert.IsTrue(result.Count == 3);
 				Assert.IsTrue(result[0] == ENUM_A.A);
 				Assert.IsTrue(result[1] == ENUM_A.B);
 				Assert.IsTrue(result[2] == ENUM_A.C);
