@@ -339,7 +339,7 @@ namespace UnitTest_Performance_Protobuf
 		};
 
 		[TestMethod]
-		public void pbn_benchmark_01_primitive()
+		public void PrBfn_benchmark_01_primitive()
 		{
 			MemoryStream memSerialize = new MemoryStream(4096);
 
@@ -365,7 +365,7 @@ namespace UnitTest_Performance_Protobuf
 			}
 		}
 		[TestMethod]
-		public void pbn_benchmark_02_list_int()
+		public void PrBfn_benchmark_02_list_int()
 		{
 			var tempObject = new TEST3 { value0 = list_int };
 
@@ -385,7 +385,7 @@ namespace UnitTest_Performance_Protobuf
 			}
 		}
 		[TestMethod]
-		public void pbn_benchmark_03_string()
+		public void PrBfn_benchmark_03_string()
 		{
 			MemoryStream memSerialize = new MemoryStream(4096);
 
@@ -413,7 +413,7 @@ namespace UnitTest_Performance_Protobuf
 			}
 		}
 		[TestMethod]
-		public void pbn_benchmark_04_list_string()
+		public void PrBfn_benchmark_04_list_string()
 		{
 			var tempObject = new TEST4 { value0 = list_string };
 
@@ -433,7 +433,47 @@ namespace UnitTest_Performance_Protobuf
 			}
 		}
 		[TestMethod]
-		public void pbn_benchmark_05_key_value_string_list_int()
+		public void PrBfn_benchmark_05_key_value_int_int()
+		{
+			//var tempObject = new TEST5 { value0 = dictionary_int_int };
+
+			//MemoryStream memSerialize = new MemoryStream();
+
+			//for (int i = 0; i < _TEST_COUNT; ++i)
+			//{
+			//	memSerialize.SetLength(0);
+
+			//	// 1) 값 써넣기
+			//	ProtoBuf.Serializer.Serialize<TEST5>((Stream)memSerialize, tempObject);
+
+			//	memSerialize.Seek(0, SeekOrigin.Begin);
+
+			//	// 2) 값 읽기
+			//	var tempDeserialize = Serializer.Deserialize<TEST5>(memSerialize);
+			//}
+		}
+		[TestMethod]
+		public void PrBfn_benchmark_05_key_value_string_string()
+		{
+			//var tempObject = new TEST5 { value0 = dictionary_string_string };
+
+			//MemoryStream memSerialize = new MemoryStream();
+
+			//for (int i = 0; i < _TEST_COUNT; ++i)
+			//{
+			//	memSerialize.SetLength(0);
+
+			//	// 1) 값 써넣기
+			//	ProtoBuf.Serializer.Serialize<TEST5>((Stream)memSerialize, tempObject);
+
+			//	memSerialize.Seek(0, SeekOrigin.Begin);
+
+			//	// 2) 값 읽기
+			//	var tempDeserialize = Serializer.Deserialize<TEST5>(memSerialize);
+			//}
+		}
+		[TestMethod]
+		public void PrBfn_benchmark_07_key_value_string_list_int()
 		{
 			var tempObject = new TEST5 { value0 = dictionary_string_List_int };
 
@@ -453,7 +493,7 @@ namespace UnitTest_Performance_Protobuf
 			}
 		}
 		[TestMethod]
-		public void pbn_benchmark_06_struct_primitive()
+		public void PrBfn_benchmark_08_struct_primitive()
 		{
 			var tempObject = new TEST
 			{
@@ -484,7 +524,7 @@ namespace UnitTest_Performance_Protobuf
 			}
 		}
 		[TestMethod]
-		public void pbn_benchmark_07_struct_composite()
+		public void PrBfn_benchmark_09_struct_composite()
 		{
 			var tempObject = new TEST_EX();
 			tempObject.value0 = 100;
@@ -510,7 +550,7 @@ namespace UnitTest_Performance_Protobuf
 		}
 
 		[TestMethod]
-		public void pbn_benchmark_extra_01_general()
+		public void PrBfn_benchmark_extra_01_general()
 		{
 			MemoryStream memSerialize = new MemoryStream(4096);
 
@@ -545,7 +585,7 @@ namespace UnitTest_Performance_Protobuf
 		}
 
 		[TestMethod]
-		public void pbn_benchmark_extra_02_multi_leveled()
+		public void PrBfn_benchmark_extra_02_multi_leveled()
 		{
 			TEST6 tempObject = new TEST6();
 
@@ -576,7 +616,7 @@ namespace UnitTest_Performance_Protobuf
 
 
 		[TestMethod]
-		public void pbn_benchmark_extra_03_multi_leveled3()
+		public void PrBfn_benchmark_extra_03_multi_leveled3()
 		{
 			TEST_X	tempObject = new TEST_X();
 
@@ -602,7 +642,7 @@ namespace UnitTest_Performance_Protobuf
 		}
 
 		[TestMethod]
-		public void pbn_benchmark_extra_04_append_peek_string()
+		public void PrBfn_benchmark_extra_04_append_peek_string()
 		{
 			TEST2[] tempObject = new TEST2[8];
 			MemoryStream[] memSerialize = new MemoryStream[8];

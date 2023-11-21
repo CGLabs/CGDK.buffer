@@ -14,10 +14,17 @@
 //*                                                                           *
 //*****************************************************************************
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
+using System.Drawing;
+using System.Linq;
+using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 
 //----------------------------------------------------------------------------
@@ -31,6685 +38,5070 @@ using System.Runtime.InteropServices;
 //----------------------------------------------------------------------------
 namespace CGDK
 {
-
-namespace Attribute
-{
-	public class Serializable : System.Attribute
+	namespace Attribute
 	{
-		public Serializable()
+		public class Serializable : System.Attribute
 		{
+			public Serializable()
+			{
+			}
 		}
 	}
-}
 	
-namespace Exception
-{
-	public class Serialize : System.Exception
+	namespace Exception
 	{
-		public Serialize(long _offset)
+		public class Serialize : System.Exception
 		{
-			this.m_Offset=_offset;
+			public Serialize(long _offset)
+			{
+				this.m_Offset=_offset;
+			}
+			public Serialize(long _offset, string _message) : base(_message)
+			{
+				this.m_Offset=_offset;
+			}
+
+			public long offset	{ get {return this.m_Offset;}}
+
+			private long m_Offset;
 		}
-		public Serialize(long _offset, string _message) : base(_message)
-		{
-			this.m_Offset=_offset;
-		}
-
-		public long offset	{ get {return this.m_Offset;}}
-
-		private long m_Offset;
-	}
-}
-
-public struct buffer
-{
-// constructor/destructor) 
-#if NET
-	public buffer(byte[]? _buffer, int _offset = 0, int _count = 0)
-#else
-	public buffer(byte[] _buffer, int _offset = 0, int _count = 0)
-#endif
-	{
-		this.m_buffer = _buffer;
-		this.m_offset = _offset;
-		this.m_count = _count;
-	}
-	public buffer(buffer _buffer)
-	{
-		this.m_buffer = _buffer.m_buffer;
-		this.m_offset = _buffer.m_offset;
-		this.m_count = _buffer.m_count;
-	}
-	public buffer(int _Size)
-	{
-		this.m_buffer = new byte[_Size];
-		this.m_offset = 0;
-		this.m_count = 0;
 	}
 
-	public buffer clone()
+	public struct buffer
 	{
-		// 1) 새로운 버퍼를 생성한다.
-		byte[] temp = new byte[capacity];
-
-		// 2) [문자열]을 복사해 넣는다.
-		if(this.m_buffer != null)
-			System.Buffer.BlockCopy(this.m_buffer, 0, temp, 0, capacity);
-
-		// 3) 적용한다.
-		return new buffer(temp, m_offset, m_count);
-	}
-
-// definitions) 
-	public const uint	SIZE_OF_CRC	 = sizeof(uint);
-
-	private static bool _is_serializable_type(Type _type)
-	{
-		if(_type.IsSerializable==true)
-			return	true;
-
-		return _type.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false).Length != 0;
-	}
-
-
-// publics) 
-// 1) 생성/버퍼설정
-	public void		alloc(int _Size)
-	{
-		this.m_buffer = new byte[_Size];
-		this.m_offset = 0;
-		this.m_count = 0;
-	}
-	public void		set_buffer(byte[] _buffer, int _offset, int _length)
-	{
-		// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
-		Debug.Assert((_offset+_length) <= _buffer.Length);
-
-		// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
-		if ((_offset+_length) > _buffer.Length)
-		{
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-		}
-
-		// 1) 값을 적용
-		this.m_buffer = _buffer;
-		this.m_offset = _offset;
-		this.m_count = _length;
-	}
-	public void		set_buffer(byte[] _buffer, int _offset)
-	{
-		// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
-		Debug.Assert(_offset <= _buffer.Length);
-
-		// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
-		if (_offset>_buffer.Length)
-		{
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-		}
-
-		// 1) 값을 적용한다.
-		this.m_buffer = _buffer;
-		this.m_offset = _offset;
-		this.m_count = _buffer.Length-_offset;
-	}
-#if NET
-	public byte[]?	clear()
-#else
-	public byte[] clear()
-#endif
-	{
-		// 1) 임시로 보관
-		var temp = this.m_buffer;
-
-		// 2) Reset한다.
-		this.m_buffer = null;
-		this.m_offset = 0;
-		this.m_count = 0;
-
-		// 3) 저장되어 있던 byte[]를 리턴해 준다.
-		return temp;
-	}
-
-// 2) Basic operations
-	public bool		empty()														{ return this.m_buffer==null;}
-	public int		get_remained()												{ return (this.m_buffer!=null) ? (this.m_buffer.Length - this.m_offset - this.m_count) : 0; }
-
-	public int		capacity
-	{
-			get { return (this.m_buffer!=null) ? this.m_buffer.Length : 0; }
-	}
-
-		// - for C++ User
-#if NET
-	public byte[]?	data														{ get { return this.m_buffer;} set { this.m_buffer = value;}}
-#else
-	public byte[]	data														{ get { return this.m_buffer;} set { this.m_buffer = value;}}
-#endif
-	public int		offset														{ get { return this.m_offset;} set { this.m_offset = value;}}
-	public int		size														{ get { return this.m_count;} set { this.m_count = value;}}
-																				  
-	// - for C# User															  
-#if NET
-	public byte[]?	Buffer														{ get { return this.m_buffer; } set { this.m_buffer = value; } }
-	public byte[]?	Array														{ get { return this.m_buffer; } set { this.m_buffer = value; } }
-#else
-	public byte[]	Buffer														{ get { return this.m_buffer; } set { this.m_buffer = value; } }
-	public byte[]	Array														{ get { return this.m_buffer; } set { this.m_buffer = value; } }
-#endif
-
-	public int		Offset														{ get { return this.m_offset;}	set { this.m_offset = value;}}
-	public int		Count														{ get { return this.m_count;} set { this.m_count = value;}}
-
-	public static buffer operator +(buffer _lhs, int _rhs)						
-	{
-		// check) 
-		Debug.Assert(_lhs.m_buffer != null && _rhs<=_lhs.Count); 
-
-		// check)
-		if(_lhs.Array == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if(_rhs > _lhs.Count)
-			throw new System.OverflowException("buffer overflow");
-
-		// 1) create
-		return new buffer(_lhs.Array, _lhs.offset + _rhs, _lhs.Count - _rhs);
-	}
-	public static buffer operator -(buffer _lhs, int _rhs)
-	{
-		// check) 
-		Debug.Assert(_lhs.m_buffer != null && _lhs.offset >= _rhs && _rhs <= (_lhs.capacity - _lhs.Count)); 
-
-		// check)
-		if(_lhs.Array == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if(_lhs.offset < _rhs || _rhs > (_lhs.capacity - _lhs.Count))
-			throw new System.OverflowException("buffer overflow");
-
-		// 1) create
-		return new buffer(_lhs.Array, _lhs.offset - _rhs, _lhs.Count + _rhs);
-	}
-	public static buffer operator ^(buffer _lhs, int _rhs)		
-	{
-		// check) 
-		Debug.Assert(_lhs.m_buffer != null && _rhs <= _lhs.capacity); 
-
-		// check)
-		if(_lhs.Array == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if(_rhs > _lhs.capacity)
-			throw new System.OverflowException("buffer overflow");
-
-		// 1) create 
-		return new buffer(_lhs.Array, _lhs.offset, _rhs);
-	}
-	public static implicit operator ArraySegment<byte>(buffer _rhs)
-	{
-		// check) 
-		Debug.Assert(_rhs.Array != null); 
-		
-		// 1) create 
-		return new ArraySegment<byte>(_rhs.Array, _rhs.offset, _rhs.Count);
-	}
-	public static explicit operator buffer(ArraySegment<byte> _rhs)
-	{
-		// 1) create 
-		return new buffer(_rhs.Array, _rhs.Offset, _rhs.Count);
-	}
-
-// 3) append(붙이기)
-	public void			append_skip				(int _amount)						{ Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _amount);	this.m_count += _amount; }
-	public void			append					(buffer _object)					{ this._append_buffer(_object);}
-	public void			append					(char _object)						
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(char));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(char))
-			throw new System.OverflowException("buffer overflow");
+	#if NET
+		public buffer(byte[]? _buffer, int _offset = 0, int _count = 0)
+	#else
+		public buffer(byte[] _buffer, int _offset = 0, int _count = 0)
 	#endif
+		{
+			this.m_buffer = _buffer;
+			this.m_offset = _offset;
+			this.m_count = _count;
+		}
+		public buffer(buffer _buffer)
+		{
+			this.m_buffer = _buffer.m_buffer;
+			this.m_offset = _buffer.m_offset;
+			this.m_count = _buffer.m_count;
+		}
+		public buffer(int _Size)
+		{
+			this.m_buffer = new byte[_Size];
+			this.m_offset = 0;
+			this.m_count = 0;
+		}
 
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + this.m_count);
+		public buffer clone()
+		{
+			// 1) 새로운 버퍼를 생성한다.
+			byte[] temp = new byte[capacity];
 
-		// 2) add size
-		this.m_count += sizeof(char);
-	}
-	public void			append					(sbyte _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(sbyte));
+			// 2) [문자열]을 복사해 넣는다.
+			if(this.m_buffer != null)
+				System.Buffer.BlockCopy(this.m_buffer, 0, temp, 0, capacity);
 
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
+			// 3) 적용한다.
+			return new buffer(temp, m_offset, m_count);
+		}
 
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(sbyte))
-			throw new System.OverflowException("buffer overflow");
+		// definitions) 
+		public const uint	SIZE_OF_CRC	 = sizeof(uint);
+
+		// 1) 생성/버퍼설정
+		public void		alloc(int _Size)
+		{
+			this.m_buffer = new byte[_Size];
+			this.m_offset = 0;
+			this.m_count = 0;
+		}
+		public void		set_buffer(byte[] _buffer, int _offset, int _length)
+		{
+			// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
+			Debug.Assert((_offset+_length) <= _buffer.Length);
+
+			// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
+			if ((_offset+_length) > _buffer.Length)
+			{
+				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+			}
+
+			// 1) 값을 적용
+			this.m_buffer = _buffer;
+			this.m_offset = _offset;
+			this.m_count = _length;
+		}
+		public void		set_buffer(byte[] _buffer, int _offset)
+		{
+			// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
+			Debug.Assert(_offset <= _buffer.Length);
+
+			// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
+			if (_offset>_buffer.Length)
+			{
+				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+			}
+
+			// 1) 값을 적용한다.
+			this.m_buffer = _buffer;
+			this.m_offset = _offset;
+			this.m_count = _buffer.Length-_offset;
+		}
+	#if NET
+		public byte[]?	clear()
+	#else
+		public byte[] clear()
 	#endif
-
-		// 1) copy
-		this.m_buffer[this.m_offset+this.m_count]=(byte)_object; 
-			
-		// 2) add size
-		this.m_count += sizeof(sbyte); 
-	}
-	public void			append					(byte _object)						
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(byte));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(byte))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		this.m_buffer[this.m_offset + this.m_count] = _object; 
-			
-		// 2) add size
-		this.m_count += sizeof(byte); 
-	}
-	public unsafe void	append					(short _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(short)); 
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(short))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
 		{
-			*(short*)(dest + this.m_offset + this.m_count) = _object;
-		}
-		
-		// 2) add size
-		this.m_count += sizeof(short); 
-	}
-	public unsafe void	append					(ushort _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(ushort));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(ushort))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(ushort*)(dest + this.m_offset + this.m_count) = _object;
-		}
-
-		// 2) add size
-		this.m_count += sizeof(ushort); 
-	}
-	public unsafe void	append					(int _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(int));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(int))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(int*)(dest + this.m_offset + this.m_count) = _object;
-		}
-
-		// 2) add size
-		this.m_count += sizeof(int); 
-	}
-	public unsafe void	append					(uint _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(uint));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(uint))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(uint*)(dest + this.m_offset + this.m_count) = _object;
-		}
-			
-		// 2) add size
-		this.m_count += sizeof(uint);
-	}
-	public unsafe void	append					(long _object)						
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_buffer.Length-this.m_offset-this.m_count)>=sizeof(long));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(long))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(long*)(dest + this.m_offset + this.m_count) = _object;
-		}
-
-		// 2) add size
-		this.m_count += sizeof(long); 
-	}
-	public unsafe void	append					(ulong _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(ulong));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(ulong))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(ulong*)(dest + this.m_offset + this.m_count) = _object;
-		}
-			
-		// 2) add size
-		this.m_count += sizeof(ulong);
-	}
-	public unsafe void	append					(float _object)						
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(float));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(float))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(float*)(dest + this.m_offset + this.m_count) = _object;
-		}
-			
-		// 2) add size
-		this.m_count += sizeof(float); 
-	}
-	public unsafe void	append					(double _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(double));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(double))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-			
-		// 1) copy 
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(double*)(dest + this.m_offset + this.m_count) = _object;
-		}
-
-		// 2) add size
-		this.m_count += sizeof(double);
-	}
-	public void			append					(DateTime _object)
-	{
-		this.append(_object.Ticks);
-	}
-
-	public void			append<T>()
-	{
-		// 1) make temporary object
-		var temp = default(T);
-
-		// check) 
-		Debug.Assert(temp != null);
-
-		//// 2) append
-		//this.append<T>(temp);
-	}
-	private unsafe void	append_primitive(object _object, Type _type)
-	{
-		// - [버퍼] Pinned 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// - [버퍼_포인터]를 얻는다.
-		var ptr = pinnedArray.AddrOfPinnedObject();
-
-		try
-		{
-			// - casting
-			object temp = Convert.ChangeType(_object, _type);
-
-			// - write
-			Marshal.StructureToPtr(temp, ptr, false);
-
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-		}
-		catch (System.Exception _e)
-		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
-
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// Reraise) 
-			throw;
-		}
-	}
-
-	public unsafe void	append<T>			(T _object) where T : unmanaged, IComparable, IFormattable, IConvertible, IComparable<T>
-		{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-		// check)
-		Debug.Assert(typeof(T) == _object.GetType());
-
-	#if _USE_BOUND_CHECK
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		// 1) write
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(T*)(dest + this.m_offset + this.m_count) = _object;
-		}
-		// 2) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void	append<T,V>			(V _object) where T:unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(T));
-
-#if _USE_BOUND_CHECK
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-#endif
-
-		// 1) casting
-		var object_t = (T)Convert.ChangeType(_object, typeof(T));
-
-		// 2) write
-		fixed (byte* dest = this.m_buffer)
-		{
-			*(T*)(dest + this.m_offset + this.m_count) = object_t;
-		}
-		// 2) add count
-		this.m_count += sizeof(T);
-	}
-
-	public unsafe void	append<T>				(string _object) where T: System.IComparable<string>
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		fixed (byte* ptr = this.m_buffer)
-		fixed (char* str = _object)
-		{
-			// - get now ptr
-			var ptr_now = ptr + this.m_offset + this.m_count;
-
-			// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-			if (_object == null)
-			{
-				// - -1을 쓰고 끝낸다.
-				*(Int32*)ptr_now = -1;
-				this.m_count += sizeof(Int32);
-				return;
-			}
-
-			// 1) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
-			var string_length = _object.Length * sizeof(char);
-
-			// check)
-			Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= (sizeof(Int32) + string_length + sizeof(char)));
-
-			// 2) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-			*(Int32*)ptr_now = _object.Length + 1;
-
-			// 3) add size
-			ptr_now += sizeof(Int32);
-
-			// 4) [문자열]을 복사해 넣는다.
-			System.Buffer.MemoryCopy(str, ptr_now, this.m_buffer.Length - this.m_offset - this.m_count - sizeof(Int32), string_length + sizeof(char)); // NULL 포함 복사
-
-			// 5) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-			this.m_count += sizeof(Int32) + string_length + sizeof(char);
-		}
-	}
-	public unsafe void	append<T>				(ICollection<T> _object) where T: unmanaged, IComparable, IFormattable, IConvertible, IComparable<T>
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		fixed (byte* ptr = this.m_buffer)
-		{
-			var ptr_now = ptr + this.m_offset + this.m_count;
-
-			if (_object == null)
-			{
-				// - -1을 쓰고 끝낸다.
-				*(Int32*)ptr_now = -1;
-				this.m_count += sizeof(Int32);
-				return;
-			}
-
-			// - get size
-			var total_size = sizeof(Int32) + sizeof(T) * _object.Count;
-
-			// check)
-			Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= total_size);
-
-			// check)
-			if((this.m_buffer.Length - this.m_offset - this.m_count) < total_size)
-				throw new System.OverflowException("buffer overflow");
-
-			// - write size
-			*(Int32*)ptr_now = _object.Count;
-			ptr_now += sizeof(Int32);
-
-			// - copy values
-			foreach (var iter in _object)
-			{
-				*(T*)ptr_now = iter;
-				ptr_now += sizeof(T);
-			}
-
-			this.m_count += total_size;
-		}
-	}
-#if NET
-	public void		append<K,V>				(Dictionary<K,V> _object) where K:notnull
-#else
-	public void		append<K,V>				(Dictionary<K,V> _object)
-#endif
-
-	{
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-	#endif
-
-		// 1) [버퍼] Pinned 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
-		long offset = this.m_count;
-
-		try
-		{
-			// 3) 추가한다.
-			this._append_Dictionary(ptr, ref offset, _object as System.Collections.IDictionary, _object.GetType().GetGenericArguments());
-
-			// 4) Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// 5) 크기차를 구한다.
-			this.m_count = (int)offset;
-		}
-		catch (System.Exception _e)
-		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
-
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// Reraise) 
-			throw;
-		}
-	}
-			
-	public void		append<T>				(object _object)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null);
-
-#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-#endif
-
-		// 1) [버퍼] Pinned 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
-		long offset = this.m_count;
-
-		try
-		{
-			Type tmp = typeof(T);
-
-			if (tmp.IsPrimitive)
-			{
-				// - convert type
-				var  t = Convert.ChangeType(_object, tmp);
-
-				// - write
-				Marshal.StructureToPtr(t, new IntPtr(ptr + offset), false);
-
-				// - add offset
-				offset += (tmp != typeof(char)) ? Marshal.SizeOf(tmp) : 2;
-			}
-			else if (tmp.IsEnum)
-			{
-				var	type_enum = tmp.GetFields()[0].FieldType;
-
-				Marshal.StructureToPtr(Convert.ChangeType(_object, type_enum), new IntPtr(ptr + offset), false);
-
-				offset += Marshal.SizeOf(type_enum);
-			}
-			else if (tmp.IsValueType)
-			{
-				if(typeof(DateTime).Equals(tmp))
-				{
-					this._append_datetime(ptr, ref offset, _object);
-				}
-				else if(typeof(CGDK.buffer).Equals(tmp))
-				{
-					this._append_buffer(ptr, ref offset, (buffer)_object);
-				}
-				else
-				{
-					this._append_struct(ptr, ref offset, _object);
-				}
-			}
-			else if (tmp.IsArray)
-			{
-				this._append_Collection(ptr, ref offset, _object as System.Collections.ICollection, _object.GetType().GetElementType());
-			}
-			else if (typeof(string).Equals(tmp))
-			{
-                this._append(ptr, ref offset, _object as string);
-			}
-			else
-			{
-				var temp_object = _object as System.Collections.IDictionary;
-
-				if (temp_object != null)
-				{
-					this._append_Dictionary(ptr, ref offset, temp_object, tmp.GetGenericArguments());
-				}
-				else
-				{
-					var tempObject2 = _object as System.Collections.ICollection;
-
-					if (tempObject2 != null)
-					{
-						this._append_Collection(ptr, ref offset, tempObject2, _object.GetType().GetGenericArguments()[0]);
-					}
-					else if (tmp.IsClass)
-					{
-						this._append_class(ptr, ref offset, _object);
-					}
-					else
-					{
-						this._append_struct(ptr, ref offset, _object);
-					}
-				}
-			}
-
-			// 5) Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// 5) 크기차를 구한다.
-			this.m_count = (int)offset;
-		}
-		catch (System.Exception _e)
-		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
-
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// Reraise) 
-			throw;
-		}
-	}
-
-	public void		append					(object _object)
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-#endif
-
-		// 1) [버퍼] Pinned 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
-		long offset = this.m_count;
-
-		try
-		{
-			// check) null 일 경우 -1만 쓰고 끝냄
-			if (_object == null)
-			{
-				this.append((int) -1);
-				return;
-			}
-
-			// 3) 추가한다.
-			this._append(ptr, ref offset, _object);
-
-			// 4) Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// 5) 크기차를 구한다.
-			this.m_count = (int)offset;
-		}
-		catch (System.Exception _e)
-		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
-
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// Reraise) 
-			throw;
-		}
-	}
-	public void		append					(byte[] _buffer, int _offset, int _count)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _count);
-
-#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < _count)
-			throw new System.OverflowException("buffer overflow");
-#endif
-
-		// 1) block copy
-		System.Buffer.BlockCopy(_buffer, _offset, this.m_buffer, this.m_offset + this.m_count, _count);
-
-		this.m_count += _count; 
-	}
-	public void		append_text				(string _object)
-	{
-		// 1) 문자열을 배열로 변경하고 길이를 구한다.
-		var temp_array = _object.ToCharArray();
-		var iStringLength = temp_array.Length;
-
-		// check) 버퍼의 크기가 충분한가 확인한다.
-		Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + iStringLength * sizeof(char)) <= this.m_buffer.Length);
-
-#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - this.m_count) < iStringLength)
-			throw new System.OverflowException("buffer overflow");
-#endif
-
-		// 2) [문자열]을 복사해 넣는다.
-		System.Buffer.BlockCopy(temp_array, 0, this.m_buffer, this.m_offset + this.m_count, iStringLength * sizeof(char));
-
-		// 3) [버퍼_길이]를 더해준다.
-		this.m_count += (iStringLength * sizeof(char));
-	}
-	public void		append_text				(ICollection<string> _Collection)
-	{
-		// 2) 데이터들을 저장한다.
-		foreach (var iter in _Collection)
-		{
-			this.append_text(iter);
-		}
-	}
-	public void		append_text				(params string[] _Array)
-	{
-		foreach (var iter in _Array)
-		{
-			append_text(iter);
-		}
-	}
-	public void		append_CRC				()
-	{
-		//_append<uint>(0);
-		m_count	+= sizeof(uint);
-	}
-
-	private void	_append_buffer			(buffer _object)
-	{
-		// check) sorce
-		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= (sizeof(ulong) + _object.m_count));
-
-		// check) destination
-		Debug.Assert(_object.m_buffer != null );
-		
-		// 1) append buffer size
-		this.append<ulong>((ulong)_object.size);
-
-		// 2) block copy
-		System.Buffer.BlockCopy(_object.m_buffer, _object.m_offset, this.m_buffer, this.m_offset + this.m_count, _object.m_count); 
-		
-		this.m_count += _object.m_count; 
-	}
-	private void	_append_buffer			(long _ptr, ref long _offset, buffer _object)
-	{
-		// check) 
-        Debug.Assert(_object.m_buffer != null);
-
-		// check) 
-		Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= sizeof(UInt64)+_object.m_count);
-
-		// 1) append buffer size
-		Marshal.WriteInt64(new IntPtr(_ptr + _offset), _object.size); _offset += sizeof(UInt64);
-
-		// 2) block copy
-		System.Buffer.BlockCopy(_object.m_buffer, _object.m_offset, this.m_buffer, (int)_offset, _object.size); _offset+=_object.m_count;
-	}
-	private void	_append<T>				(long _ptr, ref long _offset, T _object) where T:struct
-	{
-		Marshal.StructureToPtr(_object, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(typeof(T));
-	}
-#if NET
-	private void	_append				(long _ptr,ref long _offset, string _object) 
-#else
-	private unsafe void	_append				(long _ptr,ref long _offset, string _object) 
-#endif
-	{
-		// check) 
-        Debug.Assert(this.m_buffer != null);
-
-		fixed (char* str = _object)
-		{
-			// 1) get ptr
-			byte* ptr_now = (byte*)(_ptr + _offset);
-
-			// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-			if (_object == null)
-			{
-				// - -1을 쓰고 끝낸다.
-				*(Int32*)ptr_now = -1;
-				_offset += sizeof(Int32);
-				return;
-			}
-
-			// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
-			var string_length = _object.Length * sizeof(char);
-
-			// check)
-			Debug.Assert((this.m_buffer.Length - _offset) >= (sizeof(Int32) + string_length + sizeof(char)));
-
-			// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-			*(Int32*)ptr_now = _object.Length + 1;
-
-			// 4) add size
-			ptr_now += sizeof(Int32);
-
-			// 5) [문자열]을 복사해 넣는다.
-			System.Buffer.MemoryCopy(str, ptr_now, this.m_buffer.Length - _offset - sizeof(Int32) , string_length + sizeof(char)); // NULL 포함 복사
-
-			// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-			_offset += sizeof(Int32) + string_length + sizeof(char);
-		}
-	}
-	private void	_append					(long _ptr, ref long _offset, params string[] _Array)
-	{
-		foreach (var iter in _Array)
-		{
-			this._append(_ptr, ref _offset, iter as string);
-		}
-	}
-	private void	_append					(long _ptr, ref long _offset, object _object)
-	{
-		// 1) Type을 읽는다.
-		Type temp_type = _object.GetType();
-
-		// 2) primitive type일 경우
-		if (temp_type.IsPrimitive)
-		{
-			Marshal.StructureToPtr(_object, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(_object);
-		}
-		// 3) enum일 경우
-		else if(temp_type.IsEnum)
-		{
-			var	type_enum = temp_type.GetFields()[0].FieldType;
-
-			Marshal.StructureToPtr(Convert.ChangeType(_object, type_enum), new IntPtr(_ptr + _offset), false);
-
-			_offset += Marshal.SizeOf(type_enum);
-		}
-		// 4) 구조체 일 경우
-		else if (temp_type.IsValueType)
-		{
-			if(typeof(DateTime).Equals(temp_type))
-			{
-				this._append_datetime(_ptr, ref _offset, _object);
-			}
-			else if(typeof(CGDK.buffer).Equals(temp_type))
-			{
-				this._append_buffer(_ptr, ref _offset, (buffer)_object);
-			}
-			else
-			{
-				this._append_struct(_ptr, ref _offset, _object);
-			}
-		}
-		// 5) 배열일 경우
-		else if (temp_type.IsArray)
-		{
-			this._append_Collection(_ptr, ref _offset, _object as System.Collections.ICollection, _object.GetType().GetElementType());
-		}
-		// 6) 문자열일 경우
-		else if (typeof(string).Equals(temp_type))
-		{
-			this._append(_ptr, ref _offset, _object as string);
-		}
-		// 7) 기다
-		else 
-		{
-			// - Dictionary인 경우
-			{
-				var temp_object = _object as System.Collections.IDictionary;
-				if (temp_object != null)
-				{
-					this._append_Dictionary(_ptr, ref _offset, temp_object, temp_type.GetGenericArguments());
-					return;
-				}
-			}
-
-			{
-				// - Collection인 경우
-				var temp_object = _object as System.Collections.ICollection;
-				if (temp_object != null)
-				{
-					this._append_Collection(_ptr, ref _offset, temp_object, _object.GetType().GetGenericArguments()[0]);
-					return;
-				}
-				// - 일반 class 인 경우
-				else if(temp_type.IsClass)
-				{
-					this._append_class(_ptr, ref _offset, _object);
-				}
-				else
-				{
-					// check) 지원되지 않는 Type이다.
-					Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-					// Throw) 
-					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-				}
-			}
-		}
-	}
-	private unsafe void	_append_Primitive		(long _ptr, ref long _offset, object _object)
-	{
-		// 설명) 기본형(byte, sbyte, short, ushort, char, int, uint ... 인 경우 append 처리
-		//       성능을 위해 pointer를 사용해 unsafe로 작성한다.
-
-        // check) 
-        Debug.Assert(this.m_buffer != null);
-
-	#if _USE_BOUND_CHECK
-        // check) m_iCount가 남은 크기보다 작으면 Exception을 던진다.
-        if (Marshal.SizeOf(_object)+_offset > this.m_buffer.Length)
-		{
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-		}
-	#endif
-
-		// 1) ptr을 얻는다.
-		var ptr = new IntPtr(_ptr + _offset);
-
-		// 2) primitive 종류에 따라 append
-		var tmp = _object.GetType();
-		if (tmp == typeof(long)) *(long*)ptr = (long)_object;
-		else if (tmp == typeof(ulong)) *(long*)ptr = (long)_object;
-		else if (tmp == typeof(double)) *(double*)ptr = (double)_object;
-		else if (tmp == typeof(int)) *(int*)ptr = (int)_object;
-		else if (tmp == typeof(uint)) *(ulong*)ptr = (ulong)_object;
-		else if (tmp == typeof(float)) *(float*)ptr = (float)_object;
-		else if (tmp == typeof(short)) *(short*)ptr = (short)_object;
-		else if (tmp == typeof(ushort)) *(ushort*)ptr = (ushort)_object;
-		else if (tmp == typeof(char)) *(char*)ptr = (char)_object; 
-		else if (tmp == typeof(sbyte)) *(sbyte*)ptr = (sbyte)_object;
-		else if (tmp == typeof(byte)) *(byte*)ptr = (byte)_object;
-		else throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] buffer size is short");
-
-		// 3) m_iCount의 길이를 더한다.
-		_offset += Marshal.SizeOf(_object);
-	}
-#if NET
-	private void	_append_class			(long _ptr, ref long _offset, object? _object, Type? _base_type = null)
-#else
-	private void	_append_class			(long _ptr, ref long _offset, object _object, Type _base_type = null)
-#endif
-	{
-        // check)
-		Debug.Assert(_object != null);
-
-        // 1) Get Type ( 재귀용 _base_type 이 존재한다면 그걸쓰고 아니라면 Data 를 쓴다.  )
-        Type temp_type = _base_type ?? _object.GetType();
-
-		// check) Serializable이 아니면 리턴한다.
-		if (_is_serializable_type(temp_type) == false)
-			return;
-
-		// check) 
-        Debug.Assert(temp_type.BaseType != null);
-
-        // 2) 부모의 부모가 nullptr이면 object를 제외하고 최고 부모 클래스다.
-        if(temp_type.BaseType.BaseType != null)
-        {
-            this._append_class(_ptr, ref _offset, _object, temp_type.BaseType);
-        }
-
-        // 3) 변수들을 얻는다.
-		var temp_field = temp_type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-		// 4) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
-		foreach (var iter in temp_field)
-		{
-			// check) 
-			if (iter.IsNotSerialized == true)
-				continue;
-
-			// check)
-			if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
-				continue;
-
-			// declare) 
-			var temp = iter.GetValue(_object);
-
-			// - null일 경우 그냥 -1만 쓰고 끝낸다.
-			if (temp == null)
-			{
-				Marshal.WriteInt32(new IntPtr(_ptr + _offset), -1);
-				_offset += sizeof(int);
-				continue;
-			}
-
-			// - append
-			this._append(_ptr, ref _offset, temp);
-		}
-	}
-	private void	_append_struct			(long _ptr, ref long _offset, object _object)
-	{
-		// check) 
-        Debug.Assert(_object != null);
-
-		Type temp_type = _object.GetType(); 
-		var temp_field = temp_type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
-			
-
-		foreach (var iter in temp_field)
-		{
-			// check)
-			if(iter.IsNotSerialized == true)
-				continue;
-
-			var temp = iter.GetValue(_object);
-
-			// - null이 아닐 경우에만 씀
-			if (temp == null)
-			{
-				// - -1을 쓰고 끝낸다.
-				Marshal.WriteInt32(new IntPtr(_ptr + _offset), -1);
-				_offset += sizeof(int);
-				continue;
-			}
-
-			// - append data
-			//this._append(_ptr, ref _offset, temp);
-
-			var field_type = iter.FieldType;
-
-			if (field_type.IsPrimitive)
-			{
-				Marshal.StructureToPtr(temp, new IntPtr(_ptr + _offset), false); _offset += Marshal.SizeOf(field_type);
-			}
-			else if(field_type.IsEnum)
-			{
-				var	type_enum = field_type.GetFields()[0].FieldType;
-
-				Marshal.StructureToPtr(Convert.ChangeType(temp, type_enum), new IntPtr(_ptr + _offset), false);
-
-				_offset += Marshal.SizeOf(type_enum);
-			}
-			else if (field_type.IsValueType)
-			{
-				if (typeof(DateTime).Equals(field_type))
-				{
-					this._append_datetime(_ptr, ref _offset, temp);
-				}
-				else if (typeof(CGDK.buffer).Equals(field_type))
-				{
-					this._append_buffer(_ptr, ref _offset, (buffer)temp);
-				}
-				else
-				{
-					this._append_struct(_ptr, ref _offset, temp);
-				}
-			}
-			else if (field_type.IsArray)
-			{
-				this._append_Collection(_ptr, ref _offset, temp as System.Collections.ICollection, temp.GetType().GetElementType());
-			}
-			else if (typeof(string).Equals(field_type))
-			{
-				this._append(_ptr, ref _offset, temp as string);
-			}
-			else
-			{
-				{
-					var temp_object = temp as System.Collections.IDictionary;
-					if (temp_object != null)
-					{
-						this._append_Dictionary(_ptr, ref _offset, temp_object, field_type.GetGenericArguments());
-						continue;
-					}
-				}
-				{
-					var temp_object = temp as System.Collections.ICollection;
-					if (temp_object != null)
-					{
-						this._append_Collection(_ptr, ref _offset, temp_object, temp.GetType().GetGenericArguments()[0]);
-						continue;
-					}
-
-					if (field_type.IsClass)
-					{
-						this._append_class(_ptr, ref _offset, temp);
-					}
-					else
-					{
-						// check) 지원되지 않는 Type이다.
-						Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-						// Throw) 
-						throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-					}
-				}
-			}
-		}
-	}
-	public void		_append_datetime		(long _ptr, ref long _offset, DateTime _object)
-	{
-		this._append<long>(_ptr, ref _offset, _object.Ticks);
-	}
-	public void		_append_datetime		(long _ptr, ref long _offset, object _object)
-	{
-		DateTime tempTime = (DateTime)_object;
-		this._append<long>(_ptr, ref _offset, tempTime.Ticks);
-	}
-
-#if NET
-	private void	_append_Dictionary		(long _ptr,ref long _offset,System.Collections.IDictionary? _object, Type[] _types) 
-#else
-	private void	_append_Dictionary		(long _ptr,ref long _offset,System.Collections.IDictionary _object, Type[] _types) 
-#endif
-	{
-		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-		if (_object == null)
-		{
-			// - -1을 쓰고 끝낸다.
-			Marshal.WriteInt32(new IntPtr(_ptr + _offset), -1);
-			_offset += sizeof(int);
-			return;
-		}
-
-		// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
-		Marshal.WriteInt32(new IntPtr(_ptr + _offset), _object.Count); _offset += Marshal.SizeOf(typeof(int));
-
-		// 2) [데이터]들을 써넣는다.
-		if (_types[0].IsPrimitive)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int	size_0 = Marshal.SizeOf(_types[0]);
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					// - append key
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				int	size_0 = Marshal.SizeOf(_types[0]);
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					// - append key
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-
-                    // check) 
-                    Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-                    Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				int	size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					// - append key
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-				int	size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				int	size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-				int	size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				int	size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				int	size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if(_types[0].IsEnum)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					// - append key
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Key, _types[0].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_0;
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-				var size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					// - append key
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Key,   _types[0].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_0;
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					// - append key
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-				var	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				int	size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Key, new IntPtr(_ptr + _offset), false); _offset += size_0;
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsValueType)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var	size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var	size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_struct(_ptr, ref _offset, temp_enum.Key);
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsArray)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append vlaue3
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, _types[1].GetElementType());
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				 var temp_type_0 = _types[0].GetElementType();
-				 var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (typeof(string).Equals(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append(_ptr, ref _offset, temp_enum.Key as string);
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					_append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append vlaue
-					Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					_append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				var temp_type_1 = _types[1].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-
-                    // check) 
-                    Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-                    Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				var temp_type_1 = _types[1].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				var temp_type_1 = _types[1].GetGenericArguments();
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if(_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var	temp_type_0	 = _types[0].GetGenericArguments()[0];
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsClass && _is_serializable_type(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int	size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append
-					this._append_class(_ptr, ref _offset, temp_enum.Key);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - marshal
-					Marshal.StructureToPtr(temp_enum.Value, new IntPtr(_ptr + _offset), false); _offset += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					_append_class(_ptr, ref _offset, temp_enum.Key);
-
-                    // check) 
-                    Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-                    Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Value, _types[1].GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_1;
-
-				}
-			}
-			else if(_types[1].IsValueType)
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					// - append key
-					this._append_class(_ptr, ref _offset, temp_enum.Key);
-
-					// check) 
-					Debug.Assert(temp_enum.Value != null);
-
-					// - append value
-					this._append_struct(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else if(_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_class(_ptr, ref _offset, temp_enum.Key);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_class(_ptr, ref _offset, temp_enum.Key);
-					this._append(_ptr, ref _offset, temp_enum.Value as string);
-				}
-			}
-			else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_class(_ptr, ref _offset, temp_enum.Key);
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if(typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_class(_ptr, ref _offset, temp_enum.Key);
-					this._append_Collection(_ptr, ref _offset, temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while(temp_enum.MoveNext()) 
-				{
-					this._append_class(_ptr, ref _offset, temp_enum.Key);
-					this._append_class(_ptr,ref _offset,temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else
-		{
-			// check) 지원되지 않는 Type이다.
-			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-			// Throw) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-		}
-	}
-#if NET
-	private void	_append_Collection		(long _ptr, ref long _offset, System.Collections.ICollection? _object, Type? _type)
-#else
-	private unsafe void	_append_Collection		(long _ptr, ref long _offset, System.Collections.ICollection _object, Type _type)
-#endif
-	{
-		// check) 
-		Debug.Assert(_type != null);
-
-		if (_type.IsArray == false)
-		{
-			// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-			if (_object == null)
-			{
-				// - -1을 쓰고 끝낸다.
-				Marshal.WriteInt32(new IntPtr(_ptr + _offset), -1);
-				_offset += sizeof(int);
-				return;
-			}
-
-			// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
-			Marshal.WriteInt32(new IntPtr(_ptr + _offset), _object.Count); _offset += Marshal.SizeOf(typeof(int));
-
-			// 2) [데이터]들을 써넣는다.
-			if (_type.IsPrimitive)
-			{
-				int size_0 = Marshal.SizeOf(_type);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(temp_enum.Current, new IntPtr(_ptr + _offset), false); _offset += size_0;
-				}
-			}
-			else if (_type.IsEnum)
-			{
-				int size_0 = Marshal.SizeOf(_type.GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					Marshal.StructureToPtr(Convert.ChangeType(temp_enum.Current, _type.GetFields()[0].FieldType), new IntPtr(_ptr + _offset), false); _offset += size_0;
-				}
-			}
-			else if (_type.IsValueType)
-			{
-				if(typeof(DateTime).Equals(_type))
-				{
-					var temp_enum = _object.GetEnumerator();
-					while (temp_enum.MoveNext())
-					{
-						this._append_datetime(_ptr, ref _offset, temp_enum.Current);
-					}
-				}
-				else if(typeof(CGDK.buffer).Equals(_type))
-				{
-					var temp_enum = _object.GetEnumerator();
-					while (temp_enum.MoveNext())
-					{
-						this._append_buffer(_ptr, ref _offset, (buffer)temp_enum.Current);
-					}
-				}
-				else
-				{
-					var temp_enum = _object.GetEnumerator();
-					while (temp_enum.MoveNext())
-					{
-						this._append_struct(_ptr, ref _offset, temp_enum.Current);
-					}
-				}
-			}
-			else if (typeof(string).Equals(_type))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					this._append(_ptr, ref _offset, temp_enum.Current as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_type))
-			{
-				var temp_type = _type.GetGenericArguments();
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					this._append_Dictionary(_ptr, ref _offset, temp_enum.Current as System.Collections.IDictionary, temp_type);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_type))
-			{
-				var tmp_type =	_type.GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					this._append_Collection(_ptr, ref _offset, temp_enum.Current as System.Collections.ICollection, tmp_type);
-				}
-			}
-			else if (_type.IsClass && _is_serializable_type(_type))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					this._append_class(_ptr, ref _offset, temp_enum.Current);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else
-		{
-			// check)
-			Debug.Assert(_object != null);
-
-			// - Element Type에 따라 처리...
-			var temp_enum = _object.GetEnumerator();
-			while (temp_enum.MoveNext())
-			{
-				this._append(_ptr, ref _offset, temp_enum.Current);
-			}
-		}
-	}
-
-// 5) extract관련(뽑아내기)
-#if NET
-	public object?		extract					(Type _type)
-#else
-	public object		extract					(Type _type)
-#endif
-	{
-		// 1) [버퍼]를 고정(Pinned) 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// 2) [버퍼_포인터]를 얻는다.
-		long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
-		long offset = 0;
-
-		try
-		{
-			// 3) 
-			var temp = _extract(ptr, ref offset, _type, null, 0);
-
-			// 5) [버퍼]의 고정(Pinned)을 Free한다.
-			pinnedArray.Free();
-
-			// 6) Buffer Pointer를 증가시킨다.
-			this.m_count -= (int)offset;
-			this.m_offset += (int)offset;
-
-			// Return)
+			// 1) 임시로 보관
+			var temp = this.m_buffer;
+
+			// 2) Reset한다.
+			this.m_buffer = null;
+			this.m_offset = 0;
+			this.m_count = 0;
+
+			// 3) 저장되어 있던 byte[]를 리턴해 준다.
 			return temp;
 		}
-		catch(System.Exception _e)
+
+		// 2) Basic operations
+		public bool		empty() { return this.m_buffer==null;}
+		public int		get_remained() { return (this.m_buffer!=null) ? (this.m_buffer.Length - this.m_offset - this.m_count) : 0; }
+		public int		capacity { get { return (this.m_buffer!=null) ? this.m_buffer.Length : 0; }}
+
+	#if NET
+		public byte[]?	data { get { return this.m_buffer;} set { this.m_buffer = value;}}
+	#else
+		public byte[]	data { get { return this.m_buffer;} set { this.m_buffer = value;}}
+	#endif
+		public int		offset { get { return this.m_offset;} set { this.m_offset = value;}}
+		public int		size { get { return this.m_count;} set { this.m_count = value;}}
+																				  
+		// - for C# User															  
+	#if NET
+		public byte[]?	Buffer { get { return this.m_buffer; } set { this.m_buffer = value; } }
+		public byte[]?	Array { get { return this.m_buffer; } set { this.m_buffer = value; } }
+	#else
+		public byte[]	Buffer { get { return this.m_buffer; } set { this.m_buffer = value; } }
+		public byte[]	Array { get { return this.m_buffer; } set { this.m_buffer = value; } }
+	#endif
+
+		public int		Offset { get { return this.m_offset;}	set { this.m_offset = value;}}
+		public int		Count { get { return this.m_count;} set { this.m_count = value;}}
+
+		public static buffer operator +(buffer _lhs, int _rhs)
 		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(): " + _e.Message);
-
-			// - [버퍼]의 고정(Pinned)을 Free한다.
-			pinnedArray.Free();
-
-			// Reraise)
-			throw;
-		}
-	}
-
-	public T			extract<T>				()
-	{
-		Type tmp = typeof(T);
-			
-		if (tmp.IsPrimitive)
-		{
-			if (tmp == typeof(long)) return (T)(object)extract_long();
-			else if (tmp == typeof(ulong)) return (T)(object)extract_ulong();
-			else if (tmp == typeof(double)) return (T)(object)extract_double();
-			else if (tmp == typeof(int)) return (T)(object)extract_int();
-			else if (tmp == typeof(uint)) return (T)(object)extract_uint();
-			else if (tmp == typeof(float)) return (T)(object)extract_float();
-			else if (tmp == typeof(short)) return (T)(object)extract_short();
-			else if (tmp == typeof(ushort)) return (T)(object)extract_ushort();
-			else if (tmp == typeof(sbyte)) return (T)(object)extract_sbyte();
-			else if (tmp == typeof(byte)) return (T)(object)extract_byte();
-			else if (tmp == typeof(char)) return (T)(object)extract_char();
-			else throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] buffer size is short");
-		}
-		else
-		{
-			// 1) [버퍼]를 고정(Pinned) 시킨다.
-			GCHandle pinnedArray = GCHandle.Alloc(m_buffer, GCHandleType.Pinned);
-
-			// 2) [버퍼_포인터]를 얻는다.
-			long ptr = (long)pinnedArray.AddrOfPinnedObject() + this.m_offset;
-			long offset = 0;
-
-			try
-			{
-				var temp = default(T);
-
-				if (tmp.IsEnum)
-				{
-					temp = (T)_extract_enum(ptr, ref offset, tmp);
-				}
-				else if (tmp.IsValueType)
-				{
-					if (typeof(DateTime).Equals(tmp))
-					{
-						temp = (T)this._extract_datetime(ptr, ref offset);
-					}
-					else if (typeof(CGDK.buffer).Equals(tmp))
-					{
-						temp = (T)this._extract_buffer(ptr, ref offset);
-					}
-					else
-					{
-						temp = (T)this._extract_struct(ptr, ref offset, tmp);
-					}
-				}
-				else if (tmp == typeof(string))
-				{
-					var value_string = this._extract_string(ptr, ref offset);
-
-					if (value_string != null)
-						temp = (T)(object)value_string;
-				}
-				// Case) Array
-				else if (tmp.IsArray)
-				{
-					// - get element
-					var element_type = tmp.GetElementType();
-
-					// check)
-					Debug.Assert(element_type != null);
-
-					// - _extact_array
-					var temp_object_array = this._extract_array(ptr, ref offset, element_type, null, 0);
-
-					// - set value
-					if (temp_object_array != null)
-						temp = (T)(object)temp_object_array;
-				}
-				// Case) Dictionary
-				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(tmp))
-				{
-					var value_dictionary = this._extract_DictionaryX(ptr, ref offset, tmp, tmp.GetGenericArguments());
-
-					if (value_dictionary != null)
-						temp = (T)Convert.ChangeType(value_dictionary, tmp);
-				}
-				// Case) List
-				else if (typeof(System.Collections.IList).IsAssignableFrom(tmp))
-				{
-					// - extract list
-					var temp_bject_list = this._extract_ListX(ptr, ref offset, tmp, tmp.GetGenericArguments()[0]);
-
-					// - set value
-					if (temp_bject_list != null)
-						temp = (T)temp_bject_list;
-				}
-				// Case) Class
-				else if (tmp.IsClass)
-				{
-					var value_class = this._extract_class(ptr, ref offset, tmp);
-
-					if (value_class != null)
-						temp = (T)Convert.ChangeType(value_class, tmp);
-				}
-				else
-				{
-					// check) 지원되지 않는 Type이다.
-					Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-					// Throw) 
-					throw new CGDK.Exception.Serialize(offset, "[CGDK.buffer] Not Supported TYPE.");
-				}
-
-				// 5) [버퍼]의 고정(Pinned)을 Free한다.
-				pinnedArray.Free();
-
-				// 6) Buffer Pointer를 증가시킨다.
-				this.m_count -= (int)offset;
-				this.m_offset += (int)offset;
-
-				// debug)
-				Debug.Assert(temp != null);
-
-				// Return)
-				return temp;
-			}
-			catch (System.Exception _e)
-			{
-				// Trace) 
-				Debug.WriteLine("CGDK.buffer extract<T>(): " + _e.Message);
-
-				// - [버퍼]의 고정(Pinned)을 Free한다.
-				pinnedArray.Free();
-
-				// Reraise)
-				throw;
-			}
-		}
-	}
-
-#if NET
-	private object?		_extract			(long _ptr, ref long _offset, Type _type, int[]? _static_size, int _dimension)
-#else
-	private object		_extract				(long _ptr, ref long _offset, Type _type, int[] _static_size, int _dimension)
-#endif
-	{
-		// Case) Primitive Type
-		if (_type.IsPrimitive)
-		{
-			return this._extract_primitive(_ptr, ref _offset, _type);
-		}
-		// Case) Enum Type
-		else if (_type.IsEnum)
-		{
-			return this._extract_enum(_ptr, ref _offset, _type);
-		}
-		// Case) Value Type
-		else if (_type.IsValueType)
-		{
-			if(typeof(DateTime).Equals(_type))
-			{
-				return this._extract_datetime(_ptr, ref _offset);
-			}
-			else if(typeof(CGDK.buffer).Equals(_type))
-			{
-				return this._extract_buffer(_ptr, ref _offset);
-			}
-			else
-			{
-				return this._extract_struct(_ptr, ref _offset, _type);
-			}
-		}
-		// Case) STRING
-		else if (typeof(string).Equals(_type))
-		{
-			return this._extract_string(_ptr, ref _offset);
-		}
-		// Case) Array
-		else if (_type.IsArray)
-		{
-			// - get element type
-			var temp_type = _type.GetElementType();
-
 			// check) 
-			Debug.Assert(temp_type != null);
+			Debug.Assert(_lhs.m_buffer != null && _rhs<=_lhs.Count); 
 
-			// - extract array
-			return this._extract_array(_ptr, ref _offset, temp_type, _static_size, _dimension+1);
-		}
-		// Case) Dictionary
-		else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_type))
-		{
-			// Return)
-			return this._extract_DictionaryX(_ptr, ref _offset, _type, _type.GetGenericArguments());
-		}
-		else if(typeof(System.Collections.IList).IsAssignableFrom(_type))
-		{
-			// return) 
-			return this._extract_ListX(_ptr, ref _offset, _type, _type.GetGenericArguments()[0]);
-		}
-		// Case) Array
-		else if (_type.IsClass && _is_serializable_type(_type))
-		{
-			return this._extract_class(_ptr, ref _offset, _type);
-		}
-		else
-		{
-			// check) 지원되지 않는 Type이다.
-			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
+			// check)
+			if(_lhs.Array == null)
+				throw new System.NullReferenceException("buffer is not allocated");
 
-			// Throw) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
+			// check)
+			if(_rhs > _lhs.Count)
+				throw new System.OverflowException("buffer overflow");
+
+			// 1) create
+			return new buffer(_lhs.Array, _lhs.offset + _rhs, _lhs.Count - _rhs);
 		}
-	}
-	private unsafe object _extract_primitive	(long _ptr, ref long _offset, Type _type)
+		public static buffer operator -(buffer _lhs, int _rhs)
 		{
-		// 1) Type의 크기를 구한다.
-		var	sizeType = Marshal.SizeOf(_type);
+			// check) 
+			Debug.Assert(_lhs.m_buffer != null && _lhs.offset >= _rhs && _rhs <= (_lhs.capacity - _lhs.Count)); 
+
+			// check)
+			if(_lhs.Array == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+
+			// check)
+			if(_lhs.offset < _rhs || _rhs > (_lhs.capacity - _lhs.Count))
+				throw new System.OverflowException("buffer overflow");
+
+			// 1) create
+			return new buffer(_lhs.Array, _lhs.offset - _rhs, _lhs.Count + _rhs);
+		}
+		public static buffer operator ^(buffer _lhs, int _rhs)
+		{
+			// check) 
+			Debug.Assert(_lhs.m_buffer != null && _rhs <= _lhs.capacity); 
+
+			// check)
+			if(_lhs.Array == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+
+			// check)
+			if(_rhs > _lhs.capacity)
+				throw new System.OverflowException("buffer overflow");
+
+			// 1) create 
+			return new buffer(_lhs.Array, _lhs.offset, _rhs);
+		}
+		public static implicit operator ArraySegment<byte>(buffer _rhs)
+		{
+			// check) 
+			Debug.Assert(_rhs.Array != null); 
+		
+			// 1) create 
+			return new ArraySegment<byte>(_rhs.Array, _rhs.offset, _rhs.Count);
+		}
+		public static explicit operator buffer(ArraySegment<byte> _rhs)
+		{
+			// 1) create 
+			return new buffer(_rhs.Array, _rhs.Offset, _rhs.Count);
+		}
+
+		// 3) append(붙이기)
+		public void			append_skip (int _amount)
+		{ 
+			// check) 
+			Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _amount);
+
+			// 1) add size			
+			this.m_count += _amount; 
+		}
+		public void			append (byte[] _buffer, int _offset, int _count)
+		{
+			// check) 
+			Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _count);
 
 	#if _USE_BOUND_CHECK
-		// check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
-		if (_offset+ sizeType > m_count)
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+			// check)
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+
+			// check)
+			if((this.m_buffer.Length - this.m_offset - this.m_count) < _count)
+				throw new System.OverflowException("buffer overflow");
 	#endif
 
-		// 1) [버퍼]로 부터 [데이터]를 복사해 온다.
-		IntPtr ptr = new IntPtr(_ptr + _offset);
+			// 1) block copy
+			System.Buffer.BlockCopy(_buffer, _offset, this.m_buffer, this.m_offset + this.m_count, _count);
 
-		// declar) 
-		object obj;
-
-		if (_type == typeof(long)) obj = *(long*)ptr;
-		else if (_type == typeof(ulong)) obj = *(ulong*)ptr;
-		else if (_type == typeof(double)) obj = *(double*)ptr;
-		else if (_type == typeof(int)) obj = *(int*)ptr;
-		else if (_type == typeof(uint)) obj = *(uint*)ptr;
-		else if (_type == typeof(float)) obj = *(float*)ptr;
-		else if (_type == typeof(short)) obj = *(short*)ptr;
-		else if (_type == typeof(ushort)) obj = *(ushort*)ptr;
-		else if (_type == typeof(sbyte)) obj = *(sbyte*)ptr;
-		else if (_type == typeof(byte)) obj = *(byte*)ptr;
-		else if (_type == typeof(char)) obj = *(char*)ptr; 
-		else throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] buffer size is short");
-
-		// check) 
-		Debug.Assert(obj != null);
-
-		// 2) [버퍼_길이]와 [버퍼_어프셋]을 업데이트한다.
-		_offset += sizeType;
-
-		// Return) 
-		return obj;
-	}
-	private unsafe T	_extract_primitive<T>	(long _ptr, ref long _offset) where T:unmanaged
-	{
-		// check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
-		if (_offset + sizeof(T) > m_count)
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-
-		// 1) [버퍼]로 부터 [데이터]를 복사해 온다.
-		IntPtr ptr = new IntPtr(_ptr + _offset);
-
-		// 2) [버퍼]로 부터 [데이터]를 복사해 온다.
-		var obj = *(T*)ptr;
-
-		// 3) [버퍼_길이]와 [버퍼_어프셋]을 업데이트한다.
-		_offset += sizeof(T);
-
-		// Return) 
-		return obj;
-	}
-	private object		_extract_enum			(long _ptr, ref long _offset, Type _type)
-	{
-		// 1) Enum의 Type을 얻는다.
-		var	type_enum = _type.GetFields()[0].FieldType;
-		var	size_enum = Marshal.SizeOf(type_enum);
-
-		// check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
-		if (_offset + size_enum > m_count)
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-
-		// 2) [버퍼]로 부터 [데이터]를 복사해 온다.
-		var obj = Marshal.PtrToStructure(new IntPtr(_ptr+_offset), type_enum);
-
-		// check) 
-		Debug.Assert(obj != null);
-
-		// 3) [버퍼_길이]와 [버퍼_어프셋]을 업데이트한다.
-		_offset += size_enum;
-
-		// Return) 
-		return obj;
-	}
-	private object		_extract_struct			(long _ptr, ref long _offset, Type _type)
-	{
-		// 1) 객체를 생성한다.
-		var temp_object = Activator.CreateInstance(_type);
-
-		// check) 
-		Debug.Assert(temp_object != null);
-
-		// 2) Field 정보를 얻는다.
-		var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
-
-		// 3) 각 Field값을 읽어 써넣는다.
-		foreach (var iter in temp_field)
-		{
-			if(iter.IsNotSerialized)
-				continue;
-
-			iter.SetValue(temp_object, _extract(_ptr, ref _offset, iter.FieldType, null, 0));
+			this.m_count += _count; 
 		}
-
-		// Return) 
-		return temp_object;
-	}
-#if NET
-	private object?		_extract_class			(long _ptr, ref long _offset, Type _type, object? _instance_object=null)
-#else
-	private object		_extract_class			(long _ptr, ref long _offset, Type _type, object _instance_object=null)
-#endif
-	{
-        // 1) 생성된 객체가 없다면 객체를 생성한다.
-        if(_instance_object == null)
-            _instance_object = Activator.CreateInstance(_type);
-
-        // check) Serializable Attribute가 없으면 그냥 끝낸다.
-        if (_is_serializable_type(_type) == false)
-            return null;
-
-		// check) 
-		Debug.Assert(_type.BaseType != null);
-
-        // 2) 부모가 없는객체가 나올때까지 재귀를 돌린다.
-        if(_type.BaseType.BaseType != null)
-        {
-            this._extract_class(_ptr, ref _offset, _type.BaseType, _instance_object);
-        }
-
-        // 3) Field 정보를 얻는다.
-        var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-
-		// 4) 각 Field값을 읽어 써넣는다.
-		foreach (var iter in temp_field)
+		public void			append_text (string _object)
 		{
-			// check) NotSerialized일 경우는 진행하지 않는다.
-			if (iter.IsNotSerialized==true)
-				continue;
+			// 1) 문자열을 배열로 변경하고 길이를 구한다.
+			var temp_array = _object.ToCharArray();
+			var iStringLength = temp_array.Length;
 
-			iter.SetValue(_instance_object, _extract(_ptr, ref _offset, iter.FieldType, null, 0));
-		}
-
-		// Return) 
-		return _instance_object;
-	}
-
-	private unsafe object _extract_datetime		(long _ptr, ref long _offset)
-	{
-		// 1) [버퍼]로 부터 [데이터]를 복사해 온다.
-		IntPtr ptr = new IntPtr(_ptr + _offset);
-
-		// 2) add size
-		_offset += sizeof(long);
-
-		// 3) get DateTime
-		return new DateTime(*(long*)ptr);
-	}
-
-	private object		_extract_buffer			(long _ptr, ref long _offset)
-	{
-		// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
-		Debug.Assert(sizeof(UInt64)<=m_count);
-
-		// check) 
-		Debug.Assert(this.m_buffer != null);
+			// check) 버퍼의 크기가 충분한가 확인한다.
+			Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + iStringLength * sizeof(char)) <= this.m_buffer.Length);
 
 	#if _USE_BOUND_CHECK
-		// check) Buffer의 길이가 UInt32 최소크기보다 작을 경우 Exception
-		if(sizeof(UInt32) >m_count) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+			// check)
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+
+			// check)
+			if((this.m_buffer.Length - this.m_offset - this.m_count) < iStringLength)
+				throw new System.OverflowException("buffer overflow");
 	#endif
 
-		// Declare) 
-		CGDK.buffer temp_object = new CGDK.buffer();
+			// 2) [문자열]을 복사해 넣는다.
+			System.Buffer.BlockCopy(temp_array, 0, this.m_buffer, this.m_offset + this.m_count, iStringLength * sizeof(char));
 
-		// 1) buffer길이를 얻는다.
-		var temp_size = Marshal.ReadInt64(new IntPtr(_ptr + _offset));
-
-		// 2) String의 길이를 설정한다.
-		temp_object.size = (int)temp_size;
-
-		// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
-		Debug.Assert((temp_object.size + sizeof(UInt64))<=this.m_count);
-
-	#if _USE_BOUND_CHECK
-		// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
-		if ((temp_object.size + sizeof(UInt64)) > this.m_count)
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-	#endif
-
-		// 2) [문자열]을 복사한다.
-		temp_object.data = new byte[temp_object.size];
-		System.Buffer.BlockCopy(this.m_buffer, this.m_offset + (int)_offset + sizeof(UInt64), temp_object.data, 0, temp_object.size);
-
-		// 3) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
-		_offset += (sizeof(UInt64) + temp_object.size);
-
-		// Return)
-		return temp_object;
-	}
-
-#if NET
-	private string?		_extract_string			(long _ptr, ref long _offset)
-#else
-	private unsafe string		_extract_string			(long _ptr, ref long _offset)
-#endif
-	{
-		// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
-		Debug.Assert(sizeof(int) <=this.m_count);
-
-		// check) 
-		Debug.Assert(this.m_buffer != null);
-
-	#if _USE_BOUND_CHECK
-		// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
-		if(sizeof(int)>this.m_count) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-	#endif
-
-		// 1) get ptr
-		var ptr = (byte*)_ptr + _offset;
-
-		// 2) extract  string length
-		var length_string = *(Int32*)ptr;
-
-		// check) length가 -1이면 null을 리턴한다.
-		if (length_string == -1)
-		{
-			_offset	+= sizeof(Int32);
-			return null;
+			// 3) [버퍼_길이]를 더해준다.
+			this.m_count += (iStringLength * sizeof(char));
 		}
-
-		// 3) add size
-		ptr += sizeof(Int32);
-
-		// 4) 복사할 [문자열_길이]를 구한다. (NULL문자는 뺀다.)
-		int size_copy = length_string * sizeof(char);
-
-		// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
-		Debug.Assert((size_copy + sizeof(int)) <= this.m_count);
-
-		// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
-		if((size_copy + sizeof(int)) > this.m_count) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-
-		// check) [문자열]의 제일 끝이 NULL인지 확인한다.
-		if (*(char*)(ptr + size_copy - sizeof(char)) != 0)
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] string terminate No-'NULL' value");
-
-		// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.		
-		_offset	+= (size_copy + sizeof(int));
-
-		// 6) [string]로 변환해 최종 리턴한다.
-		return new string((char*)ptr, 0, length_string-1);
-	}
-
-#if NET
-	private Array?		_extract_array			(long _ptr, ref long _offset, Type _type, int[]? _static_size, int _dimension)
-#else
-	private Array		_extract_array			(long _ptr, ref long _offset, Type _type, int[] _static_size, int _dimension)
-#endif
-	{
-		// Declare)
-		int temp_count = 0;
-
-		if (_static_size == null)
+		public void			append_text (ICollection<string> _Collection)
 		{
-			// 1) [데이터 갯수]를 읽어들인다.
-			temp_count = _extract_primitive<int>(_ptr, ref _offset);
-
-			// check) length가 -1이면 null을 리턴한다.
-			if (temp_count == -1)
-				return null;
-		}
-		else
-		{
-			temp_count = _static_size[_dimension-1];
-		}
-
-		// 2) Array 객체를 생성한다.
-		Array temp_array = System.Array.CreateInstance(_type, temp_count);
-
-		// Case) Primitive Type
-		if (_type.IsPrimitive)
-		{
-			for (int i=0; i<temp_count; ++i)
+			// 2) 데이터들을 저장한다.
+			foreach (var iter in _Collection)
 			{
-				temp_array.SetValue(_extract_primitive(_ptr, ref _offset, _type), i);
+				this.append_text(iter);
 			}
 		}
-		// Case) Enum Type
-		else if (_type.IsEnum)
+		public void			append_text (params string[] _Array)
 		{
-			for (int i=0; i<temp_count; ++i)
+			foreach (var iter in _Array)
 			{
-				temp_array.SetValue(_extract_enum(_ptr, ref _offset, _type), i);
+				this.append_text(iter);
 			}
 		}
-		// Case) Value Type
-		else if (_type.IsValueType)
+		public void			append_CRC ()
 		{
-			if(typeof(DateTime).Equals(_type))
-			{
-				for (int i=0; i<temp_count; ++i)
-				{
-					temp_array.SetValue(_extract_datetime(_ptr, ref _offset), i);
-				}
-			}
-			else if(typeof(CGDK.buffer).Equals(_type))
-			{
-				for (int i=0; i<temp_count; ++i)
-				{
-					temp_array.SetValue(_extract_buffer(_ptr, ref _offset), i);
-				}
-			}
-			else
-			{
-				for (int i=0; i<temp_count; ++i)
-				{
-					temp_array.SetValue(_extract_struct(_ptr, ref _offset, _type), i);
-				}
-			}
-		}
-		// Case) STRING
-		else if (typeof(string).Equals(_type))
-		{
-			for (int i=0; i<temp_count; ++i)
-			{
-				temp_array.SetValue(_extract_string(_ptr, ref _offset), i);
-			}
-		}
-		// Case) Array
-		else if (_type.IsArray)
-		{
-			for (int i=0; i<temp_count; ++i)
-			{
-				// - get element type
-				var temp_type = _type.GetElementType();
-
-				// check) 
-				Debug.Assert(temp_type != null);
-
-				// - extract
-				temp_array.SetValue(_extract_array(_ptr, ref _offset, temp_type, _static_size, _dimension), i);
-			}
-		}
-		// Case) Dictionary
-		else if(typeof(System.Collections.IDictionary).IsAssignableFrom(_type))
-		{
-			var	temp_type = _type.GetGenericArguments();
-
-			for (int i = 0; i < temp_count; ++i)
-			{
-				// - [데이터 갯수]를 읽어들인다.
-				int count_item = _extract_primitive<int>(_ptr, ref _offset);
-
-				// check) temp_count가 -1이면 null을 리턴한다.
-				if (count_item == -1)
-					continue;
-
-				// - create object
-				var temp_object = Activator.CreateInstance(_type);
-
-				// - get value
-				var temp_object_dictionary = temp_object as System.Collections.IDictionary;
-
-				// check)
-				Debug.Assert(temp_object_dictionary != null);
-
-
-				this._extract_Dictionary(_ptr, ref _offset, temp_object_dictionary, count_item, temp_type);
-				temp_array.SetValue(temp_object, i);
-			}
-		}
-		// Case) List
-		else if(typeof(System.Collections.IList).IsAssignableFrom(_type))
-		{
-			var	temp_type = _type.GetGenericArguments()[0];
-
-			for (int i=0; i<temp_count; ++i)
-			{
-				// - [데이터 갯수]를 읽어들인다.
-				int count_item = _extract_primitive<int>(_ptr, ref _offset);
-
-				// check) temp_count가 -1이면 null을 리턴한다.
-				if(count_item == -1)
-					continue;
-
-				// - create object
-				var temp_object = Activator.CreateInstance(_type);
-
-				// - get value
-				var temp_object_list = temp_object as System.Collections.IList;
-
-				// check)
-				Debug.Assert(temp_object_list != null);
-
-				this._extract_List(_ptr, ref _offset, temp_object_list, count_item, temp_type);
-				temp_array.SetValue(temp_object, i);
-			}
-		}
-		// Case) Class
-		else if (_type.IsClass && _is_serializable_type(_type))
-		{
-			for (int i = 0; i < temp_count; ++i)
-			{
-				temp_array.SetValue(_extract_class(_ptr, ref _offset, _type), i);
-			}
-		}
-		else
-		{
-			// check) 지원되지 않는 Type이다.
-			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-			// Throw) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
+			//_append<uint>(0);
+			this.m_count += sizeof(uint);
 		}
 
-		return temp_array;
-	}
-#if NET
-	private object?		_extract_DictionaryX	(long _ptr, ref long _offset, Type _type_create, Type[] _types) 
-#else
-	private object		_extract_DictionaryX	(long _ptr, ref long _offset, Type _type_create, Type[] _types) 
-#endif
-	{
-		// 1) [데이터 갯수]를 읽어들인다.
-		int count_item = _extract_primitive<int>(_ptr, ref _offset);
-
-		// check) temp_count가 -1이면 null을 리턴한다.
-		if (count_item == -1)
-			return null;
-
-        // 2) Instance를 생성한다.
-        var obj_value = Activator.CreateInstance(_type_create);
-
-		// 3) get value
-		var obj_value_dictionary = obj_value as System.Collections.IDictionary;
-
-		// check)
-		Debug.Assert(obj_value_dictionary != null);
-
-		// 3) Dictionary 내용을 읽어들인다.
-		this._extract_Dictionary(_ptr, ref _offset, obj_value_dictionary, count_item, _types);
-
-		// Return) 생성된 객체를 Return한다.
-		return obj_value;
-	}
-	private void		_extract_Dictionary		(long _ptr, ref long _offset, System.Collections.IDictionary _object, int _count, Type[] _types) 
-	{
-		// 1) [데이터]들을 읽어들인다.
-		if (_types[0].IsPrimitive)
+		public unsafe void	append<T>(T _value)
 		{
-			if (_types[1].IsPrimitive)
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-								this._extract_primitive(_ptr, ref _offset, _types[1]));
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-								this._extract_enum(_ptr, ref _offset, _types[1]));
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				if (typeof(DateTime).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-									this._extract_datetime(_ptr, ref _offset));
-					}
-				}
-				else if (typeof(CGDK.buffer).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-									this._extract_buffer(_ptr, ref _offset));
-					}
-				}
-				else
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-									this._extract_struct(_ptr, ref _offset, _types[1]));
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-								this._extract_string(_ptr, ref _offset));
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-								this._extract_array(_ptr, ref _offset, temp_type_1, null, 0));
-				}
-			}
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_primitive(_ptr, ref _offset, _types[0]);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_primitive(_ptr, ref _offset, _types[0]);
-					var obj_value = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_1);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_primitive(_ptr, ref _offset, _types[0]),
-								this._extract_class(_ptr, ref _offset, _types[1]));
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		// Case) Value type
-		else if (_types[0].IsEnum)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-								this._extract_primitive(_ptr, ref _offset, _types[1]));
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-								this._extract_enum(_ptr, ref _offset, _types[1]));
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				if (typeof(DateTime).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-									this._extract_datetime(_ptr, ref _offset));
-					}
-				}
-				else if (typeof(CGDK.buffer).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-									this._extract_buffer(_ptr, ref _offset));
-					}
-				}
-				else
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-									this._extract_struct(_ptr, ref _offset, _types[1]));
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-								this._extract_string(_ptr, ref _offset));
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_1	 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-								this._extract_array(_ptr, ref _offset, temp_type_1, null, -1));
-				}
-			}
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key	 = this._extract_primitive(_ptr, ref _offset, _types[0]);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_primitive(_ptr, ref _offset, _types[0]);
-					var obj_value = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_1);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_enum(_ptr, ref _offset, _types[0]),
-								this._extract_class(_ptr, ref _offset, _types[1]));
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		// Case) Value Type
-		else if (_types[0].IsValueType)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_struct(_ptr, ref _offset, _types[0]),
-								this._extract_primitive(_ptr, ref _offset, _types[1]));
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_struct(_ptr, ref _offset, _types[0]),
-								this._extract_enum(_ptr, ref _offset, _types[1]));
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				if (typeof(string).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_struct(_ptr, ref _offset, _types[0]),
-									this._extract_datetime(_ptr, ref _offset));
-					}
-				}
-				else
-				{
-					for (; _count > 0; --_count)
-					{
-						_object.Add(this._extract_struct(_ptr, ref _offset, _types[0]),
-									this._extract_struct(_ptr, ref _offset, _types[1]));
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_struct(_ptr, ref _offset, _types[0]),
-								this._extract_string(_ptr, ref _offset));
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_1	 = _types[1].GetElementType();
-
-				// check)
-				Debug.Assert(temp_type_1 != null);
-
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_struct(_ptr, ref _offset, _types[0]),
-								this._extract_array(_ptr, ref _offset, temp_type_1, null, 0));
-				}
-			}
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1	 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_struct(_ptr, ref _offset, _types[0]);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1	 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_struct(_ptr, ref _offset, _types[0]);
-					var obj_value = this._extract_ListX(_ptr, ref _offset, _types[1], temp_type_1);
-		
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_struct(_ptr, ref _offset, _types[0]),
-								this._extract_class(_ptr, ref _offset, _types[1]));
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		// Case) STRING
-		else if (typeof(string).Equals(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_string(_ptr, ref _offset);
-					var obj_value = this._extract_primitive(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_string(_ptr, ref _offset);
-					var obj_value = this._extract_enum(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				if(typeof(DateTime).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key and value
-						var obj_key = this._extract_string(_ptr, ref _offset);
-						var obj_value = this._extract_datetime(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add 
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else if(typeof(CGDK.buffer).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key and value
-						var obj_key = this._extract_string(_ptr, ref _offset);
-						var obj_value = this._extract_buffer(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add 
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key and value
-						var obj_key = this._extract_string(_ptr, ref _offset);
-						var obj_value = this._extract_struct(_ptr, ref _offset, _types[1]);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add 
-						_object.Add(obj_key, obj_value);
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_string(_ptr, ref _offset);
-					var obj_value = this._extract_string(_ptr, ref _offset);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_1	 = _types[1].GetElementType();
-
-				// check)
-				Debug.Assert(temp_type_1!= null);
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_string(_ptr, ref _offset);
-					var obj_value = this._extract_array(_ptr, ref _offset, temp_type_1, null, 0);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_string(_ptr, ref _offset);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_1	 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					var	obj_key = this._extract_string(_ptr, ref _offset);
-					var	obj_value = this._extract_ListX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_string(_ptr, ref _offset);
-					var obj_value = this._extract_class(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		// Case) Array
-		else if (_types[0].IsArray)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var	temp_type_0	 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-					var	obj_value = this._extract_primitive(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var	temp_type_0	 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-					var	obj_value = this._extract_enum(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				var	temp_type_0	 = _types[0].GetGenericArguments()[0];
-				if(typeof(DateTime).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key values
-						var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-						var	obj_value = this._extract_datetime(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else if(typeof(CGDK.buffer).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key values
-						var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-						var	obj_value = this._extract_buffer(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else
-				{
-
-					for (; _count > 0; --_count)
-					{
-						// - get key values
-						var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-						var	obj_value = this._extract_struct(_ptr, ref _offset, _types[1]);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add
-						_object.Add(obj_key, obj_value);
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var	temp_type_0	= _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-					var	obj_value = this._extract_string(_ptr, ref _offset);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-					var	obj_value = this._extract_array(_ptr, ref _offset, temp_type_1, null, 0);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);;
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) List
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-					var obj_value = this._extract_ListX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				// - 
-				var	temp_type_0	 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var	obj_key = this._extract_array(_ptr, ref _offset, temp_type_0, null, 0);
-					var	obj_value = this._extract_class(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		// Case) Dictionary
-		else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var	temp_type_0	 = _types[0].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-					var obj_value = this._extract_primitive(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var	temp_type_0	 = _types[0].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-					var obj_value = this._extract_enum(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				var	temp_type_0	 = _types[0].GetGenericArguments();
-				if(typeof(DateTime).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key and value
-						var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-						var obj_value = this._extract_datetime(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add 
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else if(typeof(CGDK.buffer).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key and value
-						var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-						var obj_value = this._extract_buffer(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add 
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key and value
-						var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-						var obj_value = this._extract_struct(_ptr, ref _offset, _types[1]);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add 
-						_object.Add(obj_key, obj_value);
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-					var obj_value = this._extract_string(_ptr, ref _offset);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments();
-				var	temp_type_1 = _types[1].GetElementType();
-
-				// check)
-				Debug.Assert(temp_type_0 != null);
-
-				// check)
-				Debug.Assert(temp_type_1 != null);
-
-                for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-					var obj_value = this._extract_array(_ptr, ref _offset, temp_type_1, null, -1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments();
-				var	temp_type_1	 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) List
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments();
-				var	temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				// - 
-				var	temp_type_0 = _types[0].GetGenericArguments();
-
-				// - 
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_DictionaryX(_ptr, ref _offset, _types[0], temp_type_0);
-					var obj_value = this._extract_class(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (typeof(System.Collections.IList).IsAssignableFrom(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-					var	obj_value = this._extract_primitive(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-					var	obj_value = this._extract_enum(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				if(typeof(DateTime).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key values
-						var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-						var	obj_value = this._extract_datetime(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else if(typeof(CGDK.buffer).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key values
-						var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-						var	obj_value = this._extract_buffer(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key values
-						var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-						var	obj_value = this._extract_struct(_ptr, ref _offset, _types[1]);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add
-						_object.Add(obj_key, obj_value);
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-					var	obj_value = this._extract_string(_ptr, ref _offset);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetElementType();
-
-				// debug
-				Debug.Assert(temp_type_1 != null);
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-					var	obj_value = this._extract_array(_ptr, ref _offset, temp_type_1, null, -1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-					var	obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) List
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-					var	obj_value = this._extract_ListX(_ptr, ref _offset, _types[1], temp_type_1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				// - 
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				// - 
-				for (; _count > 0; --_count)
-				{
-					// - get key values
-					var	obj_key = this._extract_ListX(_ptr, ref _offset, _types[0], temp_type_0);
-					var	obj_value = this._extract_class(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsClass && _is_serializable_type(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				// - get type
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-					var obj_value = this._extract_primitive(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-					var obj_value = this._extract_enum(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Value Type
-			else if (_types[1].IsValueType)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				if(typeof(DateTime).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						// - get key and value
-						var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-						var obj_value = this._extract_datetime(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						// - add 
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else if(typeof(CGDK.buffer).Equals(_types[1]))
-				{
-					for (; _count > 0; --_count)
-					{
-						var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-						var obj_value = this._extract_buffer(_ptr, ref _offset);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						_object.Add(obj_key, obj_value);
-					}
-				}
-				else
-				{
-
-					for (; _count > 0; --_count)
-					{
-						var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-						var obj_value = this._extract_struct(_ptr, ref _offset, _types[1]);
-
-						// check)
-						Debug.Assert(obj_key != null);
-
-						_object.Add(obj_key, obj_value);
-					}
-				}
-			}
-			// Case) STRING
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-					var obj_value = this._extract_string(_ptr, ref _offset);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Array
-			else if (_types[1].IsArray)
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-					var obj_value = this._extract_array(_ptr, ref _offset, temp_type_1, null, -1);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Dictionary
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1 = _types[1].GetGenericArguments();
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-					var obj_value = this._extract_DictionaryX(_ptr, ref _offset, _types[1], temp_type_1);;
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) List
-			else if (typeof(System.Collections.IList).IsAssignableFrom(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-				var	temp_type_1	 = _types[1].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-					var obj_value = this._extract_ListX(_ptr, ref _offset, _types[1], temp_type_1);
-		
-					// check)
-					Debug.Assert(obj_key != null);
-
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			// Case) Class
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var	temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				for (; _count > 0; --_count)
-				{
-					// - get key and value
-					var obj_key = this._extract_class(_ptr, ref _offset, temp_type_0);
-					var obj_value = this._extract_class(_ptr, ref _offset, _types[1]);
-
-					// check)
-					Debug.Assert(obj_key != null);
-
-					// - add 
-					_object.Add(obj_key, obj_value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-				// Throw) 
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else
-		{
-			// check) 지원되지 않는 Type이다.
-			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-		
-			// Throw) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-		}
-	}
-#if NET
-	private object?		_extract_ListX			(long _ptr, ref long _offset, Type _type_create, Type _type)
-#else
-	private object		_extract_ListX			(long _ptr, ref long _offset, Type _type_create, Type _type)
-#endif
-	{
-		// - [데이터 갯수]를 읽어들인다.
-		int count_item = _extract_primitive<int>(_ptr, ref _offset);
-
-		// check) temp_count가 -1이면 null을 리턴한다.
-		if (count_item != -1)
-		{
-			// - get values
-			var obj_value = Activator.CreateInstance(_type_create);
-			var obj_value_list = obj_value as System.Collections.IList;
-
-			// debug)
-			Debug.Assert(obj_value_list != null);
-
-			// - extract list
-			this._extract_List(_ptr, ref _offset, obj_value_list, count_item, _type);
-
-			return obj_value;
-		}
-		else
-		{
-			return null;
-		}
-	}
-	private unsafe void	_extract_List			(long _ptr, ref long _offset, System.Collections.IList _object, int _count, Type _type)
-	{
-		// 2) [데이터]들을 읽어들인다.
-		if (_type.IsPrimitive)
-		{
-			// - Type의 크기를 구한다.
-			var	sizeType = Marshal.SizeOf(_type);
+			// check) 
+			Debug.Assert(this.m_buffer != null);
 
 		#if _USE_BOUND_CHECK
-			// check) [버퍼_길이]가 T의 크기보다 작으면 Exception을 던진다.
-			if (_offset + (sizeType * _count) > this.m_count)
-				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+			// check)
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
 		#endif
 
-			// - copy
-			if (_type == typeof(long))
+			fixed (byte* ptr = this.m_buffer)
 			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(long*)(ptr));
-				}
-			}
-			else if (_type == typeof(ulong))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(ulong*)(ptr));
-				}
-			}
-			else if (_type == typeof(double))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(double*)(ptr));
-				}
-			}
-			else if (_type == typeof(int))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(int*)(ptr));
-				}
-			}
-			else if (_type == typeof(uint))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(uint*)(ptr));
-				}
-			}
-			else if (_type == typeof(float))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(float*)(ptr));
-				}
-			}
-			else if (_type == typeof(short))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(short*)(ptr));
-				}
-			}
-			else if (_type == typeof(ushort))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(ushort*)(ptr));
-				}
-			}
-			else if (_type == typeof(char))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(char*)(ptr));
-				}
-			}
-			else if (_type == typeof(sbyte))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(sbyte*)(ptr));
-				}
-			}
-			else if (_type == typeof(byte))
-			{
-				for (var offset_end = _offset + sizeType * _count; _offset < offset_end; _offset +=_count)
-				{
-					IntPtr ptr = new IntPtr(_ptr + _offset);
-					_object.Add(*(byte*)(ptr));
-				}
-			}
-			else
-				throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] buffer size is short");
+				// 1) calculare ptr_now & ptr_bound
+				var ptr_pre = ptr + this.m_offset + this.m_count;
+				var ptr_now = ptr_pre;
+				var ptr_bound = ptr + this.m_buffer.Length;
 
-		}
-		else if (_type.IsEnum)
-		{
-			for (; _count > 0; --_count)
-			{
-				_object.Add(this._extract_enum(_ptr, ref _offset, _type));
+				// 2) append
+				BufferSerializer.Get<T>.instance.process_append(ref ptr_now, ptr_bound, _value);
+
+				// 3) update offset & count
+				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
-		// Case) Value Type
-		else if (_type.IsValueType)
-		{
-			if(typeof(DateTime).Equals(_type))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_datetime(_ptr, ref _offset));
-				}
-			}
-			else if(typeof(CGDK.buffer).Equals(_type))
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_buffer(_ptr, ref _offset));
-				}
-			}
-			else
-			{
-				for (; _count > 0; --_count)
-				{
-					_object.Add(this._extract_struct(_ptr, ref _offset, _type));
-				}
-			}
-		}
-		// Case) STRING
-		else if (typeof(string).Equals(_type))
-		{
-			for (; _count > 0; --_count)
-			{
-				_object.Add(this._extract_string(_ptr, ref _offset));
-			}
-		}
-		// Case) Array
-		else if (_type.IsArray)
-		{
-			var	temp_type = _type.GetElementType();
-
-			// check)
-			Debug.Assert(temp_type!= null);
-
-			for (; _count > 0; --_count)
-			{
-				_object.Add(this._extract_array(_ptr, ref _offset, temp_type, null, -1));
-			}
-		}
-		// Case) Dictionary
-		else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_type))
-		{
-			var	temp_type = _type.GetGenericArguments();
-
-			for (; _count > 0; --_count)
-			{
-				_object.Add(this._extract_DictionaryX(_ptr, ref _offset, _type, temp_type));
-			}
-		}
-		// Case) List
-		else if (typeof(System.Collections.IList).IsAssignableFrom(_type))
-		{
-			var	temp_type = _type.GetGenericArguments()[0];
-
-			for (; _count > 0; --_count)
-			{
-				_object.Add(this._extract_ListX(_ptr, ref _offset, _type, temp_type));
-			}
-		}
-		// Case) Class
-		else if (_type.IsClass && _is_serializable_type(_type))
-		{
-			for (; _count > 0; --_count)
-			{
-				_object.Add(this._extract_class(_ptr, ref _offset, _type));
-			}
-		}
-		else
-		{
-			// check) 지원되지 않는 Type이다.
-			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-			// Throw) 
-			throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] Not Supported TYPE.");
-		}
-	}
-
-	public void			extract_skip(int _amount)									{ this.m_offset+=_amount; this.m_count-=_amount;}
-	public unsafe char		extract_char()												
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(char) <= this.m_count); 
-			
-		// check) 
-		if(sizeof(char) > this.m_count)
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		int position = this.m_offset;
-		this.m_offset += sizeof(char);
-		this.m_count -= sizeof(char);
-			
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(char*)(dest + position);
-		}
-	}
-	public unsafe sbyte		extract_sbyte()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(sbyte) <= this.m_count);
-			
-		// check) 
-		if(sizeof(sbyte) > this.m_count)
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		int position = this.m_offset;
-		this.m_offset += sizeof(sbyte);
-		this.m_count -= sizeof(sbyte);
-			
-		// 2) get valueand return
-		return (sbyte)this.m_buffer[position];
-	}
-	public unsafe byte		extract_byte()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(byte) <= this.m_count);
-
-		// check) 
-		if(sizeof(byte) > this.m_count)
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(byte);
-		this.m_count -= sizeof(byte);
-			
-		// 2) get valueand return
-		return this.m_buffer[position];
-	}
-	public unsafe short		extract_short()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(short) <= this.m_count);
-
-		// check) 
-		if(sizeof(short) > this.m_count) 
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(short);
-		this.m_count -= sizeof(short); 
-
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(short*)(dest + position);
-		}
-	}
-	public unsafe ushort	extract_ushort()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(ushort) <= this.m_count);
-
-		// check) 
-		if(sizeof(ushort) > this.m_count) 
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(ushort);
-		this.m_count -= sizeof(ushort); 
-			
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(ushort*)(dest + position);
-		}
-	}
-	public unsafe int	extract_int()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(int) <= this.m_count);
-
-		// check) 
-		if(sizeof(int) > this.m_count) 
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(int);
-		this.m_count -= sizeof(int);
-			
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(int*)(dest + position);
-		}
-	}
-	public unsafe uint		extract_uint()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(uint) <= this.m_count);
-
-		// check) 
-		if(sizeof(uint) > this.m_count) 
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(uint);
-		this.m_count -= sizeof(uint);
-
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(uint*)(dest + position);
-		}
-	}
-
-	public unsafe long		extract_long()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(long) <= this.m_count);
-
-		// check) 
-		if(sizeof(long) > this.m_count)
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(long);
-		this.m_count -= sizeof(long);
-			
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(long*)(dest + position);
-		}
-	}
-	public unsafe ulong		extract_ulong()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(ulong) <= this.m_count);
-
-		// check) 
-		if(sizeof(ulong) > this.m_count)
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)"); 
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(ulong);
-		this.m_count -= sizeof(ulong);
-			
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(ulong*)(dest + position);
-		}
-	}
-	public unsafe float		extract_float()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(float) <= this.m_count);
-
-		// check) 
-		if(sizeof(float) > this.m_count)
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(float);
-		this.m_count -= sizeof(float);
-			
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(float*)(dest + position);
-		}
-	}
-	public unsafe double	extract_double()
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && sizeof(double) <= this.m_count);
-
-		// check) 
-		if(sizeof(double) > this.m_count)
-			throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Buffer size is not enougth (required , count)");
-
-		// 1) update offset and count
-		var position = this.m_offset;
-		this.m_offset = position + sizeof(double);
-		this.m_count -= sizeof(double);
-			
-		// 2) get valueand return
-		fixed (byte* dest = this.m_buffer)
-		{
-			return *(double*)(dest + position);
-		}
-	}
-	public string		extract_string()
-	{
-		return extract<string>();
-	}
-
-// 3) set_front (값 써넣기)
-	private unsafe void set_front_primitive(object _object, int _offset, Type _type)
-		{
-		// - [버퍼] Pinned 시킨다.
-		GCHandle pinnedArray = GCHandle.Alloc(this.m_buffer, GCHandleType.Pinned);
-
-		// - [버퍼_포인터]를 얻는다.
-		var ptr = pinnedArray.AddrOfPinnedObject() + this.m_offset + _offset;
-
-		try
-		{
-			// - casting
-			object temp = Convert.ChangeType(_object, _type);
-
-			// - write
-			Marshal.StructureToPtr(temp, ptr, false);
-
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-		}
-		catch (System.Exception _e)
-		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer extract<T>(ICollection<string>): " + _e.Message);
-
-			// - Pinned된 [버퍼]를 Free한다.
-			pinnedArray.Free();
-
-			// Reraise) 
-			throw;
-		}
-	}
-
-    public unsafe void	set_front<T>(char _object, int _offset = 0) where T : unmanaged 
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(char))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(sbyte _object, int _offset = 0) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(sbyte))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(byte _object, int _offset = 0) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(byte))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(short _object, int _offset = 0) where T : unmanaged 
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(short))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(ushort _object, int _offset = 0) where T : unmanaged 
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(ushort))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(int _object, int _offset = 0) where T : unmanaged 
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(int))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(uint _object, int _offset = 0) where T : unmanaged 
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(uint))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(long _object, int _offset = 0) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(long))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(ulong _object, int _offset = 0) where T : unmanaged
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(ulong))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(float _object, int _offset = 0) where T : unmanaged 
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(float))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-	public unsafe void	set_front<T>(double _object, int _offset = 0) where T : unmanaged 
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null);
-
-		// check)
-		Debug.Assert((this.m_buffer.Length - this.m_offset - _offset) >= sizeof(T));
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_buffer.Length - this.m_offset - _offset) < sizeof(T))
-			throw new System.OverflowException("buffer overflow");
-	#endif
-
-		// 1) get type
-		var type = typeof(T);
-
-		// 2) copy
-		if (type == typeof(double))
-			BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-		else
-			this.set_front_primitive(_object, _offset, type);
-	}
-
-	public void			set_front(byte[] _object, int _offset_src, int _count, int _offset = 0) 
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && (this.m_offset+this.m_count+_count)<=this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_offset + this.m_count + _count) > this.m_buffer.Length)
-			throw new System.OverflowException("out of range");
-	#endif
-		
-		// 1) copy
-		System.Buffer.BlockCopy(_object, _offset_src, this.m_buffer, this.m_offset+_offset, _count);
-	}
-	public void			set_front(buffer _object, int _offset = 0)					
-	{
-		// check)
-		Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.m_count) <= this.m_buffer.Length); 
-
-		// check)
-		Debug.Assert(_object.m_buffer != null); 
-			
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_offset + this.m_count + _object.m_count) > this.m_buffer.Length)
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) block copy
-		System.Buffer.BlockCopy(_object.m_buffer, _object.m_offset, this.m_buffer, this.m_offset + _offset, _object.m_count);
-	}
-    public void			set_front(char _object, int _offset = 0)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer != null && (this.m_offset + _offset + sizeof(char)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(char))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(sbyte _object, int _offset = 0)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(sbyte)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(sbyte))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(byte _object, int _offset = 0)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(byte)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(byte))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(short _object, int _offset = 0)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(short)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(short))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(ushort _object, int _offset = 0)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(ushort)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(ushort))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(int _object, int _offset = 0)
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(int)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(int))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(uint _object, int _offset = 0) 
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(uint)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(uint))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(long _object, int _offset = 0) 
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(long)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(long))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(ulong _object, int _offset = 0) 
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(ulong)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(ulong))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(float _object, int _offset = 0) 
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(float)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(float))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-	public void			set_front(double _object, int _offset = 0) 
-	{
-		// check) 
-		Debug.Assert(this.m_buffer!=null && (this.m_offset + _offset + sizeof(double)) <= this.m_buffer.Length);
-
-	#if _USE_BOUND_CHECK
-		// check)
-		if(this.m_buffer == null)
-			throw new System.NullReferenceException("buffer is not allocated");
-
-		// check)
-		if((this.m_count + _offset) < sizeof(double))
-			throw new System.OverflowException("out of range");
-	#endif
-
-		// 1) copy
-		BitConverter.GetBytes(_object).CopyTo(this.m_buffer, this.m_offset + _offset);
-	}
-
-// 4) get_front( 값 읽기)
-	public T			get_front<T>(int _offset = 0)								{ buffer temp = new buffer(this.m_buffer, this.m_offset+_offset, m_count-_offset); return temp.extract<T>();}
-	public void			get_front<T>(ref T _object, int _offset = 0)				{ _object = this.get_front<T>(_offset); }
-	public void			get_front<T>(ref char _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_char(_offset); }
-	public void			get_front<T>(ref sbyte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_sbyte(_offset); }
-    public void			get_front<T>(ref byte _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_byte(_offset); }
-    public void			get_front<T>(ref short _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_short(_offset); }
-    public void			get_front<T>(ref ushort _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ushort(_offset); }
-    public void			get_front<T>(ref int _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_int(_offset); }
-    public void			get_front<T>(ref uint _object, int _offset = 0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_uint(_offset); }
-    public void			get_front<T>(ref long _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_long(_offset); }
-    public void			get_front<T>(ref ulong _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_ulong(_offset); }
-    public void			get_front<T>(ref float _object, int _offset=0) where T : unmanaged { Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_float(_offset); }
-    public void			get_front<T>(ref double _object, int _offset=0) where T : unmanaged	{ Debug.Assert(Marshal.SizeOf(typeof(T)) == Marshal.SizeOf(_object), "[CGDK.buffer] parameter is different with T (Must be casted as T)"); _object = this.get_front_double(_offset); }
-
-    public char			get_front_char(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(char)) <= this.m_buffer.Length); return BitConverter.ToChar(this.m_buffer, this.m_offset + _offset);}
-	public sbyte		get_front_sbyte(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(sbyte)) <= this.m_buffer.Length); return (sbyte)this.m_buffer[this.m_offset + _offset];}
-	public byte			get_front_byte(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(byte)) <= this.m_buffer.Length); return this.m_buffer[this.m_offset + _offset]; }
-	public short		get_front_short(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(short)) <= this.m_buffer.Length); return BitConverter.ToInt16(this.m_buffer, this.m_offset + _offset);}
-	public ushort		get_front_ushort(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(ushort)) <= this.m_buffer.Length); return BitConverter.ToUInt16(this.m_buffer, this.m_offset + _offset);}
-	public int			get_front_int(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(int)) <= this.m_buffer.Length); return BitConverter.ToInt32(this.m_buffer, this.m_offset + _offset);}
-	public uint			get_front_uint(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(uint)) <= this.m_buffer.Length); return BitConverter.ToUInt32(this.m_buffer, this.m_offset + _offset);}
-	public long			get_front_long(int _offset = 0)								{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(long)) <= this.m_buffer.Length); return BitConverter.ToInt64(this.m_buffer, this.m_offset + _offset);}
-	public ulong		get_front_ulong(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(ulong)) <= this.m_buffer.Length); return BitConverter.ToUInt64(this.m_buffer, this.m_offset + _offset);}
-	public float		get_front_float(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(float)) <= this.m_buffer.Length); return BitConverter.ToSingle(this.m_buffer, this.m_offset + _offset);}
-	public double		get_front_double(int _offset = 0)							{ Debug.Assert(this.m_buffer != null && (_offset + sizeof(double)) <= this.m_buffer.Length); return BitConverter.ToDouble(this.m_buffer, this.m_offset + _offset);}
-	public void			get_front_array(byte[] _object, int _offset_src, int _count, int _offset = 0) { Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.Length) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset+_offset, _object, _offset_src, _count);}
-	public void			get_front_buffer(buffer _object, int _offset = 0)			{ Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + _object.m_count) <= this.m_buffer.Length); System.Buffer.BlockCopy(this.m_buffer, this.m_offset + _offset, _object.m_buffer, _object.m_offset, _object.m_count); }
-	public uint			get_front_CRC()												{ return 0;}
-
-	public static int	get_size_of(object _object)									{ return _size_of(_object);}
-
-	private static int	_size_of(object _object)
-	{
-		// Declare) 
-		int	size = 0;
-
-		try
-		{
-			Type tmp = _object.GetType();
-                
-			if (tmp.IsPrimitive)
-			{
-				size += Marshal.SizeOf(tmp);
-			}
-			else if(tmp.IsEnum)
-			{
-				size += Marshal.SizeOf(tmp.GetFields()[0].FieldType);
-			}
-			else if (tmp.IsValueType)
-			{
-				if(typeof(DateTime).Equals(tmp))
-				{
-					size += _size_of_DateTime();
-				}
-				else if(typeof(CGDK.buffer).Equals(tmp))
-				{
-					size += _size_of_buffer((buffer)_object);
-				}
-				else
-				{
-					size += _size_of_value(_object);
-				}
-			}
-			else if (tmp.IsArray)
-			{
-				// - get element type
-				var temp_element_type = _object.GetType().GetElementType();
-
-				// check)
-				Debug.Assert(temp_element_type != null);
-
-				// - get size
-				size += _size_of_Collection(_object as System.Collections.ICollection, temp_element_type);
-			}
-			else if (typeof(string).Equals(tmp))
-			{
-				size += _size_of_string(_object as string);
-			}
-			else
-			{
-				var tempObject1 = _object as System.Collections.IDictionary;
-				if (tempObject1!=null)
-				{
-					size += _size_of_Dictionary(tempObject1, tmp.GetGenericArguments());
-				}
-				else
-				{
-					var tempObject2 = _object as System.Collections.ICollection;
-
-					if (tempObject2 !=null)
-					{
-						size += _size_of_Collection(tempObject2, _object.GetType().GetGenericArguments()[0]);
-					}
-					else if(tmp.IsClass)
-					{
-						size += _size_Of_class(_object);
-					}
-					else
-					{
-						size += _size_of_value(_object);
-					}
-				}
-			}
-		}
-		catch (System.Exception _e)
-		{
-			// Trace) 
-			Debug.WriteLine("CGDK.buffer size_of<T>(ICollection<string>): " + _e.Message);
-
-			// Reraise) 
-			throw;
-		}
-
-		// Return0 
-		return	size;
-	}
-
-	private static int	_size_of_DateTime()
-	{
-		return sizeof(long);
-	}
-
-	private static int _size_of_buffer(CGDK.buffer _buffer)
-	{
-		return (_buffer.data!=null) ? sizeof(UInt64) + _buffer.size : sizeof(UInt64);
-	}
-
-#if NET
-	private static int	_size_of_Dictionary(System.Collections.IDictionary? _object, Type[] _types)
-#else
-	private static int	_size_of_Dictionary(System.Collections.IDictionary _object, Type[] _types)
-#endif
-	{
-		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-		if (_object == null)
-		{
-			return sizeof(int);
-		}
-
-		// Declaere)
-		int	size = 0;
-
-		// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
-		size += sizeof(int);
-
-		// 2) [데이터]들을 써넣는다.
-		if (_types[0].IsPrimitive)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int size_0 = Marshal.SizeOf(_types[0]);
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				size += _object.Count*(size_0 + size_1);
-			}
-			else if (_types[1].IsEnum)
-			{
-				int size_0 = Marshal.SizeOf(_types[0]);
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				size += _object.Count*(size_0 + size_1);
-			}
-			else if (_types[1].IsValueType)
-			{
-				int size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-				int size_0 = Marshal.SizeOf(_types[0]);
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				int size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-				int size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				int size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				int size_0 = Marshal.SizeOf(_types[0]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsEnum)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				size += _object.Count*(size_0 + size_1);
-			}
-			else if (_types[1].IsEnum)
-			{
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				size += _object.Count*(size_0 + size_1);
-			}
-			else if (_types[1].IsValueType)
-			{
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				int size_0 = Marshal.SizeOf(_types[0].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += size_0;
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsValueType)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsValueType)
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += _size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Key);
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsArray)
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsValueType)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				var temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetElementType();
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_0 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (typeof(string).Equals(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsValueType)
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += _size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_string(temp_enum.Key as string);
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsValueType)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += _size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				var temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Dictionary(temp_enum.Key as System.Collections.IDictionary, temp_type_0);
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsValueType)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					_size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					_size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				var temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_type_0 = _types[0].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_Collection(temp_enum.Key as System.Collections.ICollection, temp_type_0);
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else if (_types[0].IsClass && _is_serializable_type(_types[0]))
-		{
-			if (_types[1].IsPrimitive)
-			{
-				var temp_enum = _object.GetEnumerator();
-
-				int size_1 = Marshal.SizeOf(_types[1]);
-
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsEnum)
-			{
-				var temp_enum = _object.GetEnumerator();
-
-				int size_1 = Marshal.SizeOf(_types[1].GetFields()[0].FieldType);
-
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += size_1;
-				}
-			}
-			else if (_types[1].IsValueType)
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += _size_of_value(temp_enum.Value);
-				}
-			}
-			else if (_types[1].IsArray)
-			{
-				var temp_type_1 = _types[1].GetElementType();
-
-				// debug)
-				Debug.Assert(temp_type_1 != null);
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			else if (typeof(string).Equals(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += _size_of_string(temp_enum.Value as string);
-				}
-			}
-			else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments();
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += _size_of_Dictionary(temp_enum.Value as System.Collections.IDictionary, temp_type_1);
-				}
-			}
-			else if (typeof(System.Collections.ICollection).IsAssignableFrom(_types[1]))
-			{
-				var temp_type_1 = _types[1].GetGenericArguments()[0];
-
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += _size_of_Collection(temp_enum.Value as System.Collections.ICollection, temp_type_1);
-				}
-			}
-			if (_types[1].IsClass && _is_serializable_type(_types[1]))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_Of_class(temp_enum.Key);
-					size += _size_Of_class(temp_enum.Value);
-				}
-			}
-			else
-			{
-				// check) 지원되지 않는 Type이다.
-				Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-				// Throw) 
-				throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-			}
-		}
-		else
-		{
-			// check) 지원되지 않는 Type이다.
-			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-			// Throw) 
-			throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-		}
-
-		return size;
-	}
-#if NET
-	private static int	_size_of_Collection(System.Collections.ICollection? _object, Type _type)
-#else
-	private static int	_size_of_Collection(System.Collections.ICollection _object, Type _type)
-#endif
-	{
-		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-		if (_object == null)
-		{
-			return sizeof(int);
-		}
-
-		// Declare) 
-		int	size = 0;
-
-		// 1) [데이터 갯수]를 써넣는다. (NULL을 포함한 문자열의 길이)
-		size += sizeof(int);
-
-		// 3) [데이터]들을 써넣는다.
-		if (_type.IsPrimitive)
-		{
-			var temp_enum = _object.GetEnumerator();
-
-			size += Marshal.SizeOf(_type)*_object.Count;
-		}
-		else if (_type.IsEnum)
-		{
-			var temp_enum = _object.GetEnumerator();
-
-			size += Marshal.SizeOf(_type.GetFields()[0].FieldType) *_object.Count;
-		}
-		else if (_type.IsValueType)
-		{
-			if (typeof(DateTime).Equals(_type))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_DateTime();
-				}
-			}
-			if (typeof(DateTime).Equals(_type))
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_buffer((buffer)temp_enum.Current);
-				}
-			}
-			else
-			{
-				var temp_enum = _object.GetEnumerator();
-				while (temp_enum.MoveNext())
-				{
-					size += _size_of_value(temp_enum.Current);
-				}
-			}
-		}
-		else if (_type.IsArray)
-		{
-			var tmp_type = _type.GetElementType();
-
-			// debug)
-			Debug.Assert(tmp_type != null);
-
-			var temp_enum = _object.GetEnumerator();
-			while (temp_enum.MoveNext())
-			{
-				size += _size_of_Collection(temp_enum.Current as System.Collections.ICollection, tmp_type);
-			}
-		}
-		else if (typeof(string).Equals(_type))
-		{
-			var temp_enum = _object.GetEnumerator();
-			while (temp_enum.MoveNext())
-			{
-				size += _size_of_string(temp_enum.Current as string);
-			}
-		}
-		else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_type))
-		{
-			Type[] temp_type = _type.GetGenericArguments();
-
-			var temp_enum = _object.GetEnumerator();
-			while (temp_enum.MoveNext())
-			{
-				size += _size_of_Dictionary(temp_enum.Current as System.Collections.IDictionary, temp_type);
-			}
-		}
-		else if (typeof(System.Collections.ICollection).IsAssignableFrom(_type))
-		{
-			Type tmp_type = _type.GetGenericArguments()[0];
-
-			var temp_enum = _object.GetEnumerator();
-			while (temp_enum.MoveNext())
-			{
-				size += _size_of_Collection(temp_enum.Current as System.Collections.ICollection, tmp_type);
-			}
-		}
-		else if (_type.IsClass && _is_serializable_type(_type))
-		{
-			var temp_enum = _object.GetEnumerator();
-			while (temp_enum.MoveNext())
-			{
-				size += _size_Of_class(temp_enum.Current);
-			}
-		}
-		else
-		{
-			// check) 지원되지 않는 Type이다.
-			Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
-
-			// Throw) 
-			throw new CGDK.Exception.Serialize(size, "[CGDK.buffer] Not Supported TYPE.");
-		}
-
-		//_append_Collection
-		return	size;
-	}
-#if NET
-	private static int	_size_Of_class(object? _object, Type? _base_type = null)
-#else
-	private static int	_size_Of_class(object _object, Type _base_type = null)
-#endif
-	{
-        // check)
-        if (_object == null)
-            throw new System.Exception("[CGDK.buffer] _object is null");
-
-        // 1) Get Type ( 재귀용 _base_type 이 존재한다면 그걸쓰고 아니라면 Data 를 쓴다.  )
-        Type temp_type = _base_type ?? _object.GetType();
-
-		// check) Serializable이 아니면 리턴한다.
-		if (_is_serializable_type(temp_type) == false)
-			return 0;
-
-		// Declare)
-		int	size = 0;
-
-        // 2) 부모가 없는객체가 나올때까지 재귀를 돌린다.
-        if(temp_type.BaseType != null)
-        {
-            size += _size_Of_class(_object, temp_type.BaseType);
-        }
-        // 부모가 없는건 Object 클래스 이므로 패스한다.
-        else
-        {
-            return 0;
-        }
-
-        // 3) 변수들을 얻는다.
-        var temp_field = temp_type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-        // 4) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
-		foreach(var iter in temp_field)
+		public unsafe void	append<K, V>(Dictionary<K, V> _value) where K : notnull
 		{
 			// check) 
-			if (iter.IsNotSerialized==true)
-				continue;
+			Debug.Assert(this.m_buffer != null);
 
+		#if _USE_BOUND_CHECK
 			// check)
-			if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
-				continue;
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+		#endif
 
-			var temp = iter.GetValue(_object);
+			fixed (byte* ptr = this.m_buffer)
+			{
+				// 1) calculare ptr_now & ptr_bound
+				var ptr_pre = ptr + this.m_offset + this.m_count;
+				var ptr_now = ptr_pre;
+				var ptr_bound = ptr + this.m_buffer.Length;
 
-			// - null이 아닐 경우에만 씀
-			if (temp != null)
-			{
-				size += _size_of(temp);
-			}
-			// - null일 경우 그냥 -1만 쓰고 끝냄
-			else
-			{
-				// - -1을 쓰고 끝낸다.
-				size += sizeof(int);
-				continue;
+				// 2) append
+				BufferSerializer.Get_Dictionary<K, V>.instance.process_append(ref ptr_now, ptr_bound, _value);
+
+				// 3) update offset & count
+				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
-		return	size;
-	}
-#if NET
-	private static int	_size_of_value(object? _object)
-#else
-	private static int	_size_of_value(object _object)
-#endif
-	{
-		// check)
-		if(_object == null)
-			throw new System.Exception("[CGDK.buffer] _object is null");
-
-		// Declare)
-		int	size = 0;
-
-		Type temp_type = _object.GetType();
-		var temp_field = temp_type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
-
-		foreach(var iter in temp_field)
+		public unsafe void	append<T>(List<T> _value)
 		{
+			// check) 
+			Debug.Assert(this.m_buffer != null);
+
+		#if _USE_BOUND_CHECK
 			// check)
-			if(iter.IsNotSerialized==true)
-				continue;
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+		#endif
 
-			var temp = iter.GetValue(_object);
+			fixed (byte* ptr = this.m_buffer)
+			{
+				// 1) calculare ptr_now & ptr_bound
+				var ptr_pre = ptr + this.m_offset + this.m_count;
+				var ptr_now = ptr_pre;
+				var ptr_bound = ptr + this.m_buffer.Length;
 
-			// - null이 아닐 경우에만 씀
-			if (temp != null)
-			{
-				size += _size_of(temp);
-			}
-			// - null일 경우 그냥 -1만 쓰고 끝냄
-			else
-			{
-				// - -1을 쓰고 끝낸다.
-				size += sizeof(int);
-				continue;
+				// 2) append
+				BufferSerializer.Get_List<T>.instance.process_append(ref ptr_now, ptr_bound, _value);
+
+				// 3) update offset & count
+				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
 
-		return	size;
-	}
-#if NET
-	private static int _size_of_string(string? _string)
-#else
-	private static int _size_of_string(string _string)
-#endif
-	{
-		// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-		if (_string == null)
+		public unsafe T		extract<T>()
 		{
-			return sizeof(int);
+			// check) 
+			Debug.Assert(this.m_buffer != null);
+
+		#if _USE_BOUND_CHECK
+			// check)
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+		#endif
+
+			var count = this.m_count;
+
+			fixed (byte* ptr = this.m_buffer)
+			{
+				// 1) prepare extract
+				var ptr_now = ptr + this.m_offset;
+
+				// 2) extract
+				var temp = BufferSerializer.Get<T>.instance.process_extract(ref ptr_now, ref count);
+
+				// 3) update offset & count
+				this.m_offset = (int)(ptr_now - ptr);
+				this.m_count = count;
+
+				// check)
+				Debug.Assert(temp != null);
+
+				// retrn) 
+				return temp;
+			}
 		}
 
-		// 1) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
-		var temp_array = _string.ToCharArray();
-		var	iStringLength = temp_array.Length;
+		// 3) set_front (값 써넣기/읽기)
+		public unsafe void	set_front<T>(T _object, int _offset = 0)
+		{
+			// check) 
+			Debug.Assert(this.m_buffer != null);
 
-		// Return) [버퍼_길이]를 리턴한다.
-		return	(sizeof(int) +(iStringLength+1)*sizeof(char));
+		#if _USE_BOUND_CHECK
+			// check)
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+		#endif
+			fixed (byte* ptr = this.m_buffer)
+			{
+				// 1) calculare ptr_now & ptr_bound
+				var ptr_now = ptr + this.m_offset + _offset;
+				var ptr_bound = ptr + this.m_buffer.Length;
+
+				// 2) append
+				BufferSerializer.Get<T>.instance.process_append(ref ptr_now, ptr_bound, _object);
+			}
+		}
+		public unsafe T?	get_front<T>(int _offset = 0)
+		{
+			// check) 
+			Debug.Assert(this.m_buffer != null);
+
+		#if _USE_BOUND_CHECK
+			// check)
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+		#endif
+
+			// 1) get count
+			var count = this.m_count;
+
+			fixed (byte* ptr = this.m_buffer)
+			{
+				// 2) prepare extract
+				var ptr_now = ptr + this.m_offset + _offset;
+
+				// 3) extract
+				return BufferSerializer.Get<T>.instance.process_extract(ref ptr_now, ref count);
+			}
+		}
+
+		public static int	get_size_of<T>(T _object)
+		{
+			return BufferSerializer.Get<T>.instance.process_get_size_of(_object);
+		}
+
+		// 1) Buffer
+#if NET
+		private byte[]?	m_buffer;
+	#else
+		private byte[]	m_buffer;
+	#endif
+
+		// 2) Buffer중 시작 위치
+		private int		m_offset;
+
+		// 3) 사용 길이 (m_iOffset부터 Buffer중 사용하는 끝까지의 길이)
+		private int		m_count;
 	}
 
+	namespace BufferSerializer
+	{
+		public interface IBase<T>
+		{
+			unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object);
+			unsafe T? process_extract(ref byte* _ptr, ref int _count);
+			unsafe int process_get_size_of(T? _object);
+		}
 
-// 1) Buffer
-#if NET
-	private byte[]?	m_buffer;
-#else
-	private byte[]	m_buffer;
+		public class SerializerPrimitive<T> : IBase<T> where T : unmanaged
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T _object)
+			{
+				// 1) write
+				Unsafe.Write<T>(_ptr, _object);
+
+				// 2) update ptr
+				_ptr += sizeof(T);
+			}
+			public unsafe T process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) read
+				var p = Unsafe.Read<T>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(T);
+				_count -= sizeof(T);
+
+				// return) 
+				return p;
+			}
+			public unsafe int process_get_size_of(T _object) { return sizeof(T); }
+		}
+		public class SerializerPrimitive_object<T> : IBase<object> where T : unmanaged
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) write
+				Unsafe.Write<T>(_ptr, (T)_object);
+
+				// 2) update ptr
+				_ptr += sizeof(T);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) read
+				var p = Unsafe.Read<T>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(T);
+				_count -= sizeof(T);
+
+				// return) 
+				return p;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				return sizeof(T);
+			}
+		}
+		public class SerializerDateTime : IBase<DateTime>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, DateTime _object) { Unsafe.AsRef<long>(_ptr) = _object.Ticks; _ptr += sizeof(long); }
+			public unsafe DateTime process_extract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(Unsafe.AsRef<long>(p)); }
+			public unsafe int process_get_size_of(DateTime _object) { return sizeof(long); }
+		}
+		public class Serialize_DateTime_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object) { Debug.Assert(_object != null); Unsafe.AsRef<long>(_ptr) = ((DateTime)_object).Ticks; _ptr += sizeof(long); }
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(Unsafe.AsRef<long>(p)); }
+			public unsafe int process_get_size_of(object? _object) { return sizeof(long); }
+		}
+		public class SerializerVector2 : IBase<Vector2>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Vector2 _object)
+			{
+				// 2) write
+				*(float*)_ptr = _object.X; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Y; _ptr += sizeof(float);
+			}
+			public unsafe Vector2 process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Vector2();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 2;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(Vector2 _object) { return sizeof(float) * 2; }
+		}
+		public class SerializerVector2_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) casting
+				Vector2 temp = (Vector2)_object;
+
+				// 2) write
+				*(float*)_ptr = temp.X; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Y; _ptr += sizeof(float);
+			}
+			public unsafe object process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Vector2();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 2;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(object? _object) { return sizeof(float) * 2; }
+		}
+		public class SerializerVector3 : IBase<Vector3>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Vector3 _object)
+			{
+				// 1) write
+				*(float*)_ptr = _object.X; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Y; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Z; _ptr += sizeof(float);
+			}
+			public unsafe Vector3 process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Vector3();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Z = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 3;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(Vector3 _object) { return sizeof(float) * 3; }
+		}
+		public class SerializerVector3_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) casting
+				Vector3 temp = (Vector3)_object;
+
+				// 2) write
+				*(float*)_ptr = temp.X; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Y; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Z; _ptr += sizeof(float);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Vector3();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Z = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 3;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(object? _object) { return sizeof(float) * 3; }
+		}
+		public class SerializerVector4 : IBase<Vector4>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Vector4 _object)
+			{
+				// 2) write
+				*(float*)_ptr = _object.X; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Y; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Z; _ptr += sizeof(float);
+				*(float*)_ptr = _object.W; _ptr += sizeof(float);
+			}
+			public unsafe Vector4 process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Vector4();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Z = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.W = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 4;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(Vector4 _object) { return sizeof(float) * 4; }
+		}
+		public class SerializerVector4_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) casting
+				Vector4 temp = (Vector4)_object;
+
+				// 2) write
+				*(float*)_ptr = temp.X; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Y; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Z; _ptr += sizeof(float);
+				*(float*)_ptr = temp.W; _ptr += sizeof(float);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Vector4();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Z = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.W = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 4;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(object? _object) { return sizeof(float) * 4; }
+		}
+		public class SerializerPlane : IBase<Plane>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Plane _object)
+			{
+				// 2) write
+				*(float*)_ptr = _object.Normal.X; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Normal.Y; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Normal.Z; _ptr += sizeof(float);
+				*(float*)_ptr = _object.D; _ptr += sizeof(float);
+			}
+			public unsafe Plane process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Plane();
+
+				// 2) get value
+				temp.Normal.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Normal.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Normal.Z = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.D = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 4;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(Plane _object) { return sizeof(float) * 4; }
+		}
+		public class SerializerPlane_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) casting
+				Plane temp = (Plane)_object;
+
+				// 2) write
+				*(float*)_ptr = temp.Normal.X; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Normal.Y; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Normal.Z; _ptr += sizeof(float);
+				*(float*)_ptr = temp.D; _ptr += sizeof(float);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Plane();
+
+				// 2) get value
+				temp.Normal.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Normal.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Normal.Z = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.D = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 4;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(object? _object) { return sizeof(float) * 4; }
+		}
+		public class SerializerQuaternion : IBase<Quaternion>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Quaternion _object)
+			{
+				// 2) write
+				*(float*)_ptr = _object.X; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Y; _ptr += sizeof(float);
+				*(float*)_ptr = _object.Z; _ptr += sizeof(float);
+				*(float*)_ptr = _object.W; _ptr += sizeof(float);
+			}
+			public unsafe Quaternion process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Quaternion();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Z = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.W = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 4;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(Quaternion _object) { return sizeof(float) * 4; }
+		}
+		public class SerializerQuaternion_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) casting
+				Quaternion temp = (Quaternion)_object;
+
+				// 2) write
+				*(float*)_ptr = temp.X; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Y; _ptr += sizeof(float);
+				*(float*)_ptr = temp.Z; _ptr += sizeof(float);
+				*(float*)_ptr = temp.W; _ptr += sizeof(float);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Quaternion();
+
+				// 2) get value
+				temp.X = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Y = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.Z = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.W = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 4;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(object? _object) { return sizeof(float) * 4; }
+		}
+		public class SerializerMatrix3x2 : IBase<Matrix3x2>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Matrix3x2 _object)
+			{
+				// 1) write data
+				*(float*)_ptr = _object.M11; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M12; _ptr += sizeof(float);
+
+				*(float*)_ptr = _object.M21; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M22; _ptr += sizeof(float);
+
+				*(float*)_ptr = _object.M31; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M32; _ptr += sizeof(float);
+			}
+			public unsafe Matrix3x2 process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Matrix3x2();
+
+				// 2) get value
+				temp.M11 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M12 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M21 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M22 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M31 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M32 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 6;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(Matrix3x2 _object)
+			{
+				return sizeof(float) * 6;
+			}
+		}
+		public class SerializerMatrix3x2_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) casting
+				var temp = (Matrix3x2)_object;
+
+				// 2) write data
+				*(float*)_ptr = temp.M11; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M12; _ptr += sizeof(float);
+
+				*(float*)_ptr = temp.M21; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M22; _ptr += sizeof(float);
+
+				*(float*)_ptr = temp.M31; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M32; _ptr += sizeof(float);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Matrix3x2();
+
+				// 2) get value
+				temp.M11 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M12 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M21 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M22 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M31 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M32 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 6;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				return sizeof(float) * 6;
+			}
+		}
+		public class SerializerMatrix4x4 : IBase<Matrix4x4>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Matrix4x4 _object)
+			{
+				// 1) write data
+				*(float*)_ptr = _object.M11; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M12; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M13; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M14; _ptr += sizeof(float);
+
+				*(float*)_ptr = _object.M21; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M22; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M23; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M24; _ptr += sizeof(float);
+
+				*(float*)_ptr = _object.M31; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M32; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M33; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M34; _ptr += sizeof(float);
+
+				*(float*)_ptr = _object.M41; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M42; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M43; _ptr += sizeof(float);
+				*(float*)_ptr = _object.M44; _ptr += sizeof(float);
+			}
+			public unsafe Matrix4x4 process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Matrix4x4();
+
+				// 2) get value
+				temp.M11 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M12 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M13 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M14 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M21 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M22 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M23 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M24 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M31 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M32 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M33 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M34 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M41 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M42 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M43 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M44 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 16;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(Matrix4x4 _object)
+			{
+				return sizeof(float) * 16;
+			}
+		}
+		public class SerializerMatrix4x4_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) casting
+				var temp = (Matrix4x4)_object;
+
+				// 2) write data
+				*(float*)_ptr = temp.M11; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M12; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M13; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M14; _ptr += sizeof(float);
+
+				*(float*)_ptr = temp.M21; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M22; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M23; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M24; _ptr += sizeof(float);
+
+				*(float*)_ptr = temp.M31; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M32; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M33; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M34; _ptr += sizeof(float);
+
+				*(float*)_ptr = temp.M41; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M42; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M43; _ptr += sizeof(float);
+				*(float*)_ptr = temp.M44; _ptr += sizeof(float);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) make 
+				var temp = new Matrix4x4();
+
+				// 2) get value
+				temp.M11 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M12 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M13 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M14 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M21 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M22 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M23 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M24 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M31 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M32 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M33 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M34 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				temp.M41 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M42 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M43 = *(float*)(_ptr); _ptr += sizeof(float);
+				temp.M44 = *(float*)(_ptr); _ptr += sizeof(float);
+
+				// 3) update count
+				_count -= sizeof(float) * 16;
+
+				// return) 
+				return temp;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				return sizeof(float) * 16;
+			}
+		}
+
+		public class SerializerEnum<T> : IBase<T>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			{
+				Debug.Assert(_object != null);
+
+				// 1) write
+				Unsafe.Write<T>(_ptr, _object);
+
+				// 2) update ptr
+				_ptr += sizeof(int);
+			}
+			public unsafe T? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) read
+				var p = Unsafe.Read<T>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(int);
+				_count -= sizeof(int);
+
+				// return) 
+				return p;
+			}
+			public unsafe int process_get_size_of(T? _object)
+			{
+				Debug.Assert(_object != null);
+
+				return sizeof(int);
+			}
+		}
+		public class SerializerEnum_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_object != null);
+
+				// 1) copy
+				*(int*)_ptr = (int)_object;
+
+				// 2) add ptr
+				_ptr += sizeof(int);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// 1) store pointer
+				var p = _ptr;
+
+				// 2) update ptr & count
+				_ptr += sizeof(int);
+				_count -= sizeof(int);
+
+				// return) 
+				return *(int*)p;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				return sizeof(int);
+			}
+		}
+
+		public class SerializerBuffer : IBase<buffer>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, buffer _object)
+			{
+				// Attention) buffer의 size는 int64이다.
+
+				// 1) get buffer
+				var buf = _object.Array;
+
+				// check)
+				if (buf == null)
+				{
+					// - 0을 쓰고 끝낸다.
+					Unsafe.AsRef<Int64>(_ptr) = 0;
+					_ptr += sizeof(Int64);
+					return;
+				}
+
+				fixed (byte* buf_source = buf)
+				{
+					// check)
+					Debug.Assert(_ptr + sizeof(Int64) + _object.size <= _ptr_bound);
+
+					// 1) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+					Unsafe.AsRef<Int64>(_ptr) = _object.size;
+					_ptr += sizeof(Int64);
+
+					// check)
+					if (_object.size == 0)
+						return;
+
+					// 3) 복사해 붙인다.
+					System.Buffer.MemoryCopy(buf_source, _ptr, _ptr_bound - _ptr, _object.size); // NULL 포함 복사
+
+					// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+					_ptr += _object.size;
+				}
+			}
+			public unsafe buffer process_extract(ref byte* _ptr, ref int _count)
+			{
+				// Attention) buffer의 size는 int64이다.
+
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
+				Debug.Assert(sizeof(Int64) <= _count);
+
+#if _USE_BOUND_CHECK
+			// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+			if(sizeof(int)>this.m_count) 
+				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
 #endif
 
-	// 2) Buffer중 시작 위치
-	private int		m_offset;
+				// 1) extract  string length
+				var size_temp = Unsafe.AsRef<Int64>(_ptr);
+				var buf_size = (int)size_temp;
 
-	// 3) 사용 길이 (m_iOffset부터 Buffer중 사용하는 끝까지의 길이)
-	private int		m_count;
-}
+				// 2) update ptr & count
+				_ptr += sizeof(Int64);
+				_count -= sizeof(Int64);
 
+				// check) length가 -1이면 null을 리턴한다.
+				if (buf_size <= 0)
+					return new buffer();
 
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
+				Debug.Assert(buf_size <= _count);
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
+				if (buf_size > _count)
+					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
+
+				// 3) alloc buffer
+				var new_buf = new byte[buf_size];
+
+				// 4) block copy
+				fixed (byte* buf_dest = new_buf)
+				{
+					System.Buffer.MemoryCopy(_ptr, buf_dest, buf_size, buf_size);
+				}
+
+				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
+				_ptr += buf_size;
+				_count -= buf_size;
+
+				// 6) [string]로 변환해 최종 리턴한다.
+				return new buffer(new_buf, 0, buf_size);
+			}
+			public unsafe int process_get_size_of(buffer _object)
+			{
+				return sizeof(Int64) + _object.size;
+			}
+		}
+		public class SerializerBuffer_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// Attention) buffer의 size는 int64이다.
+
+				// check)
+				Debug.Assert(_object == null);
+
+				// 1) casting to 
+				var temp = (buffer?)_object;
+
+				// check)
+				Debug.Assert(temp != null);
+
+				// 2) get buf
+				var temp_buf = temp.Value;
+
+				// check)
+				Debug.Assert(temp_buf.size >= 0);
+
+				// 3) get buffer
+				var buf = temp_buf.Array;
+
+				// check)
+				if (buf == null || temp_buf.size <= 0)
+				{
+					// - 0을 쓰고 끝낸다.
+					Unsafe.AsRef<Int64>(_ptr) = 0;
+					_ptr += sizeof(Int64);
+					return;
+				}
+
+				// 4) write to buffer
+				fixed (byte* buf_source = buf)
+				{
+					// check)
+					Debug.Assert(_ptr + sizeof(Int64) + temp_buf.size <= _ptr_bound);
+
+					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+					Unsafe.AsRef<Int64>(_ptr) = temp_buf.size;
+					_ptr += sizeof(Int64);
+
+					// check)
+					if (temp_buf.size == 0)
+						return;
+
+					// 4) 복사해 붙인다.
+					System.Buffer.MemoryCopy(buf_source, _ptr, _ptr_bound - _ptr, temp_buf.size); // NULL 포함 복사
+
+					// 5) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+					_ptr += temp_buf.size;
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// Attention) buffer의 size는 int64이다.
+
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
+				Debug.Assert(sizeof(Int64) <= _count);
+
+			#if _USE_BOUND_CHECK
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+				if(sizeof(int)>this.m_count) 
+					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+			#endif
+
+				// 1) extract  string length
+				var size_temp = Unsafe.AsRef<Int64>(_ptr);
+				var buf_size = (int)size_temp;
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int64);
+				_count -= sizeof(Int64);
+
+				// check) length가 -1이면 null을 리턴한다.
+				if (buf_size <= 0)
+					return new buffer();
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
+				Debug.Assert(buf_size <= _count);
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
+				if (buf_size > _count)
+					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
+
+				// 3) alloc buffer
+				var new_buf = new byte[buf_size];
+
+				// 4) block copy
+				fixed (byte* buf_dest = new_buf)
+				{
+					System.Buffer.MemoryCopy(_ptr, buf_dest, buf_size, buf_size);
+				}
+
+				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
+				_ptr += buf_size;
+				_count -= buf_size;
+
+				// 6) [string]로 변환해 최종 리턴한다.
+				return new buffer(new_buf, 0, buf_size);
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// 1) casting to 
+				var temp_buf = (buffer?)_object;
+
+				// check)
+				Debug.Assert(temp_buf != null);
+
+				// return) 
+				return sizeof(Int64) + temp_buf.Value.size;
+			}
+		}
+
+		public class SerializerString : IBase<string>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, string? _object)
+			{
+				// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+				if (_object == null)
+				{
+					// - -1을 쓰고 끝낸다.
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+					_ptr += sizeof(Int32);
+					return;
+				}
+
+				fixed (char* str = (string?)_object)
+				{
+					// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
+					var string_length = _object.Length * sizeof(char);
+
+					// check)
+					Debug.Assert(_ptr + sizeof(Int32) + string_length + sizeof(char) <= _ptr_bound);
+
+					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+					Unsafe.AsRef<Int32>(_ptr) = _object.Length + 1;
+
+					// 4) add size
+					_ptr += sizeof(Int32);
+
+					// 5) [문자열]을 복사해 넣는다.
+					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length + sizeof(char)); // NULL 포함 복사
+
+					// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+					_ptr += string_length + sizeof(char);
+				}
+			}
+			public unsafe string? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
+				Debug.Assert(sizeof(Int32) <= _count);
+
+#if _USE_BOUND_CHECK
+			// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+			if(sizeof(int)>this.m_count) 
+				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+#endif
+
+				// 1) extract  string length
+				var length_string = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check) length가 -1이면 null을 리턴한다.
+				if (length_string == -1)
+					return null;
+
+				// 3) 복사할 [문자열_길이]를 구한다. (NULL문자는 뺀다.)
+				int size_copy = length_string * sizeof(char);
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
+				Debug.Assert(size_copy <= _count);
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
+				if (size_copy > _count)
+					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
+
+				// check) [문자열]의 제일 끝이 NULL인지 확인한다.
+				if (*(char*)(_ptr + size_copy - sizeof(char)) != 0)
+					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] string terminate No-'NULL' value");
+
+				// 4) get '_ptr' before update
+				var p = _ptr;
+
+				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
+				_ptr += size_copy;
+				_count -= size_copy;
+
+				// 6) [string]로 변환해 최종 리턴한다.
+				return new string((char*)p, 0, length_string - 1);
+			}
+			public unsafe int process_get_size_of(string? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) process get size of
+				return sizeof(Int32) + (_object.Length + 1) * sizeof(char);
+			}
+		}
+		public class SerializerString_object : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+				if (_object == null)
+				{
+					// - -1을 쓰고 끝낸다.
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+					_ptr += sizeof(Int32);
+					return;
+				}
+
+				// 1) casting string
+				var object_string = Unsafe.As<string>(_object);
+
+				// check)
+				Debug.Assert(object_string != null);
+
+				fixed (char* str = object_string)
+				{
+					// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
+					var string_length = object_string.Length * sizeof(char);
+
+					// check)
+					Debug.Assert(_ptr + sizeof(Int32) + string_length + sizeof(char) <= _ptr_bound);
+
+					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+					Unsafe.AsRef<Int32>(_ptr) = object_string.Length + 1;
+
+					// 4) add size
+					_ptr += sizeof(Int32);
+
+					// 5) [문자열]을 복사해 넣는다.
+					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length + sizeof(char)); // NULL 포함 복사
+
+					// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+					_ptr += string_length + sizeof(char);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
+				Debug.Assert(sizeof(Int32) <= _count);
+
+#if _USE_BOUND_CHECK
+			// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+			if(sizeof(int)>this.m_count) 
+				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+#endif
+
+				// 1) extract  string length
+				var length_string = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check) length가 -1이면 null을 리턴한다.
+				if (length_string == -1)
+					return null;
+
+				// 3) 복사할 [문자열_길이]를 구한다. (NULL문자는 뺀다.)
+				int size_copy = length_string * sizeof(char);
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
+				Debug.Assert(size_copy <= _count);
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
+				if (size_copy > _count)
+					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
+
+				// check) [문자열]의 제일 끝이 NULL인지 확인한다.
+				if (*(char*)(_ptr + size_copy - sizeof(char)) != 0)
+					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] string terminate No-'NULL' value");
+
+				// 4) get '_ptr' before update
+				var p = _ptr;
+
+				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
+				_ptr += size_copy;
+				_count -= size_copy;
+
+				// 6) [string]로 변환해 최종 리턴한다.
+				return new string((char*)p, 0, length_string - 1);
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) casting string
+				var object_string = Unsafe.As<string>(_object);
+
+				// check)
+				Debug.Assert(object_string != null);
+
+				// 1) process get size of
+				return sizeof(Int32) + (object_string.Length + 1) * sizeof(char);
+			}
+		}
+
+		public class SerializerArray_typed<V> : IBase<V[]>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, V[]? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 2) write count 
+				Unsafe.AsRef<Int32>(_ptr) = _object.Count();
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// 4) write
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, (V?)iter_item.Current);
+				}
+			}
+			public unsafe V[]? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// 4) write items
+				for (int i = 0; i < item_count; ++i)
+				{
+					// - get item
+					var item = (V?)serializer_value.process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_array.SetValue(item, i);
+				}
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// return) 
+				return obj_array;
+			}
+			public unsafe int process_get_size_of(V[]? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'count'
+				int size = sizeof(Int32);
+
+				// 2) 'items'
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of((V?)iter_item.Current);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public static IBase<V>? serializer_value;
+		}
+		public class SerializerArray_typed_primitive<V> : IBase<V[]> where V:unmanaged
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, V[]? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 2) write count 
+				Unsafe.AsRef<Int32>(_ptr) = _object.Count();
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// 4) write
+				fixed(void* ptr_src = _object)
+				{
+					System.Buffer.MemoryCopy(ptr_src, _ptr, _ptr_bound - _ptr,  sizeof(V) * _object.Count()); // NULL 포함 복사
+				}
+			}
+			public unsafe V[]? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// 4) write items
+				fixed (void* ptr_dest = obj_array)
+				{
+					System.Buffer.MemoryCopy(_ptr, ptr_dest, _count, sizeof(V) * item_count); // NULL 포함 복사
+				}
+
+				// 5) update count
+				_count -= sizeof(Int32) * item_count;
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// return) 
+				return obj_array;
+			}
+			public unsafe int process_get_size_of(V[]? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// return 
+				return sizeof(Int32) + _object.Count() * sizeof(V);
+			}
+		}
+		public class SerializerArray_no_typed<T> : IBase<T>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<IList>(_object);
+
+				// 2) write count 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe T? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj = (T?)Activator.CreateInstance(typeof(T), item_count);
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<IList>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get item
+					var item = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(T? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'count'
+				int size = sizeof(Int32);
+
+				// 2) casting to IList
+				var obj_list = Unsafe.As<IList>(_object);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 2) 'items'
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of(iter_item.Current);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public static IBase<object>? serializer_value;
+		}
+		public class SerializerArray_object_typed<V> : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<V[]>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count();
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write all items
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, (V?)iter_item.Current);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// 5) read all items
+				for (int i = 0; i < item_count; ++i)
+				{
+					// - get item
+					var item = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// -set value
+					obj_array.SetValue(item, i);
+				}
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// return) 
+				return obj_array;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'item count'
+				int size = sizeof(Int32);
+
+				// 2) cast to 'List<V>;
+				var obj_array = Unsafe.As<V[]>(_object);
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// 2) add size of 'items'
+				var iter_item = obj_array.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of((V?)iter_item.Current);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public IBase<V>? serializer_value;
+		}
+		public class SerializerArray_object_typed_primitive<V> : IBase<object> where V : unmanaged
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_array= Unsafe.As<V[]>(_object);
+
+				// 2) write count 
+				Unsafe.AsRef<Int32>(_ptr) = obj_array.Count();
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// 4) write
+				fixed (void* ptr_src = obj_array)
+				{
+					System.Buffer.MemoryCopy(ptr_src, _ptr, _ptr_bound - _ptr, sizeof(V) * obj_array.Count()); // NULL 포함 복사
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// 4) write items
+				fixed (void* ptr_dest = obj_array)
+				{
+					System.Buffer.MemoryCopy(_ptr, ptr_dest, _count, sizeof(V) * item_count); // NULL 포함 복사
+				}
+
+				// 5) update count
+				_count -= sizeof(Int32) * item_count;
+
+				// check)
+				Debug.Assert(obj_array != null);
+
+				// return) 
+				return obj_array;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) casting to list
+				var obj_array = Unsafe.As<V[]>(_object);
+
+				// return 
+				return sizeof(Int32) + obj_array.Count() * sizeof(V);
+			}
+		}
+		public class SerializerArray_object_no_typed : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<IList>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(type_create != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(type_create, item_count);
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<IList>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get item
+					var item = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'count'
+				int size = sizeof(Int32);
+
+				// 2) 'items'
+				var iter_item = Unsafe.As<IList>(_object).GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of(iter_item.Current);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public Type? type_create;
+			public IBase<object>? serializer_value;
+		}
+
+		public class SerializerDictionary<K, V> : IBase<Dictionary<K, V>> where K : notnull
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, Dictionary<K, V>? _object)
+			{
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(_object != null);
+
+				// 4) write items
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					// - write key & value
+					serializer_key.process_append(ref _ptr, _ptr_bound, iter_item.Current.Key);
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current.Value);
+				}
+			}
+			public unsafe Dictionary<K, V>? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj_create = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+
+				// check)
+				Debug.Assert(obj_create != null);
+
+				// 4) write items
+				while (item_count > 0)
+				{
+					// - get key & value
+					var item_key = serializer_key.process_extract(ref _ptr, ref _count);
+					var item_value = (V?)serializer_value.process_extract(ref _ptr, ref _count);
+
+					// check) 
+					Debug.Assert(item_key != null);
+
+					// - add item(key & value)
+					obj_create.Add((K)item_key, item_value);
+
+					// - count down!
+					--item_count;
+				}
+
+				// return) 
+				return obj_create;
+			}
+			public unsafe int process_get_size_of(Dictionary<K, V>? _object)
+			{
+				// chaeck)
+				Debug.Assert(serializer_key != null);
+
+				// chaeck)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get header size
+				int size = sizeof(Int32);
+
+				// check)
+				if (_object == null)
+					return size;
+
+				// 3) get Dictionary
+				var iter_item = _object.GetEnumerator();
+
+				// 4) add size of items
+				while (iter_item.MoveNext())
+				{
+					// - add size of 'key' & 'value'
+					size += serializer_key.process_get_size_of(iter_item.Current.Key);
+					size += serializer_value.process_get_size_of(iter_item.Current.Value);
+				}
+
+				// return) 
+				return size;
+
+			}
+
+			public static IBase<K>? serializer_key;
+			public static IBase<V>? serializer_value;
+		}
+		public class SerializerDictionary<T, K, V> : IBase<T> where K : notnull
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			{
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting
+				var dictionary_object = (IDictionary)_object;
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = dictionary_object.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(dictionary_object != null);
+
+				// 4) write items
+				var iter_item = dictionary_object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					// - write key & value
+					serializer_key.process_append(ref _ptr, _ptr_bound, (K)iter_item.Key);
+					serializer_value.process_append(ref _ptr, _ptr_bound, (V?)iter_item.Value);
+				}
+			}
+			public unsafe T? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj_create = (T?)Activator.CreateInstance(typeof(T));
+
+				// check)
+				Debug.Assert(obj_create != null);
+
+				// 4) casting
+				var dictionary_object = (IDictionary)obj_create;
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get key & value
+					var item_key = serializer_key.process_extract(ref _ptr, ref _count);
+					var item_value = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// check) 
+					Debug.Assert(item_key != null);
+
+					// - add item(key & value)
+					dictionary_object.Add(item_key, item_value);
+
+					// - count down!
+					--item_count;
+				}
+
+				// return) 
+				return obj_create;
+			}
+			public unsafe int process_get_size_of(T? _object)
+			{
+				// chaeck)
+				Debug.Assert(serializer_key != null);
+
+				// chaeck)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get header size
+				int size = sizeof(Int32);
+
+				// check)
+				if (_object == null)
+					return size;
+
+				// 2) casting
+				var dictionary_object = (IDictionary)_object;
+
+				// 3) get Dictionary
+				var iter_item = dictionary_object.GetEnumerator();
+
+				// 4) add size of items
+				while (iter_item.MoveNext())
+				{
+					// - add size of 'key' & 'value'
+					size += serializer_key.process_get_size_of((K)iter_item.Key);
+					size += serializer_value.process_get_size_of((V?)iter_item.Value);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public static IBase<K>? serializer_key;
+			public static IBase<V>? serializer_value;
+		}
+		public class SerializerDictionary_object_typed<K, V> : IBase<object> where K : notnull
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_dictionary = Unsafe.As<Dictionary<K, V>>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_dictionary != null);
+
+				// 4) write
+				var iter_item = obj_dictionary.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_key.process_append(ref _ptr, _ptr_bound, iter_item.Current.Key);
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current.Value);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// 4) get Dictionary
+				var obj_dictionary = Unsafe.As<Dictionary<K, V>>(obj);
+
+				// check)
+				Debug.Assert(obj_dictionary != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get key & value
+					var item_key = serializer_key.process_extract(ref _ptr, ref _count);
+					var item_value = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// check)
+					Debug.Assert(item_key != null);
+
+					// - add item
+					obj_dictionary.Add(item_key, item_value);
+
+					// - count down
+					--item_count;
+				}
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get header size
+				int size = sizeof(Int32);
+
+				// check)
+				if (_object == null)
+					return size;
+
+				// 3) get Dictionary
+				var iter_item = Unsafe.As<Dictionary<K, V>>(_object).GetEnumerator();
+
+				// 4) add size of items
+				while (iter_item.MoveNext())
+				{
+					size += serializer_key.process_get_size_of(iter_item.Current.Key);
+					size += serializer_value.process_get_size_of(iter_item.Current.Value);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public IBase<K>? serializer_key;
+			public IBase<V>? serializer_value;
+		}
+		public class SerializerDictionary_object_no_tuped<K, V> : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_dictionary = Unsafe.As<IDictionary>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_dictionary != null);
+
+				// 4) write
+				var iter_item = obj_dictionary.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_key.process_append(ref _ptr, _ptr_bound, (K)iter_item.Key);
+					serializer_value.process_append(ref _ptr, _ptr_bound, (V?)iter_item.Value);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				Debug.Assert(type_create != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(type_create);
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// 4) get Dictionary
+				var obj_dictionary = Unsafe.As<IDictionary>(obj);
+
+				// check)
+				Debug.Assert(obj_dictionary != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get key & value
+					var item_key = serializer_key.process_extract(ref _ptr, ref _count);
+					var item_value = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// check)
+					Debug.Assert(item_key != null);
+
+					// - add item
+					obj_dictionary.Add(item_key, item_value);
+
+					// - count down
+					--item_count;
+				}
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get header size
+				int size = sizeof(Int32);
+
+				// check)
+				if (_object == null)
+					return size;
+
+				// 3) get Dictionary
+				var iter_item = Unsafe.As<IDictionary>(_object).GetEnumerator();
+
+				// 4) add size of items
+				while (iter_item.MoveNext())
+				{
+					size += serializer_key.process_get_size_of((K)iter_item.Key);
+					size += serializer_value.process_get_size_of((V?)iter_item.Value);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public Type? type_create;
+			public IBase<K>? serializer_key;
+			public IBase<V>? serializer_value;
+		}
+		public class SerializerDictionary_object : IBase<object>
+		{
+			public static unsafe void _process_append<X, Y>(ref byte* _ptr, byte* _ptr_bound, object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			{
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_dictionary = Unsafe.As<IDictionary>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_dictionary != null);
+
+				// 4) write
+				var iter_item = obj_dictionary.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					_serializer_key.process_append(ref _ptr, _ptr_bound, (X)iter_item.Key);
+					_serializer_value.process_append(ref _ptr, _ptr_bound, (Y?)iter_item.Value);
+				}
+			}
+			public static unsafe object? _process_extract<X, Y>(ref byte* _ptr, ref int _count, Type _Type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			{
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(_Type_create);
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// 4) casting to IList
+				var obj_dictionary = Unsafe.As<IDictionary>(obj);
+
+				// check)
+				Debug.Assert(obj_dictionary != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get key & value
+					var item_key = _serializer_key.process_extract(ref _ptr, ref _count);
+					var item_value = _serializer_value.process_extract(ref _ptr, ref _count);
+
+					// check)
+					Debug.Assert(item_key != null);
+
+					// - add item
+					obj_dictionary.Add(item_key, item_value);
+
+					// - count down
+					--item_count;
+				}
+
+				// return) 
+				return obj;
+			}
+			public static unsafe int _process_get_size_of<X, Y>(object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			{
+				// 1) get header size
+				int size = sizeof(Int32);
+
+				// check)
+				if (_object == null)
+					return size;
+
+				// 3) get Dictionary
+				var iter_item = Unsafe.As<IDictionary>(_object).GetEnumerator();
+
+				// 4) add size of items
+				while (iter_item.MoveNext())
+				{
+					size += _serializer_key.process_get_size_of((X)iter_item.Key);
+					size += _serializer_value.process_get_size_of((Y?)iter_item.Value);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) press append
+				_process_append(ref _ptr, _ptr_bound, _object, serializer_key, serializer_value);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(type_create != null);
+
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) process extract
+				return _process_extract(ref _ptr, ref _count, type_create, serializer_key, serializer_value);
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(serializer_key != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) process get size of
+				return _process_get_size_of(_object, serializer_key, serializer_value);
+			}
+
+			public Type? type_create;
+			public IBase<object>? serializer_key;
+			public IBase<object>? serializer_value;
+		}
+
+		public class SerializerList_typed<V> : IBase<List<V>>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, List<V>? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<List<V>>(_object);
+
+				// 2) write count 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe List<V>? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(typeof(List<V>));
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<V>>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get item
+					var item = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// return) 
+				return obj_list;
+			}
+			public unsafe int process_get_size_of(List<V>? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'count'
+				int size = sizeof(Int32);
+
+				// 2) 'items'
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of(iter_item.Current);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public static IBase<V>? serializer_value;
+		}
+		public class SerializerList_typed_primitive<V> : IBase<List<V>> where V: unmanaged
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, List<V>? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 2) write count 
+				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// 4) write
+				var iter_item = _object.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					// - copy
+					*(V*)_ptr = iter_item.Current;
+
+					// - add ptr
+					_ptr += sizeof(V);
+				}
+			}
+			public unsafe List<V>? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(typeof(List<V>));
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<V>>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) sub count
+				_count -= sizeof(V) * item_count;
+
+				// 6) write items
+				while (item_count > 0)
+				{
+					// - add item
+					obj_list.Add(*(V*)_ptr);
+
+					// - update ptr
+					_ptr += sizeof(V);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// return) 
+				return obj_list;
+			}
+			public unsafe int process_get_size_of(List<V>? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// return) 
+				return sizeof(Int32) + _object.Count() * sizeof(V);
+			}
+		}
+		public class SerializerList_no_typed<T> : IBase<T>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<IList>(_object);
+
+				// 2) write count 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe T? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return default;
+
+				// 3) create list
+				var obj = (T?)Activator.CreateInstance(typeof(T));
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<IList>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get item
+					var item = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(T? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'count'
+				int size = sizeof(Int32);
+
+				// 2) casting to IList
+				var obj_list = Unsafe.As<IList>(_object);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 2) 'items'
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of(iter_item.Current);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public static IBase<object>? serializer_value;
+		}
+		public class SerializerList_object_typed<V> : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<List<V>>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write all items
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(typeof(List<V>));
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<V>>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) read all items
+				while (item_count > 0)
+				{
+					// - get item
+					var item = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'item count'
+				int size = sizeof(Int32);
+
+				// 2) cast to 'List<V>;
+				var obj_list = Unsafe.As<List<V>>(_object);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 2) add size of 'items'
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of(iter_item.Current);
+				}
+
+				return size;
+			}
+
+			public IBase<V>? serializer_value;
+		}
+		public class SerializerList_object_typed_primitive<V> : IBase<object> where V : unmanaged
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<List<V>>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write all items
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					// - copy
+					*(V*)_ptr = iter_item.Current;
+
+					// - add ptr
+					_ptr += sizeof(V);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(typeof(List<V>));
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<V>>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) sub count
+				_count -= sizeof(V) * item_count;
+
+				// 6) read all items
+				while (item_count > 0)
+				{
+					// - add item
+					obj_list.Add(*(V*)_ptr);
+
+					// - update ptr
+					_ptr += sizeof(V);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<List<V>>(_object);
+
+				// return) 
+				return sizeof(Int32) + obj_list.Count() * sizeof(V);
+			}
+		}
+		public class SerializerList_object_no_typed : IBase<object>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) casting to list
+				var obj_list = Unsafe.As<IList>(_object);
+
+				// 2) write -1 
+				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+
+				// 3) update ptr
+				_ptr += sizeof(Int32);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 4) write
+				var iter_item = obj_list.GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					serializer_value.process_append(ref _ptr, _ptr_bound, iter_item.Current);
+				}
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(type_create != null);
+
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// 1) get count of list
+				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int32);
+				_count -= sizeof(Int32);
+
+				// check)
+				if (item_count == -1)
+					return null;
+
+				// 3) create list
+				var obj = Activator.CreateInstance(type_create);
+
+				// 4) casting to IList
+				var obj_list = Unsafe.As<IList>(obj);
+
+				// check)
+				Debug.Assert(obj_list != null);
+
+				// 5) write items
+				while (item_count > 0)
+				{
+					// - get item
+					var item = serializer_value.process_extract(ref _ptr, ref _count);
+
+					// - add item
+					obj_list.Add(item);
+
+					// - count down
+					--item_count;
+				}
+
+				// check)
+				Debug.Assert(obj != null);
+
+				// return) 
+				return obj;
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(serializer_value != null);
+
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// 1) 'count'
+				int size = sizeof(Int32);
+
+				// 2) 'items'
+				var iter_item = Unsafe.As<IList>(_object).GetEnumerator();
+				while (iter_item.MoveNext())
+				{
+					size += serializer_value.process_get_size_of(iter_item.Current);
+				}
+
+				// return) 
+				return size;
+			}
+
+			public Type? type_create;
+			public IBase<object>? serializer_value;
+		}
+
+		public struct MemberSerializationInfo
+		{
+			public FieldInfo field_info;
+			public IBase<object> serializer;
+			public int offset;
+		}
+		public class SerializerClass<T> : IBase<T>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			{
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process append
+				SerializerClass_object._process_append(ref _ptr, _ptr_bound, _object, serializer_parent, list_member_serialzation_info);
+			}
+			public unsafe T? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process extract
+				return (T?)SerializerClass_object._process_extract(ref _ptr, ref _count, typeof(T), serializer_parent, list_member_serialzation_info);
+			}
+			public unsafe int process_get_size_of(T? _object)
+			{
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process get_size_of
+				return SerializerClass_object._process_get_size_of(_object, serializer_parent, list_member_serialzation_info);
+			}
+
+			public static IBase<object>? serializer_parent;
+			public static List<MemberSerializationInfo> list_member_serialzation_info = new List<MemberSerializationInfo>();
+		}
+		public class SerializerClass_object : IBase<object>
+		{
+			public static unsafe void _process_append(ref byte* _ptr, byte* _ptr_bound, object? _object, IBase<object>? _serializer_parent, List<MemberSerializationInfo> _list_member_serialization_info)
+			{
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) append all members
+				var iter_member = _list_member_serialization_info.GetEnumerator();
+				while (iter_member.MoveNext())
+				{
+					iter_member.Current.serializer.process_append(ref _ptr, _ptr_bound, iter_member.Current.field_info.GetValue(_object));
+				}
+			}
+			public static unsafe object? _process_extract(ref byte* _ptr, ref int _count, Type _Type_create, IBase<object>? _serializer_parent, List<MemberSerializationInfo> _list_member_serialization_info)
+			{
+				// 1) 객체를 생성한다.
+				var temp_object = Activator.CreateInstance(_Type_create);
+
+				// check) 
+				Debug.Assert(temp_object != null);
+
+				// 2) 각 Field값을 읽어 써넣는다.
+				var iter_member = _list_member_serialization_info.GetEnumerator();
+				while (iter_member.MoveNext())
+				{
+					iter_member.Current.field_info.SetValue(temp_object, iter_member.Current.serializer.process_extract(ref _ptr, ref _count));
+				}
+
+				// return) 
+				return temp_object;
+			}
+			public static unsafe int _process_get_size_of(object? _object, IBase<object>? _serializer_parent, List<MemberSerializationInfo> _list_member_serialization_info)
+			{
+				// check)
+				if (_object == null)
+					return sizeof(Int32);
+
+				// declare)
+				int size = 0;
+
+				// 1) add all member size
+				var iter_member = _list_member_serialization_info.GetEnumerator();
+				while (iter_member.MoveNext())
+				{
+					size += iter_member.Current.serializer.process_get_size_of(iter_member.Current.field_info.GetValue(_object));
+				}
+
+				// return) 
+				return size;
+			}
+
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// 1) process append
+				SerializerClass_object._process_append(ref _ptr, _ptr_bound, _object, serializer_parent, list_member_serialzation_info);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(type_create != null);
+
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process extract
+				return SerializerClass_object._process_extract(ref _ptr, ref _count, type_create, serializer_parent, list_member_serialzation_info);
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// 1) process get size of
+				return SerializerClass_object._process_get_size_of(_object, serializer_parent, list_member_serialzation_info);
+			}
+
+			public Type? type_create;
+			public IBase<object>? serializer_parent;
+			public List<MemberSerializationInfo> list_member_serialzation_info = new List<MemberSerializationInfo>();
+		}
+
+		public class SerializerStruct<T> : IBase<T>
+		{
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			{
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process append
+				SerializerStruct_object._process_append(ref _ptr, _ptr_bound, _object, list_member_serialzation_info);
+			}
+			public unsafe T? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process extract
+				return (T?)SerializerStruct_object._process_extract(ref _ptr, ref _count, typeof(T), list_member_serialzation_info);
+			}
+			public unsafe int process_get_size_of(T? _object)
+			{
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process get size of
+				return SerializerStruct_object._process_get_size_of(_object, list_member_serialzation_info);
+			}
+
+			public static List<MemberSerializationInfo> list_member_serialzation_info = new List<MemberSerializationInfo>();
+		}
+		public class SerializerStruct_object : IBase<object>
+		{
+			public static unsafe void _process_append(ref byte* _ptr, byte* _ptr_bound, object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
+			{
+				// check) is null?
+				if (_object == null)
+				{
+					// - write -1 
+					Unsafe.AsRef<Int32>(_ptr) = -1;
+
+					// - update ptr
+					_ptr += sizeof(Int32);
+
+					// return) 
+					return;
+				}
+
+				// 1) append all members
+				var iter_member = _list_member_serialization_info.GetEnumerator();
+				while (iter_member.MoveNext())
+				{
+					iter_member.Current.serializer.process_append(ref _ptr, _ptr_bound, iter_member.Current.field_info.GetValue(_object));
+				}
+			}
+			public static unsafe object _process_extract(ref byte* _ptr, ref int _count, Type _Type_create, List<MemberSerializationInfo>? _list_member_serialization_info)
+			{
+				// 1) 객체를 생성한다.
+				var temp_object = Activator.CreateInstance(_Type_create);
+
+				// check) 
+				Debug.Assert(temp_object != null);
+
+				// check) 
+				Debug.Assert(_list_member_serialization_info != null);
+
+				// 2) 각 Field값을 읽어 써넣는다.
+				var iter_member = _list_member_serialization_info.GetEnumerator();
+				while (iter_member.MoveNext())
+				{
+					iter_member.Current.field_info.SetValue(temp_object, iter_member.Current.serializer.process_extract(ref _ptr, ref _count));
+				}
+
+				// return) 
+				return temp_object;
+			}
+			public static unsafe int _process_get_size_of(object? _object, List<MemberSerializationInfo>? _list_member_serialization_info)
+			{
+				if (_object == null)
+					return sizeof(Int32);
+
+				// check) 
+				Debug.Assert(_list_member_serialization_info != null);
+
+				// declare) 
+				int size = 0;
+
+				// 1) add all member size
+				var iter_member = _list_member_serialization_info.GetEnumerator();
+				while (iter_member.MoveNext())
+				{
+					size += iter_member.Current.serializer.process_get_size_of(iter_member.Current.field_info.GetValue(_object));
+				}
+
+				// return) 
+				return size;
+			}
+
+			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(_ptr_bound != null);
+
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process append
+				_process_append(ref _ptr, _ptr_bound, _object, list_member_serialzation_info);
+			}
+			public unsafe object? process_extract(ref byte* _ptr, ref int _count)
+			{
+				// check)
+				Debug.Assert(_ptr != null);
+
+				// check)
+				Debug.Assert(type_create != null);
+
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process extract
+				return _process_extract(ref _ptr, ref _count, type_create, list_member_serialzation_info);
+			}
+			public unsafe int process_get_size_of(object? _object)
+			{
+				// check)
+				Debug.Assert(list_member_serialzation_info != null);
+
+				// 1) process get size of
+				return _process_get_size_of(_object, list_member_serialzation_info);
+			}
+
+			public Type? type_create;
+			public List<MemberSerializationInfo> list_member_serialzation_info = new List<MemberSerializationInfo>();
+		}
+
+		public class Builder
+		{
+			private static bool _is_serializable_type(Type _type)
+			{
+				// check) 
+	#if NET5_0_OR_GREATER
+				object obj = System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(_type);
+	#else
+				object obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(_type);
+	#endif
+				// check) 
+				if (obj == null)
+					return false;
+
+				// return) get Attribute
+				return _type.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false).Length != 0;
+			}
+
+			private static Dictionary<Type, object> dictionary_serializer = new Dictionary<Type, object>();
+			private static Dictionary<Type, object> dictionary_serializer_object = new Dictionary<Type, object>();
+
+			private static object BuildSerialize<T>()
+			{
+				// 1) get type
+				Type type = typeof(T);
+
+				// declare) 
+				object? result = null;
+
+				// 1) build by type
+				if (type.IsPrimitive)
+					result = BuildSerailizer_Primitive(type);
+				else if (type.IsEnum)
+					result = new SerializerEnum<T>();
+				else if (type.IsValueType)
+					result = BuildSerailizer_ValueType<T>(type);
+				else if (typeof(string).Equals(type))
+					result = new SerializerString();
+				else if (type.IsArray)
+					result = BufferSerializer_array<T>();
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(type))
+					result = BuildSerailizer_Dictionary<T>();
+				else if (typeof(System.Collections.IList).IsAssignableFrom(type))
+					result = BuildSerailizer_List<T>();
+				else if (typeof(System.Collections.ICollection).IsAssignableFrom(type))
+					result = BuildSerailizer_Collection<T>();
+				else if (type.IsClass && _is_serializable_type(type))
+					result = BuildSerializer_class<T>();
+				else
+					Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
+
+				// check)
+				Debug.Assert(result != null);
+
+				// check) 
+				if (result == null)
+					throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Not Supported TYPE.");
+
+				// return) 
+				return result;
+			}
+			private static object BuildSerialize_object(Type _type)
+			{
+				// declare) 
+				object? result = null;
+
+				// 1) build by type
+				if (_type.IsPrimitive)
+					result = BuildSerailizer_Primitive_object(_type);
+				else if (_type.IsEnum)
+					result = new SerializerEnum_object();
+				else if (_type.IsValueType)
+					result = BuildSerailizer_ValueType_object(_type);
+				else if (typeof(string).Equals(_type))
+					result = new SerializerString_object();
+				else if (_type.IsArray)
+					result = BufferSerializer_array_object(_type);
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_type))
+					result = BuildSerializer_Dictionary_object(_type);
+				else if (typeof(System.Collections.IList).IsAssignableFrom(_type))
+					result = BuildSerailizer_List_object(_type);
+				else if (typeof(System.Collections.ICollection).IsAssignableFrom(_type))
+					result = BuildSerailizer_Collection_object(_type);
+				else if (_type.IsClass && _is_serializable_type(_type))
+					result = BuildSerializer_class_object(_type);
+				else
+					Debug.Assert(false, "[CGDK.buffer] Not Supported TYPE.");
+
+				// check)
+				Debug.Assert(result != null);
+
+				// check) 
+				if (result == null)
+					throw new CGDK.Exception.Serialize(0, "[CGDK.buffer] Not Supported TYPE.");
+
+				// return) 
+				return result;
+			}
+
+			private static object? BuildSerailizer_Primitive(Type _type)
+			{
+				if (_type == typeof(long))
+					return new SerializerPrimitive<long>();
+				else if (_type == typeof(ulong))
+					return new SerializerPrimitive<ulong>();
+				else if (_type == typeof(double))
+					return new SerializerPrimitive<double>();
+				else if (_type == typeof(int))
+					return new SerializerPrimitive<int>();
+				else if (_type == typeof(uint))
+					return new SerializerPrimitive<uint>();
+				else if (_type == typeof(float))
+					return new SerializerPrimitive<float>();
+				else if (_type == typeof(short))
+					return new SerializerPrimitive<short>();
+				else if (_type == typeof(ushort))
+					return new SerializerPrimitive<ushort>();
+				else if (_type == typeof(sbyte))
+					return new SerializerPrimitive<sbyte>();
+				else if (_type == typeof(byte))
+					return new SerializerPrimitive<byte>();
+				else if (_type == typeof(char))
+					return new SerializerPrimitive<char>();
+				else
+					return null;
+			}
+			private static object? BuildSerailizer_Primitive_object(Type _type)
+			{
+				if (_type == typeof(long))
+					return new SerializerPrimitive_object<long>();
+				else if (_type == typeof(ulong))
+					return new SerializerPrimitive_object<ulong>();
+				else if (_type == typeof(double))
+					return new SerializerPrimitive_object<double>();
+				else if (_type == typeof(int))
+					return new SerializerPrimitive_object<int>();
+				else if (_type == typeof(uint))
+					return new SerializerPrimitive_object<uint>();
+				else if (_type == typeof(float))
+					return new SerializerPrimitive_object<float>();
+				else if (_type == typeof(short))
+					return new SerializerPrimitive_object<short>();
+				else if (_type == typeof(ushort))
+					return new SerializerPrimitive_object<ushort>();
+				else if (_type == typeof(sbyte))
+					return new SerializerPrimitive_object<sbyte>();
+				else if (_type == typeof(byte))
+					return new SerializerPrimitive_object<byte>();
+				else if (_type == typeof(char))
+					return new SerializerPrimitive_object<char>();
+				else
+					return null;
+			}
+
+			private static object? BuildSerailizer_ValueType<T>(Type _type)
+			{
+				if (typeof(DateTime).Equals(_type))
+					return new SerializerDateTime();
+				else if (typeof(CGDK.buffer).Equals(_type))
+					return new SerializerBuffer();
+				else if (typeof(Vector2).Equals(_type))
+					return new SerializerVector2();
+				else if (typeof(Vector3).Equals(_type))
+					return new SerializerVector3();
+				else if (typeof(Vector4).Equals(_type))
+					return new SerializerVector4();
+				else if (typeof(Plane).Equals(_type))
+					return new SerializerPlane();
+				else if (typeof(Quaternion).Equals(_type))
+					return new SerializerQuaternion();
+				else if (typeof(Matrix3x2).Equals(_type))
+					return new SerializerMatrix3x2();
+				else if (typeof(Matrix4x4).Equals(_type))
+					return new SerializerMatrix4x4();
+				else
+					return BuildSerializer_struct<T>();
+			}
+			private static object? BuildSerailizer_ValueType_object(Type _type)
+			{
+				if (typeof(DateTime).Equals(_type))
+					return new Serialize_DateTime_object();
+				else if (typeof(CGDK.buffer).Equals(_type))
+					return new SerializerBuffer_object();
+				else if (typeof(Vector2).Equals(_type))
+					return new SerializerVector2_object();
+				else if (typeof(Vector3).Equals(_type))
+					return new SerializerVector3_object();
+				else if (typeof(Vector4).Equals(_type))
+					return new SerializerVector4_object();
+				else if (typeof(Plane).Equals(_type))
+					return new SerializerPlane_object();
+				else if (typeof(Quaternion).Equals(_type))
+					return new SerializerQuaternion_object();
+				else if (typeof(Matrix3x2).Equals(_type))
+					return new SerializerMatrix3x2_object();
+				else if (typeof(Matrix4x4).Equals(_type))
+					return new SerializerMatrix4x4_object();
+				else
+					return BuildSerializer_struct_object(_type);
+			}
+
+			private static SerializerStruct<T> BuildSerializer_struct<T>()
+			{
+				// 1) create BufferSerializer
+				var created = new SerializerStruct<T>();
+
+				// 2) Field 정보를 얻는다.
+				var temp_field = typeof(T).GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
+
+				// 3) create member_serialization_info
+				var list_member_serialization_info = new List<MemberSerializationInfo>();
+
+				// 4) 각 Field값을 읽어 써넣는다.
+				foreach (var iter in temp_field)
+				{
+					// - ger serializer
+					var serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType);
+
+					// check)
+					Debug.Assert(serializer != null);
+
+					// - set
+					var temp_membeer_serialization_info = new MemberSerializationInfo();
+					temp_membeer_serialization_info.field_info = iter;
+					//temp_membeer_serialization_info.offset = Marshal.OffsetOf(typeof(T), iter.Name).ToInt32();
+					temp_membeer_serialization_info.serializer = serializer;
+
+					// - add serializer
+					list_member_serialization_info.Add(temp_membeer_serialization_info);
+				}
+				SerializerStruct<T>.list_member_serialzation_info = list_member_serialization_info;
+
+				// return) 
+				return created;
+			}
+			private static SerializerStruct_object BuildSerializer_struct_object(Type _type)
+			{
+				// 1) create BufferSerializer
+				var created = new SerializerStruct_object();
+
+				// 2) set time
+				created.type_create = _type;
+
+				// 3) Field 정보를 얻는다.
+				var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
+
+				// 4) create member_serialization_info
+				var list_member_serialization_info = new List<MemberSerializationInfo>();
+
+				// 5) 각 Field값을 읽어 써넣는다.
+				foreach (var iter in temp_field)
+				{
+					// - ger serializer
+					var serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType);
+
+					// check)
+					Debug.Assert(serializer != null);
+
+					// - set
+					var temp_membeer_serialization_info = new MemberSerializationInfo();
+					temp_membeer_serialization_info.field_info = iter;
+					//temp_membeer_serialization_info.offset = Marshal.OffsetOf(_type, iter.Name).ToInt32();
+					temp_membeer_serialization_info.serializer = serializer;
+
+					// - add serializer
+					list_member_serialization_info.Add(temp_membeer_serialization_info);
+				}
+				created.list_member_serialzation_info = list_member_serialization_info;
+
+				// return) 
+				return created;
+			}
+
+			private static object? BuildSerailizer_Dictionary<T>()
+			{
+				// declare) 
+				object? result;
+
+				// 1) get type
+				Type type = typeof(T);
+
+				// 2) try make knowed parametered
+				result = BuildSerializer_Dictionary_typed<T>();
+
+				// 3) make object
+				if (result == null)
+					result = BuildSerializer_Dictionary_typed_o_o<T>();
+
+				// return)
+				return result;
+			}
+			private static object? BuildSerializer_Dictionary_typed<T>()
+			{
+				// 2) get argument type
+				var types = typeof(T).GetGenericArguments();
+				var type_key = types[0];
+				var type_value = types[1];
+
+				if (type_key == typeof(char))
+					return BuildSerializer_Dictionary_typed_key<T, char>(type_value);
+				else if (type_key == typeof(sbyte))
+					return BuildSerializer_Dictionary_typed_key<T, sbyte>(type_value);
+				else if (type_key == typeof(byte))
+					return BuildSerializer_Dictionary_typed_key<T, byte>(type_value);
+				else if (type_key == typeof(short))
+					return BuildSerializer_Dictionary_typed_key<T, short>(type_value);
+				else if (type_key == typeof(ushort))
+					return BuildSerializer_Dictionary_typed_key<T, ushort>(type_value);
+				else if (type_key == typeof(int))
+					return BuildSerializer_Dictionary_typed_key<T, int>(type_value);
+				else if (type_key == typeof(uint))
+					return BuildSerializer_Dictionary_typed_key<T, uint>(type_value);
+				else if (type_key == typeof(long))
+					return BuildSerializer_Dictionary_typed_key<T, long>(type_value);
+				else if (type_key == typeof(ulong))
+					return BuildSerializer_Dictionary_typed_key<T, ulong>(type_value);
+				else if (type_key == typeof(float))
+					return BuildSerializer_Dictionary_typed_key<T, float>(type_value);
+				else if (type_key == typeof(double))
+					return BuildSerializer_Dictionary_typed_key<T, double>(type_value);
+				else if (type_key == typeof(string))
+					return BuildSerializer_Dictionary_typed_key<T, string>(type_value);
+				else
+					return BuildSerializer_Dictionary_typed_o<T>(type_value);
+			}
+			private static object? BuildSerializer_Dictionary_typed_key<T, K>(Type _type_second) where K : notnull
+			{
+				if (_type_second == typeof(char))
+					return BuildSerializer_Dictionary_typed_key_value<K, char>();
+				else if (_type_second == typeof(sbyte))
+					return BuildSerializer_Dictionary_typed_key_value<K, sbyte>();
+				else if (_type_second == typeof(byte))
+					return BuildSerializer_Dictionary_typed_key_value<K, byte>();
+				else if (_type_second == typeof(short))
+					return BuildSerializer_Dictionary_typed_key_value<K, short>();
+				else if (_type_second == typeof(ushort))
+					return BuildSerializer_Dictionary_typed_key_value<K, ushort>();
+				else if (_type_second == typeof(int))
+					return BuildSerializer_Dictionary_typed_key_value<K, int>();
+				else if (_type_second == typeof(uint))
+					return BuildSerializer_Dictionary_typed_key_value<K, uint>();
+				else if (_type_second == typeof(long))
+					return BuildSerializer_Dictionary_typed_key_value<K, long>();
+				else if (_type_second == typeof(ulong))
+					return BuildSerializer_Dictionary_typed_key_value<K, ulong>();
+				else if (_type_second == typeof(float))
+					return BuildSerializer_Dictionary_typed_key_value<K, float>();
+				else if (_type_second == typeof(double))
+					return BuildSerializer_Dictionary_typed_key_value<K, double>();
+				else if (_type_second == typeof(string))
+					return BuildSerializer_Dictionary_typed_key_value<K, string>();
+				else if (typeof(System.Collections.IList).IsAssignableFrom(_type_second))
+					return BuildSerializer_Dictionary_typed_key_List<T, K>(_type_second);
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(_type_second))
+					return BuildSerializer_Dictionary_typed_key_Directory<T, K>(_type_second);
+				else
+					return BuildSerializer_Dictionary_typed_key_o<T, K>();
+			}
+			private static object? BuildSerializer_Dictionary_typed_key_List<T, K>(Type _type_second) where K : notnull
+			{
+				var type_param = _type_second.GetGenericArguments()[0];
+
+				if (type_param == typeof(char))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<char>>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<sbyte>>();
+				else if (type_param == typeof(byte))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<byte>>();
+				else if (type_param == typeof(short))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<short>>();
+				else if (type_param == typeof(ushort))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<ushort>>();
+				else if (type_param == typeof(int))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<int>>();
+				else if (type_param == typeof(uint))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<uint>>();
+				else if (type_param == typeof(long))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<long>>();
+				else if (type_param == typeof(ulong))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<ulong>>();
+				else if (type_param == typeof(float))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<float>>();
+				else if (type_param == typeof(double))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<double>>();
+				else if (type_param == typeof(string))
+					return BuildSerializer_Dictionary_typed_key_value<K, List<string>>();
+				else
+					return BuildSerializer_Dictionary_typed_key_o<T, K>();
+			}
+			private static object? BuildSerializer_Dictionary_typed_key_Directory<T, K>(Type _type_second) where K : notnull
+			{
+				return BuildSerializer_Dictionary_typed_key_o<T, K>();
+			}
+			private static object? BuildSerializer_Dictionary_typed_o<T>(Type _type_second)
+			{
+				if (_type_second == typeof(char))
+					return BuildSerializer_Dictionary_typed_o_value<T, char>();
+				else if (_type_second == typeof(sbyte))
+					return BuildSerializer_Dictionary_typed_o_value<T, sbyte>();
+				else if (_type_second == typeof(byte))
+					return BuildSerializer_Dictionary_typed_o_value<T, byte>();
+				else if (_type_second == typeof(short))
+					return BuildSerializer_Dictionary_typed_o_value<T, short>();
+				else if (_type_second == typeof(ushort))
+					return BuildSerializer_Dictionary_typed_o_value<T, ushort>();
+				else if (_type_second == typeof(int))
+					return BuildSerializer_Dictionary_typed_o_value<T, int>();
+				else if (_type_second == typeof(uint))
+					return BuildSerializer_Dictionary_typed_o_value<T, uint>();
+				else if (_type_second == typeof(long))
+					return BuildSerializer_Dictionary_typed_o_value<T, long>();
+				else if (_type_second == typeof(ulong))
+					return BuildSerializer_Dictionary_typed_o_value<T, ulong>();
+				else if (_type_second == typeof(float))
+					return BuildSerializer_Dictionary_typed_o_value<T, float>();
+				else if (_type_second == typeof(double))
+					return BuildSerializer_Dictionary_typed_o_value<T, double>();
+				else if (_type_second == typeof(string))
+					return BuildSerializer_Dictionary_typed_o_value<T, string>();
+				else
+					return null;
+			}
+			private static object? BuildSerializer_Dictionary_typed_o_Directory<K>(Type _type_second)
+			{
+				return null;
+			}
+			private static object? BuildSerializer_Dictionary_object(Type _type)
+			{
+				// declare) 
+				object? result;
+
+				// 2) try make knowed parametered
+				result = BuildSerializer_Dictionary_object_typed(_type);
+
+				// 3) make object
+				if (result == null)
+				{
+					result = BuildSerializer_Dictionary_object_o_o(_type);
+				}
+
+				// return)
+				return result;
+			}
+			private static object? BuildSerializer_Dictionary_object_typed(Type _type_object)
+			{
+				// 1) get argument type
+				var types = _type_object.GetGenericArguments();
+				var type_key = types[0];
+
+				if (type_key == typeof(char))
+					return BuildSerializer_Dictionary_object_typed_key<char>(_type_object);
+				else if (type_key == typeof(sbyte))
+					return BuildSerializer_Dictionary_object_typed_key<sbyte>(_type_object);
+				else if (type_key == typeof(byte))
+					return BuildSerializer_Dictionary_object_typed_key<byte>(_type_object);
+				else if (type_key == typeof(short))
+					return BuildSerializer_Dictionary_object_typed_key<short>(_type_object);
+				else if (type_key == typeof(ushort))
+					return BuildSerializer_Dictionary_object_typed_key<ushort>(_type_object);
+				else if (type_key == typeof(int))
+					return BuildSerializer_Dictionary_object_typed_key<int>(_type_object);
+				else if (type_key == typeof(uint))
+					return BuildSerializer_Dictionary_object_typed_key<uint>(_type_object);
+				else if (type_key == typeof(long))
+					return BuildSerializer_Dictionary_object_typed_key<long>(_type_object);
+				else if (type_key == typeof(ulong))
+					return BuildSerializer_Dictionary_object_typed_key<ulong>(_type_object);
+				else if (type_key == typeof(float))
+					return BuildSerializer_Dictionary_object_typed_key<float>(_type_object);
+				else if (type_key == typeof(double))
+					return BuildSerializer_Dictionary_object_typed_key<double>(_type_object);
+				else if (type_key == typeof(string))
+					return BuildSerializer_Dictionary_object_typed_key<string>(_type_object);
+				else
+					return null;
+			}
+			private static object? BuildSerializer_Dictionary_object_typed_key<K>(Type _type_object) where K : notnull
+			{
+				// 2) get argument type
+				var types = _type_object.GetGenericArguments();
+				var type_value = types[1];
+
+				if (type_value == typeof(char))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, char>();
+				else if (type_value == typeof(sbyte))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, sbyte>();
+				else if (type_value == typeof(byte))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, byte>();
+				else if (type_value == typeof(short))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, short>();
+				else if (type_value == typeof(ushort))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, ushort>();
+				else if (type_value == typeof(int))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, int>();
+				else if (type_value == typeof(uint))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, uint>();
+				else if (type_value == typeof(long))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, long>();
+				else if (type_value == typeof(ulong))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, ulong>();
+				else if (type_value == typeof(float))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, float>();
+				else if (type_value == typeof(double))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, double>();
+				else if (type_value == typeof(string))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, string>();
+				else if (typeof(System.Collections.IList).IsAssignableFrom(type_value))
+					return BuildSerializer_Dictionary_object_typed_key_List<K>(_type_object);
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(type_value))
+					return BuildSerializer_Dictionary_object_typed_key_Directory<K>(_type_object);
+				else
+					return BuildSerializer_Dictionary_object_key_o<K>(type_value); ;
+			}
+			private static object? BuildSerializer_Dictionary_object_typed_key_List<K>(Type _type_object) where K : notnull
+			{
+				var types = _type_object.GetGenericArguments();
+				var type_value = types[1];
+				var type_param = type_value.GetGenericArguments()[0];
+
+				if (type_param == typeof(char))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<char>>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<sbyte>>();
+				else if (type_param == typeof(byte))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<byte>>();
+				else if (type_param == typeof(short))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<short>>();
+				else if (type_param == typeof(ushort))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<ushort>>();
+				else if (type_param == typeof(int))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<int>>();
+				else if (type_param == typeof(uint))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<uint>>();
+				else if (type_param == typeof(long))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<long>>();
+				else if (type_param == typeof(ulong))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<ulong>>();
+				else if (type_param == typeof(float))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<float>>();
+				else if (type_param == typeof(double))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<double>>();
+				else if (type_param == typeof(string))
+					return BuildSerializer_Dictionary_object_typed_key_value<K, List<string>>();
+				else
+					return BuildSerializer_Dictionary_object_key_o<K>(_type_object);
+			}
+			private static object? BuildSerializer_Dictionary_object_typed_key_Directory<K>(Type _type_object) where K : notnull
+			{
+				return null;
+			}
+			private static SerializerDictionary<K, V> BuildSerializer_Dictionary_typed_key_value<K, V>() where K : notnull
+			{
+				var created = new SerializerDictionary<K, V>();
+				SerializerDictionary<K, V>.serializer_key = ProcessGetSerializer<K>();
+				SerializerDictionary<K, V>.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerDictionary<T, K, object> BuildSerializer_Dictionary_typed_key_o<T, K>() where K : notnull
+			{
+				// 1) create Builder
+				var created = new SerializerDictionary<T, K, object>();
+				var types_argument = typeof(T).GetGenericArguments();
+				SerializerDictionary<T, K, object>.serializer_key = ProcessGetSerializer<K>();
+				SerializerDictionary<T, K, object>.serializer_value = Unsafe.As<IBase<object>?>(ProcessGetSerializer_object(types_argument[1])); ;
+
+				// return) 
+				return created;
+			}
+			private static SerializerDictionary<T, object, V> BuildSerializer_Dictionary_typed_o_value<T, V>()
+			{
+				var created = new SerializerDictionary<T, object, V>();
+				var types_argument = typeof(T).GetGenericArguments();
+				SerializerDictionary<T, object, V>.serializer_key = (IBase<object>?)ProcessGetSerializer_object(types_argument[0]);
+				SerializerDictionary<T, object, V>.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerDictionary<T, object, object> BuildSerializer_Dictionary_typed_o_o<T>()
+			{
+				var created = new SerializerDictionary<T, object, object>();
+				var types_argument = typeof(T).GetGenericArguments();
+				SerializerDictionary<T, object, object>.serializer_key = (IBase<object>?)ProcessGetSerializer_object(types_argument[0]);
+				SerializerDictionary<T, object, object>.serializer_value = (IBase<object>?)ProcessGetSerializer_object(types_argument[1]);
+				return created;
+			}
+
+			private static SerializerDictionary_object_typed<K, V> BuildSerializer_Dictionary_object_typed_key_value<K, V>() where K : notnull
+			{
+				var created = new SerializerDictionary_object_typed<K, V>();
+				created.serializer_key = ProcessGetSerializer<K>();
+				created.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerDictionary_object_no_tuped<K, object> BuildSerializer_Dictionary_object_key_o<K>(Type _type) where K : notnull
+			{
+				var created = new SerializerDictionary_object_no_tuped<K, object>();
+				created.type_create = _type;
+				var types_argument = _type.GetGenericArguments();
+				created.serializer_key = ProcessGetSerializer<K>();
+				created.serializer_value = (IBase<object>?)ProcessGetSerializer_object(types_argument[1]);
+				return created;
+			}
+			private static SerializerDictionary_object_no_tuped<object, V> BuildSerializer_Dictionary_object_key_value<V>(Type _type)
+			{
+				var created = new SerializerDictionary_object_no_tuped<object, V>();
+				var types_argument = _type.GetGenericArguments();
+				created.type_create = _type;
+				created.serializer_key = (IBase<object>?)ProcessGetSerializer_object(types_argument[0]);
+				created.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerDictionary_object BuildSerializer_Dictionary_object_o_o(Type _type)
+			{
+				var created = new SerializerDictionary_object();
+				created.type_create = _type;
+				var types_argument = _type.GetGenericArguments();
+				created.serializer_key = (IBase<object>?)ProcessGetSerializer_object(types_argument[0]);
+				created.serializer_value = (IBase<object>?)ProcessGetSerializer_object(types_argument[1]);
+				return created;
+			}
+
+			private static object? BufferSerializer_array<T>()
+			{
+				// declare) 
+				object? result;
+
+				// 1) get type
+				Type type = typeof(T);
+
+				// 1) try make knowed parametered
+				result = BuildSerializer_array(type);
+
+				// 2) make object
+				if (result == null)
+				{
+					result = BuildSerailizer_array_no_typed<T>();
+				}
+
+				// return)
+				return result;
+			}
+			private static object? BufferSerializer_array_object(Type _type)
+			{
+				// declare) 
+				object? result;
+
+				// 1) try make knowed parametered
+				result = BuildSerializer_array_object(_type);
+
+				// 2) make object
+				if (result == null)
+				{
+					result = BuildSerailizer_array_object_no_typed(_type);
+				}
+
+				// return)
+				return result;
+			}
+			private static object? BuildSerializer_array(Type _type)
+			{
+				// 1) get argument type
+				var type_param = _type.GetElementType();
+
+				if (type_param == typeof(char))
+					return BuildSerailizer_array_typed_primitive<char>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerailizer_array_typed_primitive<sbyte>();
+				else if (type_param == typeof(byte))
+					return BuildSerailizer_array_typed_primitive<byte>();
+				else if (type_param == typeof(short))
+					return BuildSerailizer_array_typed_primitive<short>();
+				else if (type_param == typeof(ushort))
+					return BuildSerailizer_array_typed_primitive<ushort>();
+				else if (type_param == typeof(int))
+					return BuildSerailizer_array_typed_primitive<int>();
+				else if (type_param == typeof(uint))
+					return BuildSerailizer_array_typed_primitive<uint>();
+				else if (type_param == typeof(long))
+					return BuildSerailizer_array_typed_primitive<long>();
+				else if (type_param == typeof(ulong))
+					return BuildSerailizer_array_typed_primitive<ulong>();
+				else if (type_param == typeof(float))
+					return BuildSerailizer_array_typed_primitive<float>();
+				else if (type_param == typeof(double))
+					return BuildSerailizer_array_typed_primitive<double>();
+				else if (type_param == typeof(string))
+					return BuildSerailizer_array_typed<string>();
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(type_param))
+					return BuildSerailizer_array_typed_Dictionary(_type);
+				else if (typeof(System.Collections.IList).IsAssignableFrom(type_param))
+					return BuildSerailizer_array_typed_List(_type);
+				else
+					return null;
+			}
+			private static object? BuildSerailizer_array_typed_Dictionary(Type _type)
+			{
+				return null;
+			}
+			private static object? BuildSerailizer_array_typed_List(Type _type)
+			{
+				// 1) get argument type
+				var type_value = _type.GetElementType();
+
+				// check)
+				Debug.Assert(type_value != null);
+
+				// 2) get template argment type
+				var type_param = type_value.GetGenericArguments()[0];
+
+				// 3) ...
+				if (type_param == typeof(char))
+					return BuildSerailizer_array_typed<char[]>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerailizer_array_typed<sbyte[]>();
+				else if (type_param == typeof(byte))
+					return BuildSerailizer_array_typed<byte[]>();
+				else if (type_param == typeof(short))
+					return BuildSerailizer_array_typed<short[]>();
+				else if (type_param == typeof(ushort))
+					return BuildSerailizer_array_typed<ushort[]>();
+				else if (type_param == typeof(int))
+					return BuildSerailizer_array_typed<int[]>();
+				else if (type_param == typeof(uint))
+					return BuildSerailizer_array_typed<uint[]>();
+				else if (type_param == typeof(long))
+					return BuildSerailizer_array_typed<long[]>();
+				else if (type_param == typeof(ulong))
+					return BuildSerailizer_array_typed<ulong[]>();
+				else if (type_param == typeof(float))
+					return BuildSerailizer_array_typed<float[]>();
+				else if (type_param == typeof(double))
+					return BuildSerailizer_array_typed<double[]>();
+				else if (type_param == typeof(string))
+					return BuildSerailizer_array_typed<string[]>();
+				else
+					return null;
+			}
+			private static object? BuildSerializer_array_object(Type _type)
+			{
+				// 1) get argument type
+				var type_param = _type.GetElementType();
+
+				// 2) ...
+				if (type_param == typeof(char))
+					return BuildSerailizer_array_object_typed_primitive<char>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerailizer_array_object_typed_primitive<sbyte>();
+				else if (type_param == typeof(byte))
+					return BuildSerailizer_array_object_typed_primitive<byte>();
+				else if (type_param == typeof(short))
+					return BuildSerailizer_array_object_typed_primitive<short>();
+				else if (type_param == typeof(ushort))
+					return BuildSerailizer_array_object_typed_primitive<ushort>();
+				else if (type_param == typeof(int))
+					return BuildSerailizer_array_object_typed_primitive<int>();
+				else if (type_param == typeof(uint))
+					return BuildSerailizer_array_object_typed_primitive<uint>();
+				else if (type_param == typeof(long))
+					return BuildSerailizer_array_object_typed_primitive<long>();
+				else if (type_param == typeof(ulong))
+					return BuildSerailizer_array_object_typed_primitive<ulong>();
+				else if (type_param == typeof(float))
+					return BuildSerailizer_array_object_typed_primitive<float>();
+				else if (type_param == typeof(double))
+					return BuildSerailizer_array_object_typed_primitive<double>();
+				else if (type_param == typeof(string))
+					return BuildSerailizer_array_object_typed<string>();
+				else
+					return null;
+			}
+			private static SerializerArray_typed<V> BuildSerailizer_array_typed<V>()
+			{
+				var created = new SerializerArray_typed<V>();
+				SerializerArray_typed<V>.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerArray_typed_primitive<V> BuildSerailizer_array_typed_primitive<V>() where V : unmanaged
+			{
+				var created = new SerializerArray_typed_primitive<V>();
+				return created;
+			}
+			private static SerializerArray_no_typed<T> BuildSerailizer_array_no_typed<T>()
+			{
+				var created = new SerializerArray_no_typed<T>();
+				SerializerArray_no_typed<T>.serializer_value = (IBase<object>?)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
+				return created;
+			}
+			private static SerializerArray_object_typed<V> BuildSerailizer_array_object_typed<V>()
+			{
+				var created = new SerializerArray_object_typed<V>();
+				created.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerArray_object_typed_primitive<V> BuildSerailizer_array_object_typed_primitive<V>() where V:unmanaged
+			{
+				var created = new SerializerArray_object_typed_primitive<V>();
+				return created;
+			}
+			private static SerializerArray_object_no_typed BuildSerailizer_array_object_no_typed(Type _type)
+			{
+				var created = new SerializerArray_object_no_typed();
+				created.type_create = _type;
+				created.serializer_value = (IBase<object>?)ProcessGetSerializer_object(_type.GetGenericArguments()[0]);
+				return created;
+			}
+
+			private static object? BuildSerailizer_List<T>()
+			{
+				// declare) 
+				object? result;
+
+				// 1) get type
+				Type type = typeof(T);
+
+				// 1) try make knowed parametered
+				result = BuildSerializer_List(type);
+
+				// 2) make object
+				if (result == null)
+				{
+					result = BuildSerailizer_List_no_typed<T>();
+				}
+
+				// return)
+				return result;
+			}
+			private static object? BuildSerailizer_List_object(Type _type)
+			{
+				// declare) 
+				object? result;
+
+				// 1) try make knowed parametered
+				result = BuildSerializer_List_object(_type);
+
+				// 2) make object
+				if (result == null)
+				{
+					result = BuildSerailizer_List_object_no_typed(_type);
+				}
+
+				// return)
+				return result;
+			}
+			private static object? BuildSerializer_List(Type _type)
+			{
+				// 1) get argument type
+				var type_param = _type.GetGenericArguments()[0];
+
+				// 2) 
+				if (type_param == typeof(char))
+					return BuildSerailizer_List_typed_primitive<char>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerailizer_List_typed_primitive<sbyte>();
+				else if (type_param == typeof(byte))
+					return BuildSerailizer_List_typed_primitive<byte>();
+				else if (type_param == typeof(short))
+					return BuildSerailizer_List_typed_primitive<short>();
+				else if (type_param == typeof(ushort))
+					return BuildSerailizer_List_typed_primitive<ushort>();
+				else if (type_param == typeof(int))
+					return BuildSerailizer_List_typed_primitive<int>();
+				else if (type_param == typeof(uint))
+					return BuildSerailizer_List_typed_primitive<uint>();
+				else if (type_param == typeof(long))
+					return BuildSerailizer_List_typed_primitive<long>();
+				else if (type_param == typeof(ulong))
+					return BuildSerailizer_List_typed_primitive<ulong>();
+				else if (type_param == typeof(float))
+					return BuildSerailizer_List_typed_primitive<float>();
+				else if (type_param == typeof(double))
+					return BuildSerailizer_List_typed_primitive<double>();
+				else if (type_param == typeof(string))
+					return BuildSerailizer_List_typed<string>();
+				else if (typeof(System.Collections.IDictionary).IsAssignableFrom(type_param))
+					return BuildSerailizer_List_typed_Dictionary(_type);
+				else if (typeof(System.Collections.IList).IsAssignableFrom(type_param))
+					return BuildSerailizer_List_typed_List(_type);
+				else
+					return null;
+			}
+			private static object? BuildSerailizer_List_typed_Dictionary(Type _type)
+			{
+				return null;
+			}
+			private static object? BuildSerailizer_List_typed_List(Type _type)
+			{
+				// 1) get argument type
+				var type_value = _type.GetGenericArguments()[0];
+
+				// check)
+				Debug.Assert(type_value != null);
+
+				// 2) get template argment type
+				var type_param = type_value.GetGenericArguments()[0];
+
+				if (type_param == typeof(char))
+					return BuildSerailizer_List_typed<List<char>>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerailizer_List_typed<List<sbyte>>();
+				else if (type_param == typeof(byte))
+					return BuildSerailizer_List_typed<List<byte>>();
+				else if (type_param == typeof(short))
+					return BuildSerailizer_List_typed<List<short>>();
+				else if (type_param == typeof(ushort))
+					return BuildSerailizer_List_typed<List<ushort>>();
+				else if (type_param == typeof(int))
+					return BuildSerailizer_List_typed<List<int>>();
+				else if (type_param == typeof(uint))
+					return BuildSerailizer_List_typed<List<uint>>();
+				else if (type_param == typeof(long))
+					return BuildSerailizer_List_typed<List<long>>();
+				else if (type_param == typeof(ulong))
+					return BuildSerailizer_List_typed<List<ulong>>();
+				else if (type_param == typeof(float))
+					return BuildSerailizer_List_typed<List<float>>();
+				else if (type_param == typeof(double))
+					return BuildSerailizer_List_typed<List<double>>();
+				else if (type_param == typeof(string))
+					return BuildSerailizer_List_typed<List<string>>();
+				else
+					return null;
+			}
+			private static object? BuildSerializer_List_object(Type _type)
+			{
+				// 1) get argument type
+				var type_param = _type.GetGenericArguments()[0];
+
+				if (type_param == typeof(char))
+					return BuildSerailizer_List_object_typed_primitive<char>();
+				else if (type_param == typeof(sbyte))
+					return BuildSerailizer_List_object_typed_primitive<sbyte>();
+				else if (type_param == typeof(byte))
+					return BuildSerailizer_List_object_typed_primitive<byte>();
+				else if (type_param == typeof(short))
+					return BuildSerailizer_List_object_typed_primitive<short>();
+				else if (type_param == typeof(ushort))
+					return BuildSerailizer_List_object_typed_primitive<ushort>();
+				else if (type_param == typeof(int))
+					return BuildSerailizer_List_object_typed_primitive<int>();
+				else if (type_param == typeof(uint))
+					return BuildSerailizer_List_object_typed_primitive<uint>();
+				else if (type_param == typeof(long))
+					return BuildSerailizer_List_object_typed_primitive<long>();
+				else if (type_param == typeof(ulong))
+					return BuildSerailizer_List_object_typed_primitive<ulong>();
+				else if (type_param == typeof(float))
+					return BuildSerailizer_List_object_typed_primitive<float>();
+				else if (type_param == typeof(double))
+					return BuildSerailizer_List_object_typed_primitive<double>();
+				else if (type_param == typeof(string))
+					return BuildSerailizer_List_object_typed<string>();
+				else
+					return null;
+			}
+			private static SerializerList_typed<V> BuildSerailizer_List_typed<V>()
+			{
+				var created = new SerializerList_typed<V>();
+				SerializerList_typed<V>.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerList_typed_primitive<V> BuildSerailizer_List_typed_primitive<V>() where V : unmanaged
+			{
+				var created = new SerializerList_typed_primitive<V>();
+				return created;
+			}
+			private static SerializerList_no_typed<T> BuildSerailizer_List_no_typed<T>()
+			{
+				var created = new SerializerList_no_typed<T>();
+				SerializerList_no_typed<T>.serializer_value = (IBase<object>?)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
+				return created;
+			}
+			private static SerializerList_object_typed<V> BuildSerailizer_List_object_typed<V>()
+			{
+				var created = new SerializerList_object_typed<V>();
+				created.serializer_value = ProcessGetSerializer<V>();
+				return created;
+			}
+			private static SerializerList_object_typed_primitive<V> BuildSerailizer_List_object_typed_primitive<V>() where V:unmanaged
+			{
+				var created = new SerializerList_object_typed_primitive<V>();
+				return created;
+			}
+			private static SerializerList_object_no_typed BuildSerailizer_List_object_no_typed(Type _type)
+			{
+				var created = new SerializerList_object_no_typed();
+				created.type_create = _type;
+				created.serializer_value = (IBase<object>?)ProcessGetSerializer_object(_type.GetGenericArguments()[0]);
+				return created;
+			}
+
+			private static object? BuildSerailizer_Collection<T>()
+			{
+				return null;
+			}
+			private static object? BuildSerailizer_Collection_object(Type _type)
+			{
+				return null;
+			}
+
+			private static SerializerClass<T> BuildSerializer_class<T>()
+			{
+				// 1) create BufferSerializer
+				var created = new SerializerClass<T>();
+
+				// 2) get type
+				var type = typeof(T);
+
+				// check)
+				if (_is_serializable_type(type) == false)
+					throw new System.NullReferenceException("buffer is not allocated");
+
+				// 2) 부모의 부모가 nullptr이면 object를 제외하고 최고 부모 클래스다.
+				if (type.BaseType != null && type.BaseType.BaseType != null)
+				{
+					// - get serializer
+					var serializer = ProcessGetSerializer_object(type.BaseType);
+
+					// - set parent serializer
+					SerializerClass<T>.serializer_parent = (IBase<object>?)serializer;
+				}
+
+				// 3) 변수들을 얻는다.
+				var temp_field = type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+				// 4) create member_serialization_info
+				var list_member_serialization_info = new List<MemberSerializationInfo>();
+
+				// 5) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
+				foreach (var iter in temp_field)
+				{
+					// check)
+					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
+						continue;
+
+					var temp_membeer_serialization_info = new MemberSerializationInfo();
+					temp_membeer_serialization_info.field_info = iter;
+
+					// - get serializer
+					var serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType);
+
+					// check)
+					Debug.Assert(serializer != null);
+
+					// - set serializer
+					temp_membeer_serialization_info.serializer = serializer;
+
+					// - add serializer
+					list_member_serialization_info.Add(temp_membeer_serialization_info);
+				}
+
+				// 6) add serializer
+				SerializerClass<T>.list_member_serialzation_info = list_member_serialization_info;
+
+				// return)
+				return created;
+			}
+			private static SerializerClass_object BuildSerializer_class_object(Type _type)
+			{
+				// 1) crea
+				var created = new SerializerClass_object();
+
+				// check)
+				if (_is_serializable_type(_type) == false)
+					throw new System.NullReferenceException("buffer is not allocated");
+
+				// 2) 부모의 부모가 nullptr이면 object를 제외하고 최고 부모 클래스다.
+				if (_type.BaseType != null && _type.BaseType.BaseType != null)
+				{
+					// - get serializer
+					var serializer = ProcessGetSerializer_object(_type.BaseType);
+
+					// - set parent serializer
+					SerializerClass<object>.serializer_parent = (IBase<object>?)serializer;
+				}
+
+				// 3) 변수들을 얻는다.
+				var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+				// 4) create member_serialization_info
+				var list_member_serialization_info = new List<MemberSerializationInfo>();
+
+				// 5) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
+				foreach (var iter in temp_field)
+				{
+					// check)
+					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
+						continue;
+
+					var temp_membeer_serialization_info = new MemberSerializationInfo();
+					temp_membeer_serialization_info.field_info = iter;
+
+					// - get serializer
+					var serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType);
+
+					// check)
+					Debug.Assert(serializer != null);
+
+					// - set serializer
+					temp_membeer_serialization_info.serializer = serializer;
+
+					// - add serializer
+					list_member_serialization_info.Add(temp_membeer_serialization_info);
+				}
+
+				// 6) add serializer
+				SerializerClass<object>.list_member_serialzation_info = list_member_serialization_info;
+
+				// return)
+				return created;
+			}
+
+			public static IBase<T> ProcessGetSerializer<T>()
+			{
+				// declare) 
+				object? result = null;
+
+				// 2) get type
+				var type = typeof(T);
+
+				// 3) 이미 존재하는 가?
+				var is_exist = dictionary_serializer.TryGetValue(type, out result);
+
+				// 4) 존재하지 않으면 새로 만든다.
+				if (is_exist == false)
+				{
+					// - 종류에 다라 생성
+					result = BuildSerialize<T>();
+
+					// - add to dictionary (내부적으로 Initializer 하면서 추가하는 것이 있으므로 이렇게 할 필요가 있다.
+					if (dictionary_serializer.ContainsKey(type) == false)
+					{
+						dictionary_serializer.Add(type, result);
+					}
+				}
+
+				// 4) casting
+				var result_casted = Unsafe.As<IBase<T>>(result);
+
+				// check)
+				Debug.Assert(result_casted != null);
+
+				// return) 
+				return result_casted;
+			}
+			public static IBase<Dictionary<K,V>> ProcessGetSerializer_Dictionary<K, V>() where K : notnull
+			{
+				// declare) 
+				object? result = null;
+
+				// 2) get type
+				var type = typeof(Dictionary<K, V>);
+
+				// 3) 이미 존재하는 가?
+				var is_exist = dictionary_serializer.TryGetValue(type, out result);
+
+				// 4) type을 확인한다.
+				if (is_exist == true)
+				{
+					// - 같은 type인가?
+					var serializer_aleady = result as IBase<Dictionary<K, V>>;
+
+					// - 아니라면 교체
+					if (serializer_aleady == null)
+					{
+						is_exist = false;
+					}
+				}
+
+				// 4) 존재하지 않으면 새로 만든다.
+				if (is_exist == false)
+				{
+					// - 먼저 시돈
+					result = BuildSerializer_Dictionary_typed<Dictionary<K, V>>();
+
+					if (result == null)
+						result = BuildSerializer_Dictionary_typed_key_value<K, V>();
+
+					// check)
+					Debug.Assert(result != null);
+
+					// - 무조건 삽입 혹은 교체
+					dictionary_serializer[type] = result;
+				}
+
+				// 4) casting
+				var result_casted = Unsafe.As<IBase<Dictionary<K, V>>?>(result);
+
+				// check)
+				Debug.Assert(result_casted != null);
+
+				// return) 
+				return result_casted;
+			}
+			public static IBase<List<V>> ProcessSerializer_List<V>()
+			{
+				// declare) 
+				object? result = null;
+
+				// 2) get type
+				var type = typeof(List<V>);
+
+				// 3) 이미 존재하는 가?
+				var is_exist = dictionary_serializer.TryGetValue(type, out result);
+
+				// 4) type을 확인한다.
+				if (is_exist == true)
+				{
+					// - 같은 type인가?
+					var serializer_aleady = result as SerializerList_typed<V>;
+
+					// - 아니라면 교체
+					if (serializer_aleady == null)
+					{
+						is_exist = false;
+					}
+				}
+
+				// 4) 존재하지 않으면 새로 만든다.
+				if (is_exist == false)
+				{
+					result = BuildSerializer_List(typeof(List<V>));
+
+					if(result == null)
+						result = BuildSerailizer_List_typed<V>();
+
+					// check)
+					Debug.Assert(result != null);
+
+					// - 무조건 삽입 혹은 교체
+					dictionary_serializer[type] = result;
+				}
+
+				// 4) casting
+				var result_casted = Unsafe.As<IBase<List<V>>?>(result);
+
+				// check)
+				Debug.Assert(result_casted != null);
+
+				// return) 
+				return result_casted;
+			}
+			private static object? ProcessGetSerializer_object(Type _type)
+			{
+				// declare) 
+				object? result = null;
+
+				// 1) 이미 존재하는 가?
+				var is_exist = dictionary_serializer_object.TryGetValue(_type, out result);
+
+				// 3) 존재하지 않으면 새로 만든다.
+				if (is_exist == false)
+				{
+					// - 종류에 다라 생성
+					result = BuildSerialize_object(_type);
+
+					// - add to dictionary
+					dictionary_serializer_object.Add(_type, result);
+				}
+
+				// check)
+				Debug.Assert(result != null);
+
+				// return) 
+				return result;
+			}
+		}
+
+		public static class Get<T>
+		{
+			static readonly public IBase<T> instance = Builder.ProcessGetSerializer<T>();
+		}
+		public static class Get_Dictionary<K,V> where K : notnull
+		{
+			static readonly public IBase<Dictionary<K,V>> instance = (SerializerDictionary<K, V>)Builder.ProcessGetSerializer_Dictionary<K, V>();
+		}
+		public static class Get_List<V>
+		{
+			static readonly public IBase<List<V>> instance = Builder.ProcessSerializer_List<V>();
+		}
+	}
 }

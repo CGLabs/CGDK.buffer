@@ -188,7 +188,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		}
 
 		[TestMethod]
-		public void cb_benchmark_01_primitive()
+		public void CGDKb_benchmark_01_primitive()
 		{
 			Int32 value_1 = 1;
 			UInt32 value_2 = 101;
@@ -224,7 +224,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		}
 
 		[TestMethod]
-		public void cb_benchmark_02_list_int()
+		public void CGDKb_benchmark_02_list_int()
 		{
 			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
@@ -235,7 +235,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<List<int>>(list_int);
+				bufferTemp.append(list_int);
 
 				// - 역직렬화
 				var temp = bufferTemp.extract<List<int>>();
@@ -243,7 +243,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		}
 
 		[TestMethod]
-		public void cb_benchmark_03_string()
+		public void CGDKb_benchmark_03_string()
 		{
 			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
@@ -276,7 +276,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		}
 
 		[TestMethod]
-		public void cb_benchmark_04_list_string()
+		public void CGDKb_benchmark_04_list_string()
 		{
 			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
@@ -295,7 +295,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		}
 
 		[TestMethod]
-		public void cb_benchmark_05_key_value_string_list_int()
+		public void CGDKb_benchmark_05_key_value_int_int()
 		{
 			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
@@ -306,7 +306,43 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append(dictionary_string_List_int);
+				bufferTemp.append(dictionary_int_int);
+
+				// - 역직렬화
+				var temp = bufferTemp.extract<Dictionary<int,int>>();
+			}
+		}
+		[TestMethod]
+		public void CGDKb_benchmark_06_key_value_string_string()
+		{
+			// - 버퍼 준비
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - 버퍼 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// - 직렬화
+				bufferTemp.append<Dictionary<string, string>>(dictionary_string_string);
+
+				// - 역직렬화
+				var temp = bufferTemp.extract<Dictionary<string,string>>();
+			}
+		}
+		[TestMethod]
+		public void CGDKb_benchmark_07_key_value_string_list_int()
+		{
+			// - 버퍼 준비
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - 버퍼 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// - 직렬화
+				bufferTemp.append<Dictionary<string, List<int>>>(dictionary_string_List_int);
 
 				// - 역직렬화
 				var temp = bufferTemp.extract<Dictionary<string, List<int>>>();
@@ -314,7 +350,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		}
 
 		[TestMethod]
-		public void cb_benchmark_06_struct_primitive()
+		public void CGDKb_benchmark_08_struct_primitive()
 		{
 			// - 버퍼 준비
 			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
@@ -354,7 +390,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		};
 
 		[TestMethod]
-		public void cb_benchmark_07_struct_composite()
+		public void CGDKb_benchmark_09_struct_composite()
 		{
 			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
@@ -378,109 +414,5 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				var value2 = bufferTemp.extract<TEST>();
 			}
 		}
-
-		[TestMethod]
-		public void cb_benchmark_extra_01_general_1()
-		{
-			// - 버퍼 준비
-			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 1) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// - 직렬화
-				bufferTemp.append<sbyte>((sbyte)3);
-				bufferTemp.append<byte>(4);
-				bufferTemp.append<short>((short)4100);
-				bufferTemp.append<ushort>((ushort)32210);
-				bufferTemp.append<int>((int)123310);
-				bufferTemp.append<uint>((uint)121234);
-				bufferTemp.append<long>((long)-1000443L);
-				bufferTemp.append<ulong>((ulong)12233094310UL);
-				bufferTemp.append<float>((float)1.0f);
-				bufferTemp.append<double>((double)2.0);
-
-				// - 역직렬화
-				var value0 = bufferTemp.extract<sbyte>();
-				var value1 = bufferTemp.extract<byte>();
-				var value2 = bufferTemp.extract<short>();
-				var value3 = bufferTemp.extract<ushort>();
-				var value4 = bufferTemp.extract<int>();
-				var value5 = bufferTemp.extract<uint>();
-				var value6 = bufferTemp.extract<long>();
-				var value7 = bufferTemp.extract<ulong>();
-				var value8 = bufferTemp.extract<float>();
-				var value9 = bufferTemp.extract<double>();
-			}
-		}
-
-		[TestMethod]
-		public void cb_benchmark_extra_01_general_1_ex()
-		{
-			// - 버퍼 준비
-			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 1) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// - 직렬화
-				bufferTemp.append((int)1);
-				bufferTemp.append((uint)101);
-				bufferTemp.append((long)-12345);
-				bufferTemp.append((ulong)123456);
-				bufferTemp.append((float)1.0f);
-				bufferTemp.append((double)10.0);
-
-				// - 역직렬화
-				var value_1 = bufferTemp.extract_int();
-				var value_2 = bufferTemp.extract_uint();
-				var value_3 = bufferTemp.extract_long();
-				var value_4 = bufferTemp.extract_ulong();
-				var value_5 = bufferTemp.extract_float();
-				var value_6 = bufferTemp.extract_double();
-			}
-		}
-
-		[TestMethod]
-		public void cb_benchmark_extra_01_general_2()
-		{
-			// - 버퍼 준비
-			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
-
-			for (int i = 0; i < _TEST_COUNT; ++i)
-			{
-				// 1) Buffer 준비
-				CGDK.buffer bufferTemp = bufferCreate;
-
-				// - 직렬화
-				bufferTemp.append((sbyte)3);
-				bufferTemp.append((byte)4);
-				bufferTemp.append((short)4100);
-				bufferTemp.append((ushort)32210);
-				bufferTemp.append((int)123310);
-				bufferTemp.append((uint)121234);
-				bufferTemp.append((long)-1000443L);
-				bufferTemp.append((ulong)12233094310UL);
-				bufferTemp.append((float)1.0f);
-				bufferTemp.append((double)2.0);
-
-				// - 역직렬화
-				var value0 = bufferTemp.extract_sbyte();
-				var value1 = bufferTemp.extract_byte();
-				var value2 = bufferTemp.extract_short();
-				var value3 = bufferTemp.extract_ushort();
-				var value4 = bufferTemp.extract_int();
-				var value5 = bufferTemp.extract_uint();
-				var value6 = bufferTemp.extract_long();
-				var value7 = bufferTemp.extract_ulong();
-				var value8 = bufferTemp.extract_float();
-				var value9 = bufferTemp.extract_double();
-			}
-		}
-
 	}
 }

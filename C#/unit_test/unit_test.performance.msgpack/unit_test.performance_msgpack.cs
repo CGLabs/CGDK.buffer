@@ -1,9 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.IO;
-using MessagePack;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+﻿using MessagePack;
 
 namespace UnitTest_Performance_MessagePack
 {
@@ -168,7 +163,7 @@ namespace UnitTest_Performance_MessagePack
 		};
 
 		[TestMethod]
-		public void mp_benchmark_01_primitive()
+		public void MsgPk_benchmark_01_primitive()
 		{
 			Int32	value_1 = 1;
 			UInt32	value_2 = 101;
@@ -197,7 +192,7 @@ namespace UnitTest_Performance_MessagePack
 			}
 		}
 		[TestMethod]
-		public void mp_benchmark_02_list_int()
+		public void MsgPk_benchmark_02_list_int()
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -209,7 +204,7 @@ namespace UnitTest_Performance_MessagePack
 			}
 		}
 		[TestMethod]
-		public void mp_benchmark_03_string()
+		public void MsgPk_benchmark_03_string()
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -235,7 +230,7 @@ namespace UnitTest_Performance_MessagePack
 			}
 		}
 		[TestMethod]
-		public void mp_benchmark_04_list_string()
+		public void MsgPk_benchmark_04_list_string()
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -247,7 +242,31 @@ namespace UnitTest_Performance_MessagePack
 			}
 		}
 		[TestMethod]
-		public void mp_benchmark_05_key_value_string_list_int()
+		public void MsgPk_benchmark_05_key_value_int_int()
+		{
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - 직렬화
+				var serialize = MessagePackSerializer.Serialize(dictionary_int_int);
+
+				// - 역직렬화
+				var de_value = MessagePackSerializer.Deserialize<Dictionary<int,int>>(serialize);
+			}
+		}
+		[TestMethod]
+		public void MsgPk_benchmark_06_key_value_string_string()
+		{
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - 직렬화
+				var serialize = MessagePackSerializer.Serialize(dictionary_string_string);
+
+				// - 역직렬화
+				var de_value = MessagePackSerializer.Deserialize<Dictionary<string,string>>(serialize);
+			}
+		}
+		[TestMethod]
+		public void MsgPk_benchmark_07_key_value_string_list_int()
 		{
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -259,7 +278,7 @@ namespace UnitTest_Performance_MessagePack
 			}
 		}
 		[TestMethod]
-		public void mp_benchmark_06_struct_primitive()
+		public void MsgPk_benchmark_08_struct_primitive()
 		{
 			var tempObject = new TEST
 			{
@@ -285,7 +304,7 @@ namespace UnitTest_Performance_MessagePack
 			}
 		}
 		[TestMethod]
-		public void mp_benchmark_07_struct_composite()
+		public void MsgPk_benchmark_09_struct_composite()
 		{
 			var tempObject = new TEST_EX();
 			tempObject.value0 = 100;
