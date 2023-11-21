@@ -23,10 +23,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[Serializable]
 		public class CTest
 		{
-			[CGDK.Attribute.Serializable]
 			public int	x;
-
-			[CGDK.Attribute.Serializable]
 			public int	y;
 			public int	z;
 		}
@@ -137,73 +134,73 @@ namespace CGDBuffer_CSharp_UnitTest
 
 		void function_append_GENERAL_1(ref CGDK.buffer _buffer)
 		{
-			_buffer.append<char>((char)12);
-			_buffer.append<sbyte>((sbyte)3);
-			_buffer.append<byte>((byte)4);
-			_buffer.append<short>((short)4100);
-			_buffer.append<ushort>((ushort)32210);
-			_buffer.append<int>((int)123310);
-			_buffer.append<uint>((uint)12);
-			_buffer.append<long>((long)-1000443L);
-			_buffer.append<ulong>((ulong)12233094310UL);
-			_buffer.append<float>((float)1.0f);
-			_buffer.append<double>((double)2.0);
+			_buffer.Append<char>((char)12);
+			_buffer.Append<sbyte>((sbyte)3);
+			_buffer.Append<byte>((byte)4);
+			_buffer.Append<short>((short)4100);
+			_buffer.Append<ushort>((ushort)32210);
+			_buffer.Append<int>((int)123310);
+			_buffer.Append<uint>((uint)12);
+			_buffer.Append<long>((long)-1000443L);
+			_buffer.Append<ulong>((ulong)12233094310UL);
+			_buffer.Append<float>((float)1.0f);
+			_buffer.Append<double>((double)2.0);
 		}
 
 		void function_append_GENERAL_2(ref CGDK.buffer _buffer)
 		{
-			_buffer.append((char)12);
-			_buffer.append((sbyte)3);
-			_buffer.append((byte)4);
-			_buffer.append((short)4100);
-			_buffer.append((ushort)32210);
-			_buffer.append((int)123310);
-			_buffer.append((uint)12);
-			_buffer.append((long)-1000443L);
-			_buffer.append((ulong)12233094310UL);
-			_buffer.append((float)1.0f);
-			_buffer.append((double)2.0);
+			_buffer.Append((char)12);
+			_buffer.Append((sbyte)3);
+			_buffer.Append((byte)4);
+			_buffer.Append((short)4100);
+			_buffer.Append((ushort)32210);
+			_buffer.Append((int)123310);
+			_buffer.Append((uint)12);
+			_buffer.Append((long)-1000443L);
+			_buffer.Append((ulong)12233094310UL);
+			_buffer.Append((float)1.0f);
+			_buffer.Append((double)2.0);
 		}
 
 		void function_extract_GENERAL_1(ref CGDK.buffer _buffer)
 		{
-			var value1  = _buffer.extract<char>();
-			var value2  = _buffer.extract<sbyte>();
-			var value3  = _buffer.extract<byte>();
-			var value4  = _buffer.extract<short>();
-			var value5  = _buffer.extract<ushort>();
-			var value6  = _buffer.extract<int>();
-			var value7  = _buffer.extract<uint>();
-			var value8  = _buffer.extract<long>();
-			var value9  = _buffer.extract<ulong>();
-            var value10 = _buffer.extract<float>();
-            var value11 = _buffer.extract<double>();
+			var value1  = _buffer.Extract<char>();
+			var value2  = _buffer.Extract<sbyte>();
+			var value3  = _buffer.Extract<byte>();
+			var value4  = _buffer.Extract<short>();
+			var value5  = _buffer.Extract<ushort>();
+			var value6  = _buffer.Extract<int>();
+			var value7  = _buffer.Extract<uint>();
+			var value8  = _buffer.Extract<long>();
+			var value9  = _buffer.Extract<ulong>();
+            var value10 = _buffer.Extract<float>();
+            var value11 = _buffer.Extract<double>();
 		}
 
 		void function_append_STRING(ref CGDK.buffer _buffer)
 		{
-			_buffer.append<string>(array_string[0]);
-			_buffer.append<string>(array_string[1]);
-			_buffer.append<string>(array_string[2]);
-			_buffer.append<string>(array_string[3]);
-			_buffer.append<string>(array_string[4]);
-			_buffer.append<string>(array_string[5]);
-			_buffer.append<string>(array_string[6]);
-			_buffer.append<string>(array_string[7]);
+			_buffer.Append<string>(array_string[0]);
+			_buffer.Append<string>(array_string[1]);
+			_buffer.Append<string>(array_string[2]);
+			_buffer.Append<string>(array_string[3]);
+			_buffer.Append<string>(array_string[4]);
+			_buffer.Append<string>(array_string[5]);
+			_buffer.Append<string>(array_string[6]);
+			_buffer.Append<string>(array_string[7]);
 		}
 
 		string[] function_extract_STRING(ref CGDK.buffer _buffer)
 		{
 			string[] temp = new string[8];
 
-			temp[0] = _buffer.extract<string>();
-			temp[1] = _buffer.extract<string>();
-			temp[2] = _buffer.extract<string>();
-			temp[3] = _buffer.extract<string>();
-			temp[4] = _buffer.extract<string>();
-			temp[5] = _buffer.extract<string>();
-			temp[6] = _buffer.extract<string>();
-			temp[7] = _buffer.extract<string>();
+			temp[0] = _buffer.Extract<string>();
+			temp[1] = _buffer.Extract<string>();
+			temp[2] = _buffer.Extract<string>();
+			temp[3] = _buffer.Extract<string>();
+			temp[4] = _buffer.Extract<string>();
+			temp[5] = _buffer.Extract<string>();
+			temp[6] = _buffer.Extract<string>();
+			temp[7] = _buffer.Extract<string>();
 
 			return temp;
 		}
@@ -263,88 +260,88 @@ namespace CGDBuffer_CSharp_UnitTest
 			var buf_create = new CGDK.buffer(1024);
 
 			// - char
-			buf_create.append<char>((char)100);
+			buf_create.Append<char>((char)100);
 			Assert.IsTrue(buf_create.Count == sizeof(char));
-			buf_create.extract<char>();
+			buf_create.Extract<char>();
 			Assert.IsTrue(buf_create.Count == 0);
 
 			//// - sbyte
 			//{
-			//	buf_create.append<char>((sbyte)100);
+			//	buf_create.Append<char>((sbyte)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - byte
 			//{
-			//	buf_create.append<char>((byte)100);
+			//	buf_create.Append<char>((byte)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - short
 			//{
-			//	buf_create.append<char>((short)100);
+			//	buf_create.Append<char>((short)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ushort
 			//{
-			//	buf_create.append<char>((ushort)100);
+			//	buf_create.Append<char>((ushort)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ushort
 			//{
-			//	buf_create.append<char>((ushort)100);
+			//	buf_create.Append<char>((ushort)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - int
 			//{
-			//	buf_create.append<char>((int)100);
+			//	buf_create.Append<char>((int)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - uint
 			//{
-			//	buf_create.append<char>((uint)100);
+			//	buf_create.Append<char>((uint)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - long
 			//{
-			//	buf_create.append<char>((long)100);
+			//	buf_create.Append<char>((long)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ulong
 			//{
-			//	buf_create.append<char>((ulong)100);
+			//	buf_create.Append<char>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(char));
-			//	var v = buf_create.extract<char>();
+			//	var v = buf_create.Extract<char>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -352,7 +349,7 @@ namespace CGDBuffer_CSharp_UnitTest
 			//// - float
 			//try
 			//{
-			//	buf_create.append<char>((float)100);
+			//	buf_create.Append<char>((float)100);
 
 			//	// Error float는 char로 넣을 수 없다.
 			//	Assert.IsTrue(false);
@@ -364,7 +361,7 @@ namespace CGDBuffer_CSharp_UnitTest
 			//// - double
 			//try
 			//{
-			//	buf_create.append<char>((double)100);
+			//	buf_create.Append<char>((double)100);
 
 			//	// Error float는 char로 넣을 수 없다.
 			//	Assert.IsTrue(false);
@@ -382,99 +379,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<sbyte>((char)100);
+			//	buf_create.Append<sbyte>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - sbyte
 			{
-				buf_create.append<sbyte>((sbyte)100);
+				buf_create.Append<sbyte>((sbyte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-				var v = buf_create.extract<sbyte>();
+				var v = buf_create.Extract<sbyte>();
 				Assert.IsTrue(v == 100);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - byte
 			//{
-			//	buf_create.append<sbyte>((byte)100);
+			//	buf_create.Append<sbyte>((byte)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - short
 			//{
-			//	buf_create.append<sbyte>((short)100);
+			//	buf_create.Append<sbyte>((short)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ushort
 			//{
-			//	buf_create.append<sbyte>((ushort)100);
+			//	buf_create.Append<sbyte>((ushort)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - int
 			{
-				buf_create.append<sbyte>((int)100);
+				buf_create.Append<sbyte>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-				var v = buf_create.extract<sbyte>();
+				var v = buf_create.Extract<sbyte>();
 				Assert.IsTrue(v == 100);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - uint
 			//{
-			//	buf_create.append<sbyte>((uint)100);
+			//	buf_create.Append<sbyte>((uint)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - long
 			//{
-			//	buf_create.append<sbyte>((long)100);
+			//	buf_create.Append<sbyte>((long)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ulong
 			//{
-			//	buf_create.append<sbyte>((ulong)100);
+			//	buf_create.Append<sbyte>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - float
 			//{
-			//	buf_create.append<sbyte>((float)100);
+			//	buf_create.Append<sbyte>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<sbyte>((double)100);
+			//	buf_create.Append<sbyte>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(sbyte));
-			//	var v = buf_create.extract<sbyte>();
+			//	var v = buf_create.Extract<sbyte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -488,99 +485,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<byte>((char)100);
+			//	buf_create.Append<byte>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - sbyte
 			//{
-			//	buf_create.append<byte>((sbyte)100);
+			//	buf_create.Append<byte>((sbyte)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - bytes
 			{
-				buf_create.append<byte>((byte)100);
+				buf_create.Append<byte>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(byte));
-				var v = buf_create.extract<byte>();
+				var v = buf_create.Extract<byte>();
 				Assert.IsTrue(v == 100);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - short
 			//{
-			//	buf_create.append<byte>((short)100);
+			//	buf_create.Append<byte>((short)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ushort
 			//{
-			//	buf_create.append<byte>((ushort)100);
+			//	buf_create.Append<byte>((ushort)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - int
 			{
-				buf_create.append<byte>((int)100);
+				buf_create.Append<byte>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(byte));
-				var v = buf_create.extract<byte>();
+				var v = buf_create.Extract<byte>();
 				Assert.IsTrue(v == 100);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - uint
 			//{
-			//	buf_create.append<byte>((uint)100);
+			//	buf_create.Append<byte>((uint)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - long
 			//{
-			//	buf_create.append<byte>((long)100);
+			//	buf_create.Append<byte>((long)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ulong
 			//{
-			//	buf_create.append<byte>((ulong)100);
+			//	buf_create.Append<byte>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - float
 			//{
-			//	buf_create.append<byte>((float)100);
+			//	buf_create.Append<byte>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<byte>((double)100);
+			//	buf_create.Append<byte>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(byte));
-			//	var v = buf_create.extract<byte>();
+			//	var v = buf_create.Extract<byte>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -594,99 +591,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<short>((char)100);
+			//	buf_create.Append<short>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(short));
-			//	var v = buf_create.extract<short>();
+			//	var v = buf_create.Extract<short>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - sbyte
 			{
-				buf_create.append<short>((sbyte)100);
+				buf_create.Append<short>((sbyte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(short));
-				var v = buf_create.extract<short>();
+				var v = buf_create.Extract<short>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - byte
 			{
-				buf_create.append<short>((byte)100);
+				buf_create.Append<short>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(short));
-				var v = buf_create.extract<short>();
+				var v = buf_create.Extract<short>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - short
 			{
-				buf_create.append<short>((short)100);
+				buf_create.Append<short>((short)100);
 				Assert.IsTrue(buf_create.Count == sizeof(short));
-				var v = buf_create.extract<short>();
+				var v = buf_create.Extract<short>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - ushort
 			//{
-			//	buf_create.append<short>((ushort)100);
+			//	buf_create.Append<short>((ushort)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(short));
-			//	var v = buf_create.extract<short>();
+			//	var v = buf_create.Extract<short>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - int
 			{
-				buf_create.append<short>((int)100);
+				buf_create.Append<short>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(short));
-				var v = buf_create.extract<short>();
+				var v = buf_create.Extract<short>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - uint
 			//{
-			//	buf_create.append<short>((uint)100);
+			//	buf_create.Append<short>((uint)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(short));
-			//	var v = buf_create.extract<short>();
+			//	var v = buf_create.Extract<short>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - long
 			//{
-			//	buf_create.append<short>((long)100);
+			//	buf_create.Append<short>((long)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(short));
-			//	var v = buf_create.extract<short>();
+			//	var v = buf_create.Extract<short>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ulong
 			//{
-			//	buf_create.append<short>((ulong)100);
+			//	buf_create.Append<short>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(short));
-			//	var v = buf_create.extract<short>();
+			//	var v = buf_create.Extract<short>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - float
 			//{
-			//	buf_create.append<short>((float)100);
+			//	buf_create.Append<short>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(short));
-			//	var v = buf_create.extract<short>();
+			//	var v = buf_create.Extract<short>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<short>((double)100);
+			//	buf_create.Append<short>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(short));
-			//	var v = buf_create.extract<short>();
+			//	var v = buf_create.Extract<short>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -700,99 +697,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<ushort>((char)100);
+			//	buf_create.Append<ushort>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - sbyte
 			//{
-			//	buf_create.append<ushort>((sbyte)100);
+			//	buf_create.Append<ushort>((sbyte)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - byte
 			{
-				buf_create.append<ushort>((byte)100);
+				buf_create.Append<ushort>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ushort));
-				var v = buf_create.extract<ushort>();
+				var v = buf_create.Extract<ushort>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - shrot
 			//{
-			//	buf_create.append<ushort>((short)100);
+			//	buf_create.Append<ushort>((short)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - ushort
 			{
-				buf_create.append<ushort>((ushort)100);
+				buf_create.Append<ushort>((ushort)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ushort));
-				var v = buf_create.extract<ushort>();
+				var v = buf_create.Extract<ushort>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - int
 			{
-				buf_create.append<ushort>((int)100);
+				buf_create.Append<ushort>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ushort));
-				var v = buf_create.extract<ushort>();
+				var v = buf_create.Extract<ushort>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - uint
 			//{
-			//	buf_create.append<ushort>((uint)100);
+			//	buf_create.Append<ushort>((uint)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - long
 			//{
-			//	buf_create.append<ushort>((long)100);
+			//	buf_create.Append<ushort>((long)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ulong
 			//{
-			//	buf_create.append<ushort>((ulong)100);
+			//	buf_create.Append<ushort>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - float
 			//{
-			//	buf_create.append<ushort>((float)100);
+			//	buf_create.Append<ushort>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<ushort>((double)100);
+			//	buf_create.Append<ushort>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ushort));
-			//	var v = buf_create.extract<ushort>();
+			//	var v = buf_create.Extract<ushort>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -806,99 +803,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<int>((char)100);
+			//	buf_create.Append<int>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(int));
-			//	var v = buf_create.extract<int>();
+			//	var v = buf_create.Extract<int>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - sbyte
 			{
-				buf_create.append<int>((sbyte)100);
+				buf_create.Append<int>((sbyte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(int));
-				var v = buf_create.extract<int>();
+				var v = buf_create.Extract<int>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - byte
 			{
-				buf_create.append<int>((byte)100);
+				buf_create.Append<int>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(int));
-				var v = buf_create.extract<int>();
+				var v = buf_create.Extract<int>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - short
 			{
-				buf_create.append<int>((short)100);
+				buf_create.Append<int>((short)100);
 				Assert.IsTrue(buf_create.Count == sizeof(int));
-				var v = buf_create.extract<int>();
+				var v = buf_create.Extract<int>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - ushort
 			{
-				buf_create.append<int>((ushort)100);
+				buf_create.Append<int>((ushort)100);
 				Assert.IsTrue(buf_create.Count == sizeof(int));
-				var v = buf_create.extract<int>();
+				var v = buf_create.Extract<int>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - int
 			{
-				buf_create.append<int>((int)100);
+				buf_create.Append<int>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(int));
-				var v = buf_create.extract<int>();
+				var v = buf_create.Extract<int>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - uint
 			//{
-			//	buf_create.append<int>((uint)100);
+			//	buf_create.Append<int>((uint)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(int));
-			//	var v = buf_create.extract<int>();
+			//	var v = buf_create.Extract<int>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - long
 			//{
-			//	buf_create.append<int>((long)100);
+			//	buf_create.Append<int>((long)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(int));
-			//	var v = buf_create.extract<int>();
+			//	var v = buf_create.Extract<int>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ulong
 			//{
-			//	buf_create.append<int>((ulong)100);
+			//	buf_create.Append<int>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(int));
-			//	var v = buf_create.extract<int>();
+			//	var v = buf_create.Extract<int>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - float
 			//{
-			//	buf_create.append<int>((float)100);
+			//	buf_create.Append<int>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(int));
-			//	var v = buf_create.extract<int>();
+			//	var v = buf_create.Extract<int>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<int>((double)100);
+			//	buf_create.Append<int>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(int));
-			//	var v = buf_create.extract<int>();
+			//	var v = buf_create.Extract<int>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -912,99 +909,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<uint>((char)100);
+			//	buf_create.Append<uint>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(uint));
-			//	var v = buf_create.extract<uint>();
+			//	var v = buf_create.Extract<uint>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - sbyte
 			//{
-			//	buf_create.append<uint>((sbyte)100);
+			//	buf_create.Append<uint>((sbyte)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(uint));
-			//	var v = buf_create.extract<uint>();
+			//	var v = buf_create.Extract<uint>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - byte
 			{
-				buf_create.append<uint>((byte)100);
+				buf_create.Append<uint>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(uint));
-				var v = buf_create.extract<uint>();
+				var v = buf_create.Extract<uint>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - short
 			//{
-			//	buf_create.append<uint>((short)100);
+			//	buf_create.Append<uint>((short)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(uint));
-			//	var v = buf_create.extract<uint>();
+			//	var v = buf_create.Extract<uint>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - ushort
 			{
-				buf_create.append<uint>((ushort)100);
+				buf_create.Append<uint>((ushort)100);
 				Assert.IsTrue(buf_create.Count == sizeof(uint));
-				var v = buf_create.extract<uint>();
+				var v = buf_create.Extract<uint>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - int
 			{
-				buf_create.append<uint>((int)100);
+				buf_create.Append<uint>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(uint));
-				var v = buf_create.extract<uint>();
+				var v = buf_create.Extract<uint>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - uint
 			{
-				buf_create.append<uint>((uint)100);
+				buf_create.Append<uint>((uint)100);
 				Assert.IsTrue(buf_create.Count == sizeof(uint));
-				var v = buf_create.extract<uint>();
+				var v = buf_create.Extract<uint>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - long
 			//{
-			//	buf_create.append<uint>((long)100);
+			//	buf_create.Append<uint>((long)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(uint));
-			//	var v = buf_create.extract<uint>();
+			//	var v = buf_create.Extract<uint>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - ulong
 			//{
-			//	buf_create.append<uint>((ulong)100);
+			//	buf_create.Append<uint>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(uint));
-			//	var v = buf_create.extract<uint>();
+			//	var v = buf_create.Extract<uint>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - float
 			//{
-			//	buf_create.append<uint>((float)100);
+			//	buf_create.Append<uint>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(uint));
-			//	var v = buf_create.extract<uint>();
+			//	var v = buf_create.Extract<uint>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<uint>((double)100);
+			//	buf_create.Append<uint>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(uint));
-			//	var v = buf_create.extract<uint>();
+			//	var v = buf_create.Extract<uint>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -1018,99 +1015,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<long>((char)100);
+			//	buf_create.Append<long>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(long));
-			//	var v = buf_create.extract<long>();
+			//	var v = buf_create.Extract<long>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - sbyte
 			{
-				buf_create.append<long>((sbyte)100);
+				buf_create.Append<long>((sbyte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(long));
-				var v = buf_create.extract<long>();
+				var v = buf_create.Extract<long>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - byte
 			{
-				buf_create.append<long>((byte)100);
+				buf_create.Append<long>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(long));
-				var v = buf_create.extract<long>();
+				var v = buf_create.Extract<long>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - short
 			{
-				buf_create.append<long>((short)100);
+				buf_create.Append<long>((short)100);
 				Assert.IsTrue(buf_create.Count == sizeof(long));
-				var v = buf_create.extract<long>();
+				var v = buf_create.Extract<long>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - ushort
 			{
-				buf_create.append<long>((ushort)100);
+				buf_create.Append<long>((ushort)100);
 				Assert.IsTrue(buf_create.Count == sizeof(long));
-				var v = buf_create.extract<long>();
+				var v = buf_create.Extract<long>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - int
 			{
-				buf_create.append<long>((int)100);
+				buf_create.Append<long>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(long));
-				var v = buf_create.extract<long>();
+				var v = buf_create.Extract<long>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - uint
 			{
-				buf_create.append<long>((uint)100);
+				buf_create.Append<long>((uint)100);
 				Assert.IsTrue(buf_create.Count == sizeof(long));
-				var v = buf_create.extract<long>();
+				var v = buf_create.Extract<long>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - long
 			{
-				buf_create.append<long>((long)100);
+				buf_create.Append<long>((long)100);
 				Assert.IsTrue(buf_create.Count == sizeof(long));
-				var v = buf_create.extract<long>();
+				var v = buf_create.Extract<long>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - ulong
 			//{
-			//	buf_create.append<long>((ulong)100);
+			//	buf_create.Append<long>((ulong)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(long));
-			//	var v = buf_create.extract<long>();
+			//	var v = buf_create.Extract<long>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - float
 			//{
-			//	buf_create.append<long>((float)100);
+			//	buf_create.Append<long>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(long));
-			//	var v = buf_create.extract<long>();
+			//	var v = buf_create.Extract<long>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<long>((double)100);
+			//	buf_create.Append<long>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(long));
-			//	var v = buf_create.extract<long>();
+			//	var v = buf_create.Extract<long>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -1124,99 +1121,99 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<ulong>((char)100);
+			//	buf_create.Append<ulong>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ulong));
-			//	var v = buf_create.extract<ulong>();
+			//	var v = buf_create.Extract<ulong>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - sbyte
 			//{
-			//	buf_create.append<ulong>((sbyte)100);
+			//	buf_create.Append<ulong>((sbyte)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ulong));
-			//	var v = buf_create.extract<ulong>();
+			//	var v = buf_create.Extract<ulong>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - byte
 			{
-				buf_create.append<ulong>((byte)100);
+				buf_create.Append<ulong>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ulong));
-				var v = buf_create.extract<ulong>();
+				var v = buf_create.Extract<ulong>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - short
 			//{
-			//	buf_create.append<ulong>((short)100);
+			//	buf_create.Append<ulong>((short)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ulong));
-			//	var v = buf_create.extract<ulong>();
+			//	var v = buf_create.Extract<ulong>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - ushort
 			{
-				buf_create.append<ulong>((ushort)100);
+				buf_create.Append<ulong>((ushort)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ulong));
-				var v = buf_create.extract<ulong>();
+				var v = buf_create.Extract<ulong>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - int
 			{
-				buf_create.append<ulong>((int)100);
+				buf_create.Append<ulong>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ulong));
-				var v = buf_create.extract<ulong>();
+				var v = buf_create.Extract<ulong>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - uint
 			{
-				buf_create.append<ulong>((uint)100);
+				buf_create.Append<ulong>((uint)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ulong));
-				var v = buf_create.extract<ulong>();
+				var v = buf_create.Extract<ulong>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - long
 			{
-				buf_create.append<ulong>((long)100);
+				buf_create.Append<ulong>((long)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ulong));
-				var v = buf_create.extract<ulong>();
+				var v = buf_create.Extract<ulong>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - ulong
 			{
-				buf_create.append<ulong>((ulong)100);
+				buf_create.Append<ulong>((ulong)100);
 				Assert.IsTrue(buf_create.Count == sizeof(ulong));
-				var v = buf_create.extract<ulong>();
+				var v = buf_create.Extract<ulong>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - float
 			//{
-			//	buf_create.append<ulong>((float)100);
+			//	buf_create.Append<ulong>((float)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ulong));
-			//	var v = buf_create.extract<ulong>();
+			//	var v = buf_create.Extract<ulong>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			//// - double
 			//{
-			//	buf_create.append<ulong>((double)100);
+			//	buf_create.Append<ulong>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(ulong));
-			//	var v = buf_create.extract<ulong>();
+			//	var v = buf_create.Extract<ulong>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -1231,98 +1228,98 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<float>((char)100);
+			//	buf_create.Append<float>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(float));
-			//	var v = buf_create.extract<float>();
+			//	var v = buf_create.Extract<float>();
 			//	Assert.IsTrue(v == 100);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - sbyte
 			{
-				buf_create.append<float>((sbyte)100);
+				buf_create.Append<float>((sbyte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - byte
 			{
-				buf_create.append<float>((byte)100);
+				buf_create.Append<float>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - short
 			{
-				buf_create.append<float>((short)100);
+				buf_create.Append<float>((short)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - ushort
 			{
-				buf_create.append<float>((ushort)100);
+				buf_create.Append<float>((ushort)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - int
 			{
-				buf_create.append<float>((int)100);
+				buf_create.Append<float>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - uint
-			buf_create.append<float>((uint)100);
+			buf_create.Append<float>((uint)100);
 			{
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - long
 			{
-				buf_create.append<float>((long)100);
+				buf_create.Append<float>((long)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - ulong
 			{
-				buf_create.append<float>((ulong)100);
+				buf_create.Append<float>((ulong)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - float
 			{
-				buf_create.append<float>((float)100);
+				buf_create.Append<float>((float)100);
 				Assert.IsTrue(buf_create.Count == sizeof(float));
-				var v = buf_create.extract<float>();
+				var v = buf_create.Extract<float>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			//// - double
 			//{
-			//	buf_create.append<float>((double)100);
+			//	buf_create.Append<float>((double)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(float));
-			//	var v = buf_create.extract<float>();
+			//	var v = buf_create.Extract<float>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
@@ -1337,106 +1334,106 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			//// - char
 			//{
-			//	buf_create.append<double>((char)100);
+			//	buf_create.Append<double>((char)100);
 			//	Assert.IsTrue(buf_create.Count == sizeof(double));
-			//	var v = buf_create.extract<double>();
+			//	var v = buf_create.Extract<double>();
 			//	Assert.IsTrue(v == 100.0);
 			//	Assert.IsTrue(buf_create.Count == 0);
 			//}
 
 			// - sbyte
 			{
-				buf_create.append<double>((sbyte)100);
+				buf_create.Append<double>((sbyte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - byte
 			{
-				buf_create.append<double>((byte)100);
+				buf_create.Append<double>((byte)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - short
 			{
-				buf_create.append<double>((short)100);
+				buf_create.Append<double>((short)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - ushort
 			{
-				buf_create.append<double>((ushort)100);
+				buf_create.Append<double>((ushort)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - int
 			{
-				buf_create.append<double>((int)100);
+				buf_create.Append<double>((int)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - uint
 			{
-				buf_create.append<double>((uint)100);
+				buf_create.Append<double>((uint)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - long
 			{
-				buf_create.append<double>((long)100);
+				buf_create.Append<double>((long)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - ulong
 			{
-				buf_create.append<double>((ulong)100);
+				buf_create.Append<double>((ulong)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - float
 			{
-				buf_create.append<double>((float)100);
+				buf_create.Append<double>((float)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 
 			// - double
 			{
-				buf_create.append<double>((double)100);
+				buf_create.Append<double>((double)100);
 				Assert.IsTrue(buf_create.Count == sizeof(double));
-				var v = buf_create.extract<double>();
+				var v = buf_create.Extract<double>();
 				Assert.IsTrue(v == 100.0);
 				Assert.IsTrue(buf_create.Count == 0);
 			}
 		}
 
 		[TestMethod]
-		public void test_buffer_get_size_of_general()
+		public void test_buffer_GetSizeOf_general()
 		{
 			char		value1	 = 'X';
 			sbyte		value2	 = 0;
@@ -1453,18 +1450,18 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				Assert.IsTrue(CGDK.buffer.get_size_of(value1) == sizeof(char));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value2) == sizeof(sbyte));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value3) == sizeof(byte));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value4) == sizeof(short));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value5) == sizeof(ushort));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value6) == sizeof(int));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value7) == sizeof(uint));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value8) == sizeof(long));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value9) == sizeof(ulong));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value10) == sizeof(UInt64));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value11) == sizeof(float));
-				Assert.IsTrue(CGDK.buffer.get_size_of(value12) == sizeof(double));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value1) == sizeof(char));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value2) == sizeof(sbyte));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value3) == sizeof(byte));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value4) == sizeof(short));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value5) == sizeof(ushort));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value6) == sizeof(int));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value7) == sizeof(uint));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value8) == sizeof(long));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value9) == sizeof(ulong));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value10) == sizeof(UInt64));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value11) == sizeof(float));
+				Assert.IsTrue(CGDK.buffer.GetSizeOf(value12) == sizeof(double));
 			}
 		}
 
@@ -1476,59 +1473,59 @@ namespace CGDBuffer_CSharp_UnitTest
 				// - Buffer 할당
 				var buf_temp = new CGDK.buffer(1024);
 
-				buf_temp.append<char>((char)12);
-				buf_temp.set_front<char>((char)12);
-				var	a0	 = buf_temp.get_front<char>();
+				buf_temp.Append<char>((char)12);
+				buf_temp.SetFront<char>((char)12);
+				var	a0	 = buf_temp.GetFront<char>();
 				Assert.IsTrue(a0==12);
 
-				buf_temp.append<sbyte>((sbyte)3);
-				buf_temp.set_front<sbyte>(3);
-				var	a1	 = buf_temp.get_front<sbyte>();
+				buf_temp.Append<sbyte>((sbyte)3);
+				buf_temp.SetFront<sbyte>(3);
+				var	a1	 = buf_temp.GetFront<sbyte>();
 				Assert.IsTrue(a1==3);
 
-				buf_temp.append<byte>((byte)4);
-				buf_temp.set_front<byte>(4);
-				var	a2	 = buf_temp.get_front<byte>();
+				buf_temp.Append<byte>((byte)4);
+				buf_temp.SetFront<byte>(4);
+				var	a2	 = buf_temp.GetFront<byte>();
 				Assert.IsTrue(a2==4);
 
-				buf_temp.append<short>((short)4100);
-				buf_temp.set_front<short>(4100);
-				var	a3	 = buf_temp.get_front<short>();
+				buf_temp.Append<short>((short)4100);
+				buf_temp.SetFront<short>(4100);
+				var	a3	 = buf_temp.GetFront<short>();
 				Assert.IsTrue(a3==4100);
 
-				buf_temp.append<ushort>((ushort)32210);
-				buf_temp.set_front<ushort>(32210);
-				var	a4	 = buf_temp.get_front<ushort>();
+				buf_temp.Append<ushort>((ushort)32210);
+				buf_temp.SetFront<ushort>(32210);
+				var	a4	 = buf_temp.GetFront<ushort>();
 				Assert.IsTrue(a4==32210);
 
-				buf_temp.append<int>((int)123310);
-				buf_temp.set_front<int>(123310);
-				var	a5	 = buf_temp.get_front<int>();
+				buf_temp.Append<int>((int)123310);
+				buf_temp.SetFront<int>(123310);
+				var	a5	 = buf_temp.GetFront<int>();
 				Assert.IsTrue(a5==123310);
 
-				buf_temp.append<uint>((uint)12);
-				buf_temp.set_front<uint>(12);
-				var	a6	 = buf_temp.get_front<uint>();
+				buf_temp.Append<uint>((uint)12);
+				buf_temp.SetFront<uint>(12);
+				var	a6	 = buf_temp.GetFront<uint>();
 				Assert.IsTrue(a6==12);
 
-				buf_temp.append<long>((long)-1000443L);
-				buf_temp.set_front<long>(-1000443L);
-				var	a7	 = buf_temp.get_front<long>();
+				buf_temp.Append<long>((long)-1000443L);
+				buf_temp.SetFront<long>(-1000443L);
+				var	a7	 = buf_temp.GetFront<long>();
 				Assert.IsTrue(a7==-1000443L);
 
-				buf_temp.append<ulong>((ulong)12233094310UL);
-				buf_temp.set_front<ulong>(12233094310UL);
-				var	a8	 = buf_temp.get_front<ulong>();
+				buf_temp.Append<ulong>((ulong)12233094310UL);
+				buf_temp.SetFront<ulong>(12233094310UL);
+				var	a8	 = buf_temp.GetFront<ulong>();
 				Assert.IsTrue(a8==12233094310UL);
 
-				buf_temp.append<float>((float)1.0f);
-				buf_temp.set_front<float>(1.0f);
-				var	a9	 = buf_temp.get_front<float>();
+				buf_temp.Append<float>((float)1.0f);
+				buf_temp.SetFront<float>(1.0f);
+				var	a9	 = buf_temp.GetFront<float>();
 				Assert.IsTrue(a9==1.0f);
 
-				buf_temp.append<double>((double)2.0);
-				buf_temp.set_front<double>(2.0);
-				var	a10	 = buf_temp.get_front<double>();
+				buf_temp.Append<double>((double)2.0);
+				buf_temp.SetFront<double>(2.0);
+				var	a10	 = buf_temp.GetFront<double>();
 				Assert.IsTrue(a10==2.0);
 			}
 		}
@@ -1537,7 +1534,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		public void test_buffer_datetime1()
 		{
 			var tempTime = new DateTime(2016, 12, 11, 03, 12, 22);
-			var size_source = CGDK.buffer.get_size_of(tempTime);
+			var size_source = CGDK.buffer.GetSizeOf(tempTime);
 
 			// check) 
 			Assert.IsTrue(size_source == 8);
@@ -1548,16 +1545,16 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(tempTime);
+				buf_temp.Append(tempTime);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<DateTime>();
+				var temp = buf_temp.Extract<DateTime>();
 
 				// Check) 
 				Assert.IsTrue(tempTime == temp);
-				Assert.IsTrue(buf_temp.size == 0);
+				Assert.IsTrue(buf_temp.Size == 0);
 			}
 		}
 
@@ -1591,7 +1588,7 @@ namespace CGDBuffer_CSharp_UnitTest
         [TestMethod]
 		public void test_buffer_append_getfront_string()
 		{
-			var size_source = CGDK.buffer.get_size_of("test_String");
+			var size_source = CGDK.buffer.GetSizeOf("test_String");
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1599,12 +1596,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(1024);
 
 				// - 값 써넣기
-				buf_temp.append<string>("test_String");
+				buf_temp.Append<string>("test_String");
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var result = buf_temp.get_front<string>();
+				var result = buf_temp.GetFront<string>();
 
 				// Check) 
 				Assert.IsTrue(result == "test_String");
@@ -1614,7 +1611,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_array_int_extract_int()
 		{
-			var size_source = CGDK.buffer.get_size_of(list_int);
+			var size_source = CGDK.buffer.GetSizeOf(list_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1622,12 +1619,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(list_int);
+				buf_temp.Append(list_int);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<int[]>();
+				var temp = buf_temp.Extract<int[]>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count==0);
@@ -1640,7 +1637,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_array_int_get_front_array_int()
 		{
-			var size_source = CGDK.buffer.get_size_of(list_int);
+			var size_source = CGDK.buffer.GetSizeOf(list_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1648,14 +1645,15 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(list_int);
+				buf_temp.Append(list_int);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.get_front<int[]>();
+				var temp = buf_temp.GetFront<int[]>();
 
 				// Check) 
+				Assert.IsTrue(temp != null);
 				Assert.IsTrue(list_int.Count==temp.Length);
 				for(int j=0;j<list_int.Count;++j)
 					Assert.AreEqual(list_int[j], temp[j]);
@@ -1665,7 +1663,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_array_string_extract_string()
 		{
-			var size_source = CGDK.buffer.get_size_of(array_string);
+			var size_source = CGDK.buffer.GetSizeOf(array_string);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1673,12 +1671,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				CGDK.buffer buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(array_string);
+				buf_temp.Append(array_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<string[]>();
+				var temp = buf_temp.Extract<string[]>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count==0);
@@ -1691,7 +1689,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_array_string_get_front_string()
 		{
-			var size_source = CGDK.buffer.get_size_of(array_string);
+			var size_source = CGDK.buffer.GetSizeOf(array_string);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1699,14 +1697,15 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(array_string);
+				buf_temp.Append(array_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				string[] temp = buf_temp.get_front<string[]>();
+				string[]? temp = buf_temp.GetFront<string[]>();
 
 				// Check) 
+				Assert.IsTrue(temp != null);
 				Assert.IsTrue(array_string.Length==temp.Length);
 				for(int j=0;j<array_string.Length;++j)
 					Assert.AreEqual(array_string[j], temp[j]);
@@ -1716,7 +1715,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_list_string_extract_general()
 		{
-			var size_source = CGDK.buffer.get_size_of(list_string);
+			var size_source = CGDK.buffer.GetSizeOf(list_string);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1724,12 +1723,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(list_string);
+				buf_temp.Append(list_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<List<string>>();
+				var temp = buf_temp.Extract<List<string>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count==0);
@@ -1742,7 +1741,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_list_string_get_front_list_string()
 		{
-			var size_source = CGDK.buffer.get_size_of(list_string);
+			var size_source = CGDK.buffer.GetSizeOf(list_string);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1750,15 +1749,16 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(list_string);
+				buf_temp.Append(list_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.get_front<List<string>>();
+				var temp = buf_temp.GetFront<List<string>>();
 
 				// Check) 
-				Assert.IsTrue(list_string.Count==temp.Count);
+				Assert.IsTrue(temp != null);
+				Assert.IsTrue(list_string.Count == temp.Count);
 				for(int j=0;j<list_string.Count;++j)
 					Assert.AreEqual(list_string[j], temp[j]);
 			}
@@ -1767,7 +1767,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_int_int_extract_int_int()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_int_int);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_int_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1775,12 +1775,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_int_int);
+				buf_temp.Append(dictionary_int_int);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<Dictionary<int, int>>();
+				var temp = buf_temp.Extract<Dictionary<int, int>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count==0);
@@ -1800,7 +1800,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_int_int_get_front_int_int()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_int_int);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_int_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1808,15 +1808,16 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_int_int);
+				buf_temp.Append(dictionary_int_int);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
 				// - 값 읽기
-				var temp = buf_temp.get_front<Dictionary<int, int>>();
+				var temp = buf_temp.GetFront<Dictionary<int, int>>();
 
 				// Check) 
+				Assert.IsTrue(temp != null);
 				Assert.IsTrue(dictionary_int_int.Count==temp.Count);
 				var ka = dictionary_int_int.Keys.GetEnumerator();
 				var va = dictionary_int_int.Values.GetEnumerator();
@@ -1833,7 +1834,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_string_int_extract_string_int()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_string_int);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_string_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1841,12 +1842,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_int);
+				buf_temp.Append(dictionary_string_int);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<Dictionary<string, int>>();
+				var temp = buf_temp.Extract<Dictionary<string, int>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count==0);
@@ -1866,7 +1867,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_string_int_extract_string_int_2()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_string_int);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_string_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1874,12 +1875,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_int);
+				buf_temp.Append(dictionary_string_int);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<Dictionary<string, int>>();
+				var temp = buf_temp.Extract<Dictionary<string, int>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == 0);
@@ -1899,7 +1900,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_string_int_get_front_string_int()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_string_int);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_string_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1907,15 +1908,16 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_int);
+				buf_temp.Append(dictionary_string_int);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				// - 값 읽기 get_front
-				var temp = buf_temp.get_front<Dictionary<string, int>>();
+				// - 값 읽기 GetFront
+				var temp = buf_temp.GetFront<Dictionary<string, int>>();
 
 				// Check) 
+				Assert.IsTrue(temp != null);
 				Assert.IsTrue(dictionary_string_int.Count==temp.Count);
 				var ka = dictionary_string_int.Keys.GetEnumerator();
 				var va = dictionary_string_int.Values.GetEnumerator();
@@ -1932,7 +1934,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_string_string_extract_string_string()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_string_string);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_string_string);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1940,12 +1942,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_string);
+				buf_temp.Append(dictionary_string_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp =buf_temp.extract<Dictionary<string, string>>();
+				var temp =buf_temp.Extract<Dictionary<string, string>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count==0);
@@ -1965,7 +1967,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_string_string_get_front_string_string()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_string_string);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_string_string);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -1973,15 +1975,16 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_string);
+				buf_temp.Append(dictionary_string_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
 				// - 값 읽기
-				Dictionary<string, string> temp = buf_temp.get_front<Dictionary<string, string>>();
+				Dictionary<string, string>? temp = buf_temp.GetFront<Dictionary<string, string>>();
 
 				// Check) 
+				Assert.IsTrue(temp != null);
 				Assert.IsTrue(dictionary_string_string.Count==temp.Count);
 				var ka = dictionary_string_string.Keys.GetEnumerator();
 				var va = dictionary_string_string.Values.GetEnumerator();
@@ -1998,7 +2001,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_list_list_int_string_get_front()
 		{
-			var size_source = CGDK.buffer.get_size_of(list_list_int);
+			var size_source = CGDK.buffer.GetSizeOf(list_list_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -2006,23 +2009,23 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(list_list_int);
+				buf_temp.Append(list_list_int);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_source);
 
 				// - 값 써넣기
-				buf_temp.append(list_list_int);
+				buf_temp.Append(list_list_int);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_source + size_source);
 
-				var temp1 = buf_temp.extract<List<List<int>>>();
+				var temp1 = buf_temp.Extract<List<List<int>>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_source);
 
-				var temp2 = buf_temp.extract<List<List<int>>>();
+				var temp2 = buf_temp.Extract<List<List<int>>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == 0);
@@ -2032,7 +2035,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_string_list_int_get_front()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_string_List_int);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_string_List_int);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -2040,23 +2043,23 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_List_int);
+				buf_temp.Append(dictionary_string_List_int);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_source);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_List_int);
+				buf_temp.Append(dictionary_string_List_int);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_source + size_source);
 
-				var temp1 = buf_temp.extract<Dictionary<string, List<int>>>();
+				var temp1 = buf_temp.Extract<Dictionary<string, List<int>>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_source);
 
-				var temp2 = buf_temp.extract<Dictionary<string, List<int>>>();
+				var temp2 = buf_temp.Extract<Dictionary<string, List<int>>>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == 0);
@@ -2066,7 +2069,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_append_dictionary_string_list_string_get_front()
 		{
-			var size_source = CGDK.buffer.get_size_of(dictionary_string_List_string);
+			var size_source = CGDK.buffer.GetSizeOf(dictionary_string_List_string);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -2074,12 +2077,12 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(2048);
 
 				// - 값 써넣기
-				buf_temp.append(dictionary_string_List_string);
+				buf_temp.Append(dictionary_string_List_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var temp = buf_temp.extract<Dictionary<string, List<string>>>();
+				var temp = buf_temp.Extract<Dictionary<string, List<string>>>();
 			}
 		}
 
@@ -2103,20 +2106,20 @@ namespace CGDBuffer_CSharp_UnitTest
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<Vector2>(v1);
-				bufferTemp.append<Vector3>(v2);
-				bufferTemp.append<Vector4>(v3);
-				bufferTemp.append<Plane>(p1);
-				bufferTemp.append<Matrix3x2>(m1);
-				bufferTemp.append<Matrix4x4>(m2);
+				bufferTemp.Append<Vector2>(v1);
+				bufferTemp.Append<Vector3>(v2);
+				bufferTemp.Append<Vector4>(v3);
+				bufferTemp.Append<Plane>(p1);
+				bufferTemp.Append<Matrix3x2>(m1);
+				bufferTemp.Append<Matrix4x4>(m2);
 
 				// - 역직렬화
-				var value1 = bufferTemp.extract<Vector2>();
-				var value2 = bufferTemp.extract<Vector3>();
-				var value3 = bufferTemp.extract<Vector4>();
-				var value4 = bufferTemp.extract<Plane>();
-				var value5 = bufferTemp.extract<Matrix3x2>();
-				var value6 = bufferTemp.extract<Matrix4x4>();
+				var value1 = bufferTemp.Extract<Vector2>();
+				var value2 = bufferTemp.Extract<Vector3>();
+				var value3 = bufferTemp.Extract<Vector4>();
+				var value4 = bufferTemp.Extract<Plane>();
+				var value5 = bufferTemp.Extract<Matrix3x2>();
+				var value6 = bufferTemp.Extract<Matrix4x4>();
 			}
 		}
 	#endif
@@ -2141,21 +2144,21 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			string temp_string = "Txxx";
 
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(100);
+			buf_Alloc.Alloc(100);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append<int>(10);
-				buf_temp.append<TEST>(temp);
-				buf_temp.append<string>(temp_string);
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST>(temp);
+				buf_temp.Append<string>(temp_string);
 
-				var a1 = buf_temp.extract<int>();
-				var a2 = buf_temp.extract<TEST>();
-				var a3 = buf_temp.extract<string>();
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST>();
+				var a3 = buf_temp.Extract<string>();
 			}
         }
 
@@ -2179,32 +2182,32 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			string temp_string = "Txxfasgfsgfdfx";
 
-			var size_a = CGDK.buffer.get_size_of((int)10);
-			var size_b = CGDK.buffer.get_size_of(temp);
-			var size_c = CGDK.buffer.get_size_of(temp_string);
+			var size_a = CGDK.buffer.GetSizeOf((int)10);
+			var size_b = CGDK.buffer.GetSizeOf(temp);
+			var size_c = CGDK.buffer.GetSizeOf(temp_string);
 			var size_source = size_a + size_b + size_c;
 
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(size_source);
+			buf_Alloc.Alloc(size_source);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append<int>(10);
-				buf_temp.append<TEST_B>(temp);
-				buf_temp.append<string>(temp_string);
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST_B>(temp);
+				buf_temp.Append<string>(temp_string);
 
 				// Check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var a1 = buf_temp.extract<int>();
-				var a2 = buf_temp.extract<TEST_B>();
-				var a3 = buf_temp.extract<string>();
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST_B>();
+				var a3 = buf_temp.Extract<string>();
 
 				// Check) 
-				Assert.IsTrue(buf_temp.size == 0);
+				Assert.IsTrue(buf_temp.Size == 0);
 			}
 		}
 
@@ -2247,59 +2250,59 @@ namespace CGDBuffer_CSharp_UnitTest
 			tempDic.Add(3, 100);
 			tempDic.Add(4, 100);
 
-			var size_a = CGDK.buffer.get_size_of((int)10);
-			var size_b = CGDK.buffer.get_size_of(temp);
-			var size_c = CGDK.buffer.get_size_of(temp_string);
-			var size_d = CGDK.buffer.get_size_of(tempDic);
+			var size_a = CGDK.buffer.GetSizeOf((int)10);
+			var size_b = CGDK.buffer.GetSizeOf(temp);
+			var size_c = CGDK.buffer.GetSizeOf(temp_string);
+			var size_d = CGDK.buffer.GetSizeOf(tempDic);
 			var size_source = size_a + size_b + size_c + size_d;
 
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(size_source);
+			buf_Alloc.Alloc(size_source);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append<int>(10);
+				buf_temp.Append<int>(10);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_a);
 
-				buf_temp.append<TEST_C>(temp);
+				buf_temp.Append<TEST_C>(temp);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_a + size_b);
 
-				buf_temp.append<string>(temp_string);
+				buf_temp.Append<string>(temp_string);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_a + size_b + size_c);
 
-				buf_temp.append<Dictionary<long, long>>(tempDic);
+				buf_temp.Append<Dictionary<long, long>>(tempDic);
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_source);
 
-				var a1 = buf_temp.extract<int>();
+				var a1 = buf_temp.Extract<int>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_b + size_c + size_d);
 
-				var a2 = buf_temp.extract<TEST_C>();
+				var a2 = buf_temp.Extract<TEST_C>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_c + size_d);
 
-				var a3 = buf_temp.extract<string>();
+				var a3 = buf_temp.Extract<string>();
 
 				// Check) 
 				Assert.IsTrue(buf_temp.Count == size_d);
 
-				var a4 = buf_temp.extract<Dictionary<long, long>>();
+				var a4 = buf_temp.Extract<Dictionary<long, long>>();
 
 				// Check) 
-				Assert.IsTrue(buf_temp.size == 0);
+				Assert.IsTrue(buf_temp.Size == 0);
 			}
 		}
 
@@ -2313,23 +2316,18 @@ namespace CGDBuffer_CSharp_UnitTest
 			public List<int> b;
 #endif
 
-			[CGDK.Attribute.Serializable]
 			int c { get { return 100;} set { } }
 
-			[CGDK.Attribute.Serializable]
 			public TEST d;
 
-			[CGDK.Attribute.Serializable]
 			public ENUM_A e;
 		};
 
 		[CGDK.Attribute.Serializable]
 		public class TEST_CLASS2 : TEST_CLASS1	
 		{
-			[CGDK.Attribute.Serializable]
 			public UInt32 f;
 
-			[CGDK.Attribute.Serializable]
 #if NET
 			public int[]? g;
 #else
@@ -2352,21 +2350,21 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			string temp_string = "Txxx";
 
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(256);
+			buf_Alloc.Alloc(256);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append<int>(10);
-				buf_temp.append<TEST_CLASS1>(temp);
-				buf_temp.append<string>(temp_string);
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST_CLASS1>(temp);
+				buf_temp.Append<string>(temp_string);
 
-				var a1 = buf_temp.extract<int>();
-				var a2 = buf_temp.extract<TEST_CLASS1>();
-				var a3 = buf_temp.extract<string>();
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST_CLASS1>();
+				var a3 = buf_temp.Extract<string>();
 
 				Assert.IsTrue(a2.a == temp.a);
 				Assert.IsTrue(a2.b == null);
@@ -2379,7 +2377,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		}
 
 		[TestMethod]
-		public void test_buffer_class_TEST_CLASS1_get_size_of()
+		public void test_buffer_class_TEST_CLASS1_GetSizeOf()
 		{
 			TEST_CLASS1 temp = new TEST_CLASS1();
 			temp.a = 10;
@@ -2393,13 +2391,13 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			var buf_temp = new CGDK.buffer();
 
-			buf_temp.alloc(256);
+			buf_temp.Alloc(256);
 
-			buf_temp.append<TEST_CLASS1>(temp);
+			buf_temp.Append<TEST_CLASS1>(temp);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				int size_source = CGDK.buffer.get_size_of(temp);
+				int size_source = CGDK.buffer.GetSizeOf(temp);
 
 				Assert.IsTrue(size_source == buf_temp.Count);
 			}
@@ -2422,26 +2420,26 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			string temp_string = "Txxx";
 
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(256);
+			buf_Alloc.Alloc(256);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append<int>(10);
-				buf_temp.append<TEST_CLASS2>(temp);
-				buf_temp.append<string>(temp_string);
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST_CLASS2>(temp);
+				buf_temp.Append<string>(temp_string);
 
-				var a1 = buf_temp.extract<int>();
-				var a2 = buf_temp.extract<TEST_CLASS2>();
-				var a3 = buf_temp.extract<string>();
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST_CLASS2>();
+				var a3 = buf_temp.Extract<string>();
 			}
         }
 
 		[TestMethod]
-		public void test_buffer_class_TEST_CLASS2_get_size_of()
+		public void test_buffer_class_TEST_CLASS2_GetSizeOf()
 		{
 			TEST_CLASS2 temp = new TEST_CLASS2();
 			temp.a = 10;
@@ -2456,14 +2454,14 @@ namespace CGDBuffer_CSharp_UnitTest
 
 			var buf_temp = new CGDK.buffer();
 
-			buf_temp.alloc(256);
+			buf_temp.Alloc(256);
 
-			buf_temp.append<TEST_CLASS2>(temp);
+			buf_temp.Append<TEST_CLASS2>(temp);
 
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				int size_source = CGDK.buffer.get_size_of(temp);
+				int size_source = CGDK.buffer.GetSizeOf(temp);
 
 				Assert.IsTrue(size_source == buf_temp.Count);
 			}
@@ -2473,32 +2471,32 @@ namespace CGDBuffer_CSharp_UnitTest
 		public void test_buffer_append_extract_buffer()
 		{
 			var tempBufer2 = new CGDK.buffer();
-			tempBufer2.alloc(64);
-			tempBufer2.append<int>(100);
-			tempBufer2.append<int>(10000);
-			tempBufer2.append<int>(100000);
+			tempBufer2.Alloc(64);
+			tempBufer2.Append<int>(100);
+			tempBufer2.Append<int>(10000);
+			tempBufer2.Append<int>(100000);
 
-			var size_source = CGDK.buffer.get_size_of(tempBufer2);
+			var size_source = CGDK.buffer.GetSizeOf(tempBufer2);
 
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(256);
+			buf_Alloc.Alloc(256);
 			
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append(tempBufer2);
+				buf_temp.Append(tempBufer2);
 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var rr = buf_temp.extract<CGDK.buffer>();
+				var rr = buf_temp.Extract<CGDK.buffer>();
 
 				Assert.IsTrue(0 == buf_temp.Count);
 
-				var v1 = rr.extract<int>();
-				var v2 = rr.extract<int>();
-				var v3 = rr.extract<int>();
+				var v1 = rr.Extract<int>();
+				var v2 = rr.Extract<int>();
+				var v3 = rr.Extract<int>();
 
 				Assert.IsTrue(v1 == 100);
 				Assert.IsTrue(v2 == 10000);
@@ -2509,57 +2507,57 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_enum()
 		{
-			var size_source = CGDK.buffer.get_size_of(ENUM_A.A);
+			var size_source = CGDK.buffer.GetSizeOf(ENUM_A.A);
 
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(256);
+			buf_Alloc.Alloc(256);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append<ENUM_A>(ENUM_A.A);
+				buf_temp.Append<ENUM_A>(ENUM_A.A);
 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var result = buf_temp.extract<ENUM_A>();
+				var result = buf_temp.Extract<ENUM_A>();
 
 				Assert.IsTrue(result == ENUM_A.A);
 
-				Assert.IsTrue(buf_temp.size == 0);
+				Assert.IsTrue(buf_temp.Size == 0);
 			}
 		}
 		[TestMethod]
 		public void test_buffer_enum2()
 		{
-			var buf_alloc = new CGDK.buffer();
+			var buf_Alloc = new CGDK.buffer();
 
-			buf_alloc.alloc(256);
+			buf_Alloc.Alloc(256);
 
 			var temp_list = new List<ENUM_A>();
 			temp_list.Add(ENUM_A.A);
 			temp_list.Add(ENUM_A.B);
 			temp_list.Add(ENUM_A.C);
 
-			var size_source = CGDK.buffer.get_size_of(temp_list);
+			var size_source = CGDK.buffer.GetSizeOf(temp_list);
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
-				var buf_temp = buf_alloc;
+				var buf_temp = buf_Alloc;
 
-				buf_temp.append<List<ENUM_A>>(temp_list);
+				buf_temp.Append<List<ENUM_A>>(temp_list);
 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
-				var result = buf_temp.extract<List<ENUM_A>>();
+				var result = buf_temp.Extract<List<ENUM_A>>();
 
 				Assert.IsTrue(result.Count == 3);
 				Assert.IsTrue(result[0] == ENUM_A.A);
 				Assert.IsTrue(result[1] == ENUM_A.B);
 				Assert.IsTrue(result[2] == ENUM_A.C);
 
-				Assert.IsTrue(buf_temp.size == 0);
+				Assert.IsTrue(buf_temp.Size == 0);
 			}
 		}
 	}

@@ -112,9 +112,7 @@ namespace CGDK
 
 			// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
 			if ((_offset+_length) > _buffer.Length)
-			{
 				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-			}
 
 			// 1) 값을 적용
 			this.m_buffer = _buffer;
@@ -128,9 +126,7 @@ namespace CGDK
 
 			// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
 			if (_offset>_buffer.Length)
-			{
 				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-			}
 
 			// 1) 값을 적용한다.
 			this.m_buffer = _buffer;
@@ -1079,15 +1075,18 @@ namespace CGDK
 			public unsafe void process_append(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				// 1) write
+			#pragma warning disable CS8500
 				*(T*)_ptr = _object;
-
+			#pragma warning restore CS8500
 				// 2) update ptr
 				_ptr += sizeof(int);
 			}
 			public unsafe T process_extract(ref byte* _ptr, ref int _count)
 			{
 				// 1) read
+			#pragma warning disable CS8500
 				var p = *(T*)_ptr;
+			#pragma warning restore CS8500
 
 				// 2) update ptr & count
 				_ptr += sizeof(int);

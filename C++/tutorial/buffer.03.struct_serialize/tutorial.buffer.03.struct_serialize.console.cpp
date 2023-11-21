@@ -106,11 +106,11 @@ int main()
 	{
 		ENABLE_STRUCT_SERIALIZABLE	// {!} 이것이 넣어준다! 
 
-		int					a;
-		eMESSAGE_TYPE		b;
-		std::string			c;
-		short				d;
-		std::vector<int>	e;
+		int					a{};
+		eMESSAGE_TYPE		b{};
+		std::string			c{};
+		short				d{};
+		std::vector<int>	e{};
 	};
 
 	{

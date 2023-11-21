@@ -9,5 +9,6 @@
     <Import_RootNamespace>CGDK.buffer.unit_test.performance.memorypack</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)unit_test.performance_memorypack.cs" />
   </ItemGroup>
 </Project>

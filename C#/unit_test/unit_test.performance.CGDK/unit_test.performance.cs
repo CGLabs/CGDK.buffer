@@ -132,58 +132,58 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 
 		void function_append_GENERAL(ref CGDK.buffer _Buffer)
 		{
-			_Buffer.append<char>((char)12);
-			_Buffer.append<sbyte>((sbyte)3);
-			_Buffer.append<byte>((byte)4);
-			_Buffer.append<short>((short)4100);
-			_Buffer.append<ushort>((ushort)32210);
-			_Buffer.append<int>((int)123310);
-			_Buffer.append<uint>((uint)121234);
-			_Buffer.append<long>((long)-1000443L);
-			_Buffer.append<ulong>((ulong)12233094310UL);
-			_Buffer.append<float>((float)1.0f);
-			_Buffer.append<double>((double)2.0);
+			_Buffer.Append<char>((char)12);
+			_Buffer.Append<sbyte>((sbyte)3);
+			_Buffer.Append<byte>((byte)4);
+			_Buffer.Append<short>((short)4100);
+			_Buffer.Append<ushort>((ushort)32210);
+			_Buffer.Append<int>((int)123310);
+			_Buffer.Append<uint>((uint)121234);
+			_Buffer.Append<long>((long)-1000443L);
+			_Buffer.Append<ulong>((ulong)12233094310UL);
+			_Buffer.Append<float>((float)1.0f);
+			_Buffer.Append<double>((double)2.0);
 		}
 
 		void function_extract_GENERAL(ref CGDK.buffer _Buffer)
 		{
-			var value1 = _Buffer.extract<char>();
-			var value2 = _Buffer.extract<sbyte>();
-			var value3 = _Buffer.extract<byte>();
-			var value4 = _Buffer.extract<short>();
-			var value5 = _Buffer.extract<ushort>();
-			var value6 = _Buffer.extract<int>();
-			var value7 = _Buffer.extract<uint>();
-			var value8 = _Buffer.extract<long>();
-			var value9 = _Buffer.extract<ulong>();
-			var value10 = _Buffer.extract<float>();
-			var value11 = _Buffer.extract<double>();
+			var value1 = _Buffer.Extract<char>();
+			var value2 = _Buffer.Extract<sbyte>();
+			var value3 = _Buffer.Extract<byte>();
+			var value4 = _Buffer.Extract<short>();
+			var value5 = _Buffer.Extract<ushort>();
+			var value6 = _Buffer.Extract<int>();
+			var value7 = _Buffer.Extract<uint>();
+			var value8 = _Buffer.Extract<long>();
+			var value9 = _Buffer.Extract<ulong>();
+			var value10 = _Buffer.Extract<float>();
+			var value11 = _Buffer.Extract<double>();
 		}
 
 		void function_append_STRING(ref CGDK.buffer _Buffer)
 		{
-			_Buffer.append<string>(array_string[0]);
-			_Buffer.append<string>(array_string[1]);
-			_Buffer.append<string>(array_string[2]);
-			_Buffer.append<string>(array_string[3]);
-			_Buffer.append<string>(array_string[4]);
-			_Buffer.append<string>(array_string[5]);
-			_Buffer.append<string>(array_string[6]);
-			_Buffer.append<string>(array_string[7]);
+			_Buffer.Append<string>(array_string[0]);
+			_Buffer.Append<string>(array_string[1]);
+			_Buffer.Append<string>(array_string[2]);
+			_Buffer.Append<string>(array_string[3]);
+			_Buffer.Append<string>(array_string[4]);
+			_Buffer.Append<string>(array_string[5]);
+			_Buffer.Append<string>(array_string[6]);
+			_Buffer.Append<string>(array_string[7]);
 		}
 
 		string[] function_extract_STRING(ref CGDK.buffer _Buffer)
 		{
 			string[] temp = new string[8];
 
-			temp[0] = _Buffer.extract<string>();
-			temp[1] = _Buffer.extract<string>();
-			temp[2] = _Buffer.extract<string>();
-			temp[3] = _Buffer.extract<string>();
-			temp[4] = _Buffer.extract<string>();
-			temp[5] = _Buffer.extract<string>();
-			temp[6] = _Buffer.extract<string>();
-			temp[7] = _Buffer.extract<string>();
+			temp[0] = _Buffer.Extract<string>();
+			temp[1] = _Buffer.Extract<string>();
+			temp[2] = _Buffer.Extract<string>();
+			temp[3] = _Buffer.Extract<string>();
+			temp[4] = _Buffer.Extract<string>();
+			temp[5] = _Buffer.Extract<string>();
+			temp[6] = _Buffer.Extract<string>();
+			temp[7] = _Buffer.Extract<string>();
 
 			return temp;
 		}
@@ -207,20 +207,20 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<int>(value_1);
-				bufferTemp.append<uint>(value_2);
-				bufferTemp.append<long>(value_3);
-				bufferTemp.append<ulong>(value_4);
-				bufferTemp.append<float>(value_5);
-				bufferTemp.append<double>(value_6);
+				bufferTemp.Append<int>(value_1);
+				bufferTemp.Append<uint>(value_2);
+				bufferTemp.Append<long>(value_3);
+				bufferTemp.Append<ulong>(value_4);
+				bufferTemp.Append<float>(value_5);
+				bufferTemp.Append<double>(value_6);
 
 				// - 역직렬화
-				var d_value_1 = bufferTemp.extract<Int32>();
-				var d_value_2 = bufferTemp.extract<UInt32>();
-				var d_value_3 = bufferTemp.extract<Int64>();
-				var d_value_4 = bufferTemp.extract<UInt64>();
-				var d_value_5 = bufferTemp.extract<float>();
-				var d_value_6 = bufferTemp.extract<double>();
+				var d_value_1 = bufferTemp.Extract<Int32>();
+				var d_value_2 = bufferTemp.Extract<UInt32>();
+				var d_value_3 = bufferTemp.Extract<Int64>();
+				var d_value_4 = bufferTemp.Extract<UInt64>();
+				var d_value_5 = bufferTemp.Extract<float>();
+				var d_value_6 = bufferTemp.Extract<double>();
 			}
 		}
 
@@ -236,10 +236,10 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append(list_int);
+				bufferTemp.Append(list_int);
 
 				// - 역직렬화
-				var temp = bufferTemp.extract<List<int>>();
+				var temp = bufferTemp.Extract<List<int>>();
 			}
 		}
 
@@ -255,24 +255,24 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<string>(array_string[0]);
-				bufferTemp.append<string>(array_string[1]);
-				bufferTemp.append<string>(array_string[2]);
-				bufferTemp.append<string>(array_string[3]);
-				bufferTemp.append<string>(array_string[4]);
-				bufferTemp.append<string>(array_string[5]);
-				bufferTemp.append<string>(array_string[6]);
-				bufferTemp.append<string>(array_string[7]);
+				bufferTemp.Append<string>(array_string[0]);
+				bufferTemp.Append<string>(array_string[1]);
+				bufferTemp.Append<string>(array_string[2]);
+				bufferTemp.Append<string>(array_string[3]);
+				bufferTemp.Append<string>(array_string[4]);
+				bufferTemp.Append<string>(array_string[5]);
+				bufferTemp.Append<string>(array_string[6]);
+				bufferTemp.Append<string>(array_string[7]);
 
 				// - 역직렬화
-				var value_1 = bufferTemp.extract<string>();
-				var value_2 = bufferTemp.extract<string>();
-				var value_3 = bufferTemp.extract<string>();
-				var value_4 = bufferTemp.extract<string>();
-				var value_5 = bufferTemp.extract<string>();
-				var value_6 = bufferTemp.extract<string>();
-				var value_7 = bufferTemp.extract<string>();
-				var value_8 = bufferTemp.extract<string>();
+				var value_1 = bufferTemp.Extract<string>();
+				var value_2 = bufferTemp.Extract<string>();
+				var value_3 = bufferTemp.Extract<string>();
+				var value_4 = bufferTemp.Extract<string>();
+				var value_5 = bufferTemp.Extract<string>();
+				var value_6 = bufferTemp.Extract<string>();
+				var value_7 = bufferTemp.Extract<string>();
+				var value_8 = bufferTemp.Extract<string>();
 			}
 		}
 
@@ -288,10 +288,10 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append(list_string);
+				bufferTemp.Append(list_string);
 
 				// - 역직렬화
-				var temp = bufferTemp.extract<List<string>>();
+				var temp = bufferTemp.Extract<List<string>>();
 			}
 		}
 
@@ -307,10 +307,10 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append(dictionary_int_int);
+				bufferTemp.Append(dictionary_int_int);
 
 				// - 역직렬화
-				var temp = bufferTemp.extract<Dictionary<int,int>>();
+				var temp = bufferTemp.Extract<Dictionary<int,int>>();
 			}
 		}
 		[TestMethod]
@@ -325,10 +325,10 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<Dictionary<string, string>>(dictionary_string_string);
+				bufferTemp.Append<Dictionary<string, string>>(dictionary_string_string);
 
 				// - 역직렬화
-				var temp = bufferTemp.extract<Dictionary<string,string>>();
+				var temp = bufferTemp.Extract<Dictionary<string,string>>();
 			}
 		}
 		[TestMethod]
@@ -343,10 +343,10 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<Dictionary<string, List<int>>>(dictionary_string_List_int);
+				bufferTemp.Append<Dictionary<string, List<int>>>(dictionary_string_List_int);
 
 				// - 역직렬화
-				var temp = bufferTemp.extract<Dictionary<string, List<int>>>();
+				var temp = bufferTemp.Extract<Dictionary<string, List<int>>>();
 			}
 		}
 
@@ -374,10 +374,10 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<TEST>(tempData);
+				bufferTemp.Append<TEST>(tempData);
 
 				// - 역직렬화
-				var value2 = bufferTemp.extract<TEST>();
+				var value2 = bufferTemp.Extract<TEST>();
 			}
 		}
 
@@ -409,10 +409,10 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				CGDK.buffer bufferTemp = bufferCreate;
 
 				// - 직렬화
-				bufferTemp.append<TEST_EX>(foo);
+				bufferTemp.Append<TEST_EX>(foo);
 
 				// - 역직렬화
-				var value2 = bufferTemp.extract<TEST>();
+				var value2 = bufferTemp.Extract<TEST>();
 			}
 		}
 	}
