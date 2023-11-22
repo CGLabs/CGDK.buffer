@@ -27,6 +27,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using System.Linq;
+using System.Runtime.Serialization;
 
 
 //----------------------------------------------------------------------------
@@ -49,8 +51,23 @@ namespace CGDK
 			{
 			}
 		}
+		[System.AttributeUsage(System.AttributeTargets.Field)]
+		public class Field : System.Attribute
+		{
+			private readonly bool _is_serializable;
+
+			public Field(bool is_serializable= true)
+			{
+				this._is_serializable = is_serializable;
+			}
+
+			public bool is_serializable
+			{
+				get => _is_serializable;
+			}
+		}
 	}
-	
+
 	namespace Exception
 	{
 		public class Serialize : System.Exception
@@ -68,8 +85,6 @@ namespace CGDK
 
 			private long m_Offset;
 		}
-
-		
 	}
 
 	public struct buffer
@@ -3914,7 +3929,7 @@ namespace CGDK
 				Debug.Assert(list_member_serialization_info != null);
 
 				// 1) append - members
-				SerializerClass_object.Xprocess_append(ref _ptr, _ptr_bound, _object, serializer_parent, list_member_serialization_info);
+				SerializerClass_object.Xprocess_append(ref _ptr, _ptr_bound, _object, list_member_serialization_info);
 			}
 			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
 			{
@@ -3922,7 +3937,7 @@ namespace CGDK
 				Debug.Assert(list_member_serialization_info != null);
 
 				// 1) extract - members
-				return (T?)SerializerClass_object.XProcessExtract(ref _ptr, ref _count, typeof(T), serializer_parent, list_member_serialization_info);
+				return (T?)SerializerClass_object.XProcessExtract(ref _ptr, ref _count, typeof(T), list_member_serialization_info);
 			}
 			public unsafe int ProcessGetSizeOf(T? _object)
 			{
@@ -3930,15 +3945,13 @@ namespace CGDK
 				Debug.Assert(list_member_serialization_info != null);
 
 				// 1) process get_size_of - memeber
-				return SerializerClass_object.XProcessGetSizeOf(_object, serializer_parent, list_member_serialization_info);
+				return SerializerClass_object.XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
-
-			public static IBase<object>? serializer_parent = null;
 			public static List<MemberSerializationInfo> list_member_serialization_info = new List<MemberSerializationInfo>();
 		}
 		public class SerializerClass_object : IBase<object>
 		{
-			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object? _object, IBase<object>? _serializer_parent, List<MemberSerializationInfo> _list_member_serialization_info)
+			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// check) is null?
 				if (_object == null)
@@ -3953,26 +3966,18 @@ namespace CGDK
 					return;
 				}
 
-				// 1) append - parent cless
-				if (_serializer_parent != null)
-					_serializer_parent.ProcessAppend(ref _ptr, _ptr_bound, _object);
-
-				// 2) append all members
+				// 1) append all members
 				var iter_member = _list_member_serialization_info.GetEnumerator();
 				while (iter_member.MoveNext())
 					iter_member.Current.serializer.ProcessAppend(ref _ptr, _ptr_bound, iter_member.Current.field_info.GetValue(_object));
 			}
-			public static unsafe object? XProcessExtract(ref byte* _ptr, ref int _count, Type _Type_create, IBase<object>? _serializer_parent, List<MemberSerializationInfo> _list_member_serialization_info)
+			public static unsafe object? XProcessExtract(ref byte* _ptr, ref int _count, Type _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// 1) 객체를 생성한다.
-				var temp_object = Activator.CreateInstance(_Type_create);
+				var temp_object = Activator.CreateInstance(_type_create);
 
 				// check) 
 				Debug.Assert(temp_object != null);
-
-				// 1) etract- parent classes
-				if (_serializer_parent != null)
-					_serializer_parent.ProcessExtract(ref _ptr, ref _count);
 
 				// 2) 각 Field값을 읽어 써넣는다.
 				var iter_member = _list_member_serialization_info.GetEnumerator();
@@ -3982,7 +3987,7 @@ namespace CGDK
 				// return) 
 				return temp_object;
 			}
-			public static unsafe int XProcessGetSizeOf(object? _object, IBase<object>? _serializer_parent, List<MemberSerializationInfo> _list_member_serialization_info)
+			public static unsafe int XProcessGetSizeOf(object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// check)
 				if (_object == null)
@@ -3990,10 +3995,6 @@ namespace CGDK
 
 				// declare)
 				int size = 0;
-
-				// 1) process get_size_of - parent 
-				if (_serializer_parent != null)
-					size += _serializer_parent.ProcessGetSizeOf(_object);
 
 				// 1) add all member size
 				var iter_member = _list_member_serialization_info.GetEnumerator();
@@ -4007,7 +4008,7 @@ namespace CGDK
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
 			{
 				// 1) process append
-				SerializerClass_object.Xprocess_append(ref _ptr, _ptr_bound, _object, serializer_parent, list_member_serialization_info);
+				Xprocess_append(ref _ptr, _ptr_bound, _object, list_member_serialization_info);
 			}
 			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
 			{
@@ -4021,16 +4022,15 @@ namespace CGDK
 				Debug.Assert(list_member_serialization_info != null);
 
 				// 1) process extract
-				return SerializerClass_object.XProcessExtract(ref _ptr, ref _count, type_create, serializer_parent, list_member_serialization_info);
+				return XProcessExtract(ref _ptr, ref _count, type_create, list_member_serialization_info);
 			}
 			public unsafe int ProcessGetSizeOf(object? _object)
 			{
 				// 1) process get size of
-				return SerializerClass_object.XProcessGetSizeOf(_object, serializer_parent, list_member_serialization_info);
+				return XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			public readonly Type? type_create;
-			public readonly IBase<object>? serializer_parent;
+			public Type? type_create;
 			public List<MemberSerializationInfo> list_member_serialization_info = new List<MemberSerializationInfo>();
 		}
 
@@ -4184,8 +4184,11 @@ namespace CGDK
 				if (obj == null)
 					return false;
 
+				// 1) get attribute list
+				var list_att = _type.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), true);
+
 				// return) get Attribute
-				return _type.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false).Length != 0;
+				return list_att.Length != 0;
 			}
 
 			private static Dictionary<Type, object> dictionary_serializer = new Dictionary<Type, object>();
@@ -4379,6 +4382,10 @@ namespace CGDK
 				// 2) 각 Field값을 읽어 써넣는다.
 				foreach (var iter in temp_field)
 				{
+					// check)
+					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Field), false).Where(x => ((CGDK.Attribute.Field)x).is_serializable == false).Count() != 0)
+						continue;
+
 					// - ger serializer
 					var serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType);
 
@@ -4411,6 +4418,10 @@ namespace CGDK
 				// 3) 각 Field값을 읽어 써넣는다.
 				foreach (var iter in temp_field)
 				{
+					// check)
+					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Field), false).Where(x => ((CGDK.Attribute.Field)x).is_serializable == false).Count() != 0)
+						continue;
+
 					// - set
 					var temp_membeer_serialization_info = new MemberSerializationInfo()
 					{
@@ -5163,81 +5174,34 @@ namespace CGDK
 				return null;
 			}
 
-			private static SerializerClass<T> BuildSerializer_Class<T>()
+			private static void BuildSerializer_Class(Type _type, ref List<MemberSerializationInfo> _list_member_serialization_info)
 			{
-				// 1) get type
-				var type = typeof(T);
-
 				// check)
-				if (IsSerializableType(type) == false)
+				if (IsSerializableType(_type) == false)
 					throw new System.NullReferenceException("class is not CGDK.serializable");
 
 				// 2) 부모의 부모가 nullptr이면 object를 제외하고 최고 부모 클래스다.
-				if (type.BaseType != null && type.BaseType.BaseType != null)
+				if (_type.BaseType != null && _type.BaseType.BaseType != null)
 				{
-					// - get serializer
-					var serializer = ProcessGetSerializer_object(type.BaseType);
+					var temp_base_type = _type.BaseType;
 
-					// - set parent serializer
-					SerializerClass<T>.serializer_parent = (IBase<object>?)serializer;
+					// - get serializer
+					BuildSerializer_Class(temp_base_type, ref _list_member_serialization_info);
 				}
 
-				// 3) 변수들을 얻는다.
-				var temp_field = type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+				// 3) member변수들을 얻는다.
+				var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
 				// 4) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
 				foreach (var iter in temp_field)
 				{
 					// check)
-					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
+					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Field), false).Where(x => ((CGDK.Attribute.Field)x).is_serializable).Count() == 0)
 						continue;
 
 					// - set serializer
 					var temp_membeer_serialization_info = new MemberSerializationInfo()
 					{
-						field_info = iter,
-						serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType)!,
-						offset =0
-					};
-
-					// check)
-					Debug.Assert(temp_membeer_serialization_info.serializer != null);
-
-					// - add serializer
-					SerializerClass<T>.list_member_serialization_info.Add(temp_membeer_serialization_info);
-				}
-
-				// return) create and return 
-				return new SerializerClass<T>();
-			}
-			private static SerializerClass_object BuildSerializer_Class_object(Type _type)
-			{
-				// check)
-				if (IsSerializableType(_type) == false)
-					throw new System.NullReferenceException("buffer is not allocated");
-
-				// 1) 부모의 부모가 nullptr이면 object를 제외하고 최고 부모 클래스다.
-				if (_type.BaseType != null && _type.BaseType.BaseType != null)
-				{
-					// - get serializer
-					var serializer = ProcessGetSerializer_object(_type.BaseType);
-
-					// - set parent serializer
-					SerializerClass<object>.serializer_parent = (IBase<object>?)serializer;
-				}
-
-				// 2) 변수들을 얻는다.
-				var temp_field = _type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-				// 3) 최상위 부모의 맴버부터 차례대로 buffer 에 append 한다
-				foreach (var iter in temp_field)
-				{
-					// check)
-					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Serializable), false) == null)
-						continue;
-
-					var temp_membeer_serialization_info = new MemberSerializationInfo()
-					{ 
 						field_info = iter,
 						serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType)!,
 						offset = 0
@@ -5247,11 +5211,46 @@ namespace CGDK
 					Debug.Assert(temp_membeer_serialization_info.serializer != null);
 
 					// - add serializer
-					SerializerClass<object>.list_member_serialization_info.Add(temp_membeer_serialization_info);
+					_list_member_serialization_info.Add(temp_membeer_serialization_info);
 				}
+			}
 
-				// return)
-				return new SerializerClass_object();
+			private static SerializerClass<T> BuildSerializer_Class<T>()
+			{
+				// 1) build class info
+				BuildSerializer_Class(typeof(T), ref SerializerClass<T>.list_member_serialization_info);
+
+				// return) create and return 
+				return new SerializerClass<T>();
+			}
+			private static SerializerClass_object BuildSerializer_Class_object(Type _type)
+			{
+				// check)
+				if (IsSerializableType(_type) == false)
+					throw new System.NullReferenceException("class is not CGDK.serializable");
+
+				// 1) allloc List<member_inf>
+				var temp_list_member_serialization_info = new List<MemberSerializationInfo>();
+
+				// check)
+				Debug.Assert(temp_list_member_serialization_info != null);
+	
+				// 2) build class info
+				BuildSerializer_Class(_type, ref temp_list_member_serialization_info);
+
+				// chekck)
+				if (temp_list_member_serialization_info.Count == 0)
+					throw new System.NullReferenceException("None member field serializable use 'CGDK.Attribute.Field'");
+
+				// 3) create
+				var created = new SerializerClass_object()
+				{
+					type_create = _type,
+					list_member_serialization_info = temp_list_member_serialization_info
+				};
+
+				// return) create and return 
+				return created;
 			}
 
 			public static IBase<T> ProcessGetSerializer<T>()

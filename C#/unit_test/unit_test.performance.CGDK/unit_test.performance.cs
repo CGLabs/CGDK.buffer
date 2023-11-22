@@ -3,6 +3,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 
 namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
@@ -388,8 +389,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			public List<int> v3;
 			public UInt64 v4;
 			public Dictionary<string, int> v5;
-		};
-
+		}
 		[TestMethod]
 		public void CGDKb_benchmark_09_struct_composite()
 		{
