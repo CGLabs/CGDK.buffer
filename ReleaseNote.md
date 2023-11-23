@@ -2,12 +2,13 @@
    #### (C#)
    * 8년만에 완전 구조 변경
      - 실시간 Reflection를 사용하지 않고 Serializer를 생성해 직렬화/역직렬화 수행<br>
-       (즉, 매번 직렬화/역직렬화할 때마다 reflection을 통해 진행하지 않고 처음 한번만 Reflection을 통해 Serializer를 성정 후 그것으로 직렬화/역직렬화를 함) <br>
-     - 성능의 비약성 향상(struc & class를 제외하고는 MemoryPack에 비해서도 앞도적 성능을 제공)<br>
-     - Roslyn과 Souce Ganetratation을 이용한 버전은 이번 업데이트에서 제와 <br>
-       (아직 더 적용할 수 있는 부분이 남아 4.0  업데이트에서 할 예정. Nuget과의 통합도 문제...)
+       (즉, 매번 직렬화/역직렬화할 때마다 reflection을 통해 진행하지 않고 처음 한번만 Reflection을 통해 Serializer를 생성 후 직렬화/역직렬화를 함) <br>
+     - 성능의 비약성 향상(struct & class를 제외하고는 MemoryPack에 비해서도 앞도적 성능을 제공)<br>
+     - Roslyn과 Souce Ganetratation을 이용한 버전은 이번 업데이트에서 제외 <br>
        (struct & class 직렬화/역직렬화 성능은 향상되지 않음.) <br>
-      <br>      
+     - 아직 더 시도해볼 내용도 있고 소스도 많이 다듬어야 하는 부분이 남아 4.0  업데이트에서 할 예정. Nuget과의 통합도 문제...)<br>
+       (struct & class의 직렬화 성능이 극적 향상되었습니다.)
+      <br>
    * 명명 방식을 C# 표준안에 따르게 수정 <br>
      - 전부 소문자 + '_' 명명 방식을 첫글자 대문자 방식으로 변경 <br>
        따라서 이름이 아래와 같은 방식으로 변경되었다. <br>
