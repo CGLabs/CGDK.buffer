@@ -1,41 +1,73 @@
-## CGDK 3.03.(4) (2023.11.13)
+## CGDK 3.03.(4) (2023.11.23)
    #### (C#)
-   * 성능 향상 작업 
-     - unsafe를 사용해 일부 기능 성능 향상
-   * Warning 수정
-     - .NET과 .NET core 컴파일 시 발생하던 Warning 수정
-   * 디렉토리 재조정
-     - unit_test는 디렉토리를 따로 만들어 분리
-   * CGDK.buffer의 직렬화/역직렬화시 size 저장 변수를 4Byte->8Byte (C++버전과의 호환을 위해)
+   * 8년만에 완전 구조 변경
+     - 실시간 Reflection를 사용하지 않고 Serializer를 생성해 직렬화/역직렬화 수행<br>
+       (즉, 매번 직렬화/역직렬화할 때마다 reflection을 통해 진행하지 않고 처음 한번만 Reflection을 통해 Serializer를 성정 후 그것으로 직렬화/역직렬화를 함) <br>
+     - 성능의 비약성 향상(struc & class를 제외하고는 MemoryPack에 비해서도 앞도적 성능을 제공)<br>
+     - Roslyn과 Souce Ganetratation을 이용한 버전은 이번 업데이트에서 제와 <br>
+       (아직 더 적용할 수 있는 부분이 남아 4.0  업데이트에서 할 예정. Nuget과의 통합도 문제...)
+       (struct & class 직렬화/역직렬화 성능은 향상되지 않음.) <br>
+      <br>      
+   * 명명 방식을 C# 표준안에 따르게 수정 <br>
+     - 전부 소문자 + '_' 명명 방식을 첫글자 대문자 방식으로 변경 <br>
+       따라서 이름이 아래와 같은 방식으로 변경되었다. <br>
+       <br>
+         append => __Append__ <br>
+         extract => __Extract__ <br>
+         get_size_if => __GetSizeOf__ <br>
+         get_front => __GetFront__ <br>
+         set_front => __SetFront__ <br>
+         ... <br>
+         <br>
+   * 파일 분리 <br>
+     - .NET, .NET core, .NET framework의 소스파일을 분리 <br>
+       (nullable, Unsafe, Linq 등 문법이 너무 상이해 더이상 공통사용이 힘들다고 판단) <br>
 
-## CGDK 3.03.(3) (2023.11.10)
-   #### (C#)
-   * size 형이 short -> Int32 로 변경되었습니다.
-     - C++버전은 size의 기본형(COUNT_T)가 int32_t로 되어 있으므로 그에 맞춰 변경.
+   * Unit test 추가. <br>
 
-## CGDK 3.03.(2) (2023.11.8, bug fix)
-   #### (C++)
-   * common
-     - unit_test update(버그 수정, 빠진 파일 추가)
-     - flatbuffers unit_test 관련 빠진 파일 업데이트
-     - 빠진 tutorial file 추가(add mission tutorial)
-     - 문서 업데이트(document update)
+## CGDK 3.03.(4) (2023.11.13) <br>
+   #### (C#)  <br>
+   * 성능 향상 작업  <br>
+     - unsafe를 사용해 일부 기능 성능 향상 <br>
+   * Warning 수정 <br>
+     - .NET과 .NET core 컴파일 시 발생하던 Warning 수정 <br>
+   * 디렉토리 재조정 <br>
+     - unit_test는 디렉토리를 따로 만들어 분리 <br>
+   * CGDK.buffer의 직렬화/역직렬화시 size 저장 변수를 4Byte->8Byte (C++버전과의 호환을 위해) <br>
+ <br>
 
-## CGDK 3.03 (2023.10.28)
-   #### (C++)
-   * common
-     - unit_test update
-     - document update
+## CGDK 3.03.(3) (2023.11.10) <br>
+   #### (C#) <br>
+   * size 형이 short -> Int32 로 변경되었습니다. <br>
+     - C++버전은 size의 기본형(COUNT_T)가 int32_t로 되어 있으므로 그에 맞춰 변경. <br>
+     <br>
 
-## CGDK 3.02 (2023.10.24)
-   #### (C++)
-   * common
-     - add_size, sub_size, set_size 같은 함수에 경계정보 검증과정을 추가.
-     - 오류와 오타를 수정.
+## CGDK 3.03.(2) (2023.11.8, bug fix) <br>
+   #### (C++) <br>
+   * common <br>
+     - unit_test update(버그 수정, 빠진 파일 추가) <br>
+     - flatbuffers unit_test 관련 빠진 파일 업데이트 <br>
+     - 빠진 tutorial file 추가(add mission tutorial) <br>
+     - 문서 업데이트(document update) <br>
+ <br>
 
-## CGDK 3.01 (2022.07.10)
-   #### (C++)
-   * common
+## CGDK 3.03 (2023.10.28) <br>
+   #### (C++) <br>
+   * common <br>
+     - unit_test update <br>
+     - document update <br>
+      <br>
+
+## CGDK 3.02 (2023.10.24) <br>
+   #### (C++) <br>
+   * common <br>
+     - add_size, sub_size, set_size 같은 함수에 경계정보 검증과정을 추가. <br>
+     - 오류와 오타를 수정. <br>
+ <br>
+
+## CGDK 3.01 (2022.07.10) <br>
+   #### (C++) <br>
+   * common <br>
      - buffer의 overflow시 assert, exception, 혹은 무반응을 사용자가 설정할 수 있도록 변경<br>
         ``` C++
          #define CGDK_NO_BOUND_CHECK // bound 검사를 하지 않음(assert나 exception 던지지 않음)<br>
@@ -44,24 +76,25 @@
      - 구조체 직렬화(structure serialzation)시 stack overflow 발생 상황 줄임.<br>
       구조체 직렬화는 지역 변수를 활용하기 때문에 지나치 큰 변수의 직렬화시 stack overflow가 날 수 있었다.<br>
       최대한 지역 변수의 사용을 최소화함으로 인해 stack에 의한 제한을 많이 완화 했음.<br>
-     - unreal 3d를 지원하기 위한 기능.
+     - unreal 3d를 지원하기 위한 기능. <br>
 
-   * buffer(_basic_buffer)
+   * buffer(_basic_buffer) <br>
      - _basic_buffer(buffer) 배열로 초기화 기능 추가<br>
      - ramained()함수 추가 - 원본 버퍼의 남은 영역을 buffer로 만들어 리턴해 주는 함수<br>
      - append시 return값이 모두 reference형에서 오는 오류 수정 (기본형일 경우만 reference 리턴값 가짐)<br>
-     - 중복 코드 제거<br>
+     - 중복 코드 제거 <br>
      - buffer_view의 extract시 오류 수정<br>
      - extract_multi 시 own_ptr<T> 동작 오류 수정(CGDK10에서 사용할 경우에만 해당)<br>
-   * _shared_buffer
+   * _shared_buffer <br>
      - remained()함수 추가. 원본 버퍼의 남은 버퍼를 shared)buffer로 만들어 리턴해주는 함수<br>
-
-   * toturial 정리
+ <br>
+   * toturial 정리 <br>
     - tutorial 내용과 설명을 일부 변경<br>
+ <br>
 
-## CGDK 3.0 (2022.07.10)
+## CGDK 3.0 (2022.07.10) <br>
    CGD.buffer에서 CGDK.buffer로 명칭 변경<br>
-   #### (C++)
+   #### (C++) <br>
    - CGDK::buffer_view, CGDK::buffer, CGDK::shared_buffer로 buffer 세분화<br>
      CGDK::buffer_view는 extract<T>와 front<T> 기능만 가지며 append<T>는 사용 불가능함.<br>
      CGDK::buffer는 CGDK::buffer_view를 상속받아 append<T> 기능이 추가됨. <br>
@@ -76,12 +109,13 @@
    - std::tuple<T...>, std::tie<T...> 지원<br>
    - CGDK::buffer의 append, extract 지원<br>
    - 문자열 변환 기능을 가진 appened_text<T> 추가<br>
+ <br>
 
-   #### (C#) 
+   #### (C#)  <br>
    - get_size_of<T> 지원<br>
    - .NET, .NET.core, .NET.framework 등등 다양한 플랫폼 지원.<br>
 
--------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------- <br>
 ## 2.0.3pre (2015.7.3)
    #### (C++)
    - CGD::buffer::extract(SKIP) 함수 추가.<br>
@@ -99,6 +133,7 @@
 ## 2.0.2pre (2015.6.26)
    #### (C++)
    - Linux 지원. (Linux GCC, cygwin, MinGW, Solaris,  C++11이상 지원 필요)<br>
+ <br>
 
    - 버그 수정<br>
      - CGD::buffer::_append_array 함수: _Count가 0개일 경우 _Data가 nullptr라도 허용하도록 수정.<br>
@@ -111,12 +146,14 @@
      - CGD::ptr::_prepend_string_format() 함수 오타로 인한 컴파일 오류 수정.<br>
      - CGD::ptr::_append_string_format 스트링 길이 계산 오류 수정<br>
      - CGD::ptr::_extract_string_copy()함수 파라미터 이름 오류 수정.<br>
+ <br>
 
 ## 2.0.1pre (2015.2.26)
    - visual studio 2010용 Project 추가<br>
    - C++용 CGD::buffer Example01 내용 보강<br>
    - C++용 CGD::ptr 오타로 인한 오류 수정<br>
    - C++용 vs2013 컴파일시 Warning 수정<br>
+ <br>
 
 ## 2.0pre (2015.1.5) 
    - CGCII 프로젝트에서 독립 프로젝트로 분리<br>
@@ -124,7 +161,7 @@
    - 클래스명 변경<br>
      CGBUF     -> CGD::buffer <br>
      CCGMemPtr -> CGD::ptr<br>
-
+ <br>
    - 함수명이 전부 소문자로 바뀌었습니다.(예, Append -> append, Extract -> extract)<br>
    - 함수명이 대폭 변경<br>
        Append<T>      -> append<T><br>
@@ -132,7 +169,7 @@
        ExtractTail<T> -> subtract<T><br>
        Head<T>        -> front<T><br>
        Tail<T>        -> back<T><br>
-
+ <br>
    - C++11 기준 template meta programming이 적용<br>
    - meta programming이 적용되어 vector/list 등의 복합형을 동일이름으로 동작가능<br>
    - meta programming이 적용되어 array, vector<T>와 같은 복합형은 Block copy를 지원해 성능을 향상<br>
@@ -146,5 +183,6 @@
    - C++버전은 배열형 extract 기능도 추가<br>
    - 웹서버 통신에 필요한 형식 추가('\r\n'을 사용하는 문자열 처리 추가)<br>
    - r-value 관련 오류 가능성 수정<br>
+ <br>
 
-## 1.0   CGDK 7.0까지 포함되어 있던 CCGBuffer
+## 1.0   CGDK 7.0까지 포함되어 있던 CCGBuffer     <br>

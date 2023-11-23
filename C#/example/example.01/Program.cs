@@ -14,22 +14,22 @@ namespace Example
 			Sample_simple_creation_copy();
 
 			// Example 2) 가장 기본적인 형의 쓰기와 읽기
-			Sample_simple_append_extract();
+			Sample_simple_Append_Extract();
 
 			// Example 3) 문자열 쓰기/읽기
-			Sample_simple_append_extract_string();
+			Sample_simple_Append_Extract_string();
 
 			// Example 4) Collection 쓰기/읽기
-			Sample_simple_append_extract_collection();
+			Sample_simple_Append_Extract_collection();
 
 			// Example 5) struct(Heterogenous Type) 쓰기/읽기 (1)
-			Sample_simple_append_extract_struct();
+			Sample_simple_Append_Extract_struct();
 
 			// Example 6) 다계층(Multiple-Layerd) struct 쓰기/읽기
-			Sample_simple_append_extract_struct2();
+			Sample_simple_Append_Extract_struct2();
 
 			// Example 7) 클래스(Class) 쓰기/읽기
-			Sample_simple_append_extract_class();
+			Sample_simple_Append_Extract_class();
 		}
 
 		//----------------------------------------------------------------------------
@@ -44,7 +44,7 @@ namespace Example
 			// Case 2) 선언 후 할당하기
 			CGDK.buffer bufTemp2 = new CGDK.buffer();
 			
-			bufTemp2.alloc(256);
+			bufTemp2.Alloc(256);
 
 			// Case 3) CGPool이 있을 경우
 			//CGDK.buffer buffer 3 = MEM_POOL.Alloc(256);
@@ -73,31 +73,31 @@ namespace Example
 		//----------------------------------------------------------------------------
 		// Example 2) 가장 기본적인 형의 쓰기와 읽기
 		//
-		//  append<T> 함수를 사용하여 버퍼의 끝에 T형 값을 써넣을 수 있다.
-		//  extract<T> 함수를 사용하여 버퍼에 제일 앞에서부터 T형 값을 읽어올 수 있다.
+		//  Append<T> 함수를 사용하여 버퍼의 끝에 T형 값을 써넣을 수 있다.
+		//  Extract<T> 함수를 사용하여 버퍼에 제일 앞에서부터 T형 값을 읽어올 수 있다.
 		// 
 		//----------------------------------------------------------------------------
-		static void Sample_simple_append_extract()
+		static void Sample_simple_Append_Extract()
 		{
 			// 1) byte[256]를 생성해서 설정한다.
 			CGDK.buffer	bufTemp	 = new CGDK.buffer(new byte[256]);
 
 			// APPEND) 기본적인 값들을 써넣는다.
-			bufTemp.append<byte>(10);
-			bufTemp.append<sbyte>(20);
-			bufTemp.append<int>(-100);
-			bufTemp.append<uint>(1000);
+			bufTemp.Append<byte>(10);
+			bufTemp.Append<sbyte>(20);
+			bufTemp.Append<int>(-100);
+			bufTemp.Append<uint>(1000);
 
-			// * 여기까지 append를 수행했으면 총 14Byte가 쓰여져
+			// * 여기까지 Append를 수행했으면 총 14Byte가 쓰여져
 			//   Count 값은 14가 된다. Offset은 여전히 0이지만 
-			// * append할때 붙여진 <T>보다는 쓰여진 값에 따라 쓰여진다.
+			// * Append할때 붙여진 <T>보다는 쓰여진 값에 따라 쓰여진다.
 
 			// EXTRACT) 값을 일어낸다.
 			//    - 값을 읽어내게 되면 Offset값부터 값을 읽어내게 되고 Offset값을 읽어낸 크기 증가시킨다.
-			var	temp1 = bufTemp.extract<byte>(); // 10
-			var	temp2 = bufTemp.extract<SByte>(); // 20
-			var	temp3 = bufTemp.extract<int>(); // -100
-			var	temp4 = bufTemp.extract<uint>(); // 1000
+			var	temp1 = bufTemp.Extract<byte>(); // 10
+			var	temp2 = bufTemp.Extract<SByte>(); // 20
+			var	temp3 = bufTemp.Extract<int>(); // -100
+			var	temp4 = bufTemp.Extract<uint>(); // 1000
 
 			// 확인)
 			Console.WriteLine("temp1:"+temp1 +"  temp2:"+ temp2 + "  temp3"+temp3 + "  temp4"+temp4);
@@ -105,36 +105,36 @@ namespace Example
 		//----------------------------------------------------------------------------
 		// Example 3) 문자열 쓰기/읽기
 		//
-		//  역시 append<string> 함수를 사용하여 버퍼의 끝에 string형 값을 쓸수 있다.
+		//  역시 Append<string> 함수를 사용하여 버퍼의 끝에 string형 값을 쓸수 있다.
 		//  굳이 <string>을 쓸 필요가 없지만 코드의 가독성을 위해 붙여 주는 경우가 많다.
 		//  
-		//  읽을 때는 extract<string> 함수를 사용하여 읽을 수 있다.
+		//  읽을 때는 Extract<string> 함수를 사용하여 읽을 수 있다.
 		//  여기서는 반드시 템플릿 인자인 <string>를 써주어야 한다.
 		// 
 		//----------------------------------------------------------------------------
-		static void Sample_simple_append_extract_string()
+		static void Sample_simple_Append_Extract_string()
 		{
 			// 1) byte[256]를 생성해서 설정한다.
 			CGDK.buffer	bufTemp	 = new CGDK.buffer(new byte[256]);
 
 			// APPEND1) 문자열을 추가한다. (1) 
-			bufTemp.append<string>("First test String");
+			bufTemp.Append<string>("First test String");
 
 			// APPEND2) 문자열을 추가한다. 구지 <string>을 쓸 필요는 없다.(2) 
-			bufTemp.append("Second");
+			bufTemp.Append("Second");
 
 			// Declare) 임시로 문자열 변수를 만든다.
 			string	tempString	 = "Third";
 
 			// APPEND3) 문자열을 추가한다. 구지 <string>을 쓸 필요는 없다.(2) 
-			bufTemp.append(tempString);
+			bufTemp.Append(tempString);
 
 
 
 			// EXTRACT) 추가된 문자열을 뽑아낸다.
-			var	str1 = bufTemp.extract<string>(); // "First test String"
-			var str2 = bufTemp.extract<string>(); // "Second"
-			var str3 = bufTemp.extract<string>(); // "Third"
+			var	str1 = bufTemp.Extract<string>(); // "First test String"
+			var str2 = bufTemp.Extract<string>(); // "Second"
+			var str3 = bufTemp.Extract<string>(); // "Third"
 
 			// 확인)
 			Console.WriteLine(str1);
@@ -145,10 +145,10 @@ namespace Example
 		//----------------------------------------------------------------------------
 		// Example 4) Collection 쓰기/읽기
 		//
-		//  Collection 역시 그냥 append함수로 똑같이 읽고 쓸수 있다.
+		//  Collection 역시 그냥 Append함수로 똑같이 읽고 쓸수 있다.
 		// 
 		//----------------------------------------------------------------------------
-		static void Sample_simple_append_extract_collection()
+		static void Sample_simple_Append_Extract_collection()
 		{
 			// Decalre) 임시로 사용할 List를 선언한다.
 			List<int> list_int = new List<int>{ 10, 20, 30, 40};
@@ -159,15 +159,15 @@ namespace Example
 			CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
 
 			// APPEND) List<int>를 추가한다.
-			bufTemp.append(list_int);
-			bufTemp.append(list_string);
-			bufTemp.append(dictionary_int_string);
+			bufTemp.Append(list_int);
+			bufTemp.Append(list_string);
+			bufTemp.Append(dictionary_int_string);
 
 			
 			// EXTRACT) 추가했던 문자열을 읽어낸다.
-			var data1 = bufTemp.extract<List<int>>();
-			var data2 = bufTemp.extract<List<string>>();
-			var data3 = bufTemp.extract<Dictionary<string, int>>();
+			var data1 = bufTemp.Extract<List<int>>();
+			var data2 = bufTemp.Extract<List<string>>();
+			var data3 = bufTemp.Extract<Dictionary<string, int>>();
 
 			// 2) 출력한다.
 			foreach(var iter in data1) {Console.WriteLine(iter.ToString());}
@@ -179,7 +179,7 @@ namespace Example
 		//----------------------------------------------------------------------------
 		// Example 5) struct(Heterogenous Type) 쓰기/읽기 (1)
 		//
-		//  구조체의 읽기/쓰기 역시 동일하다. 그냥 값을 써넣은 후 append/extract를 사용해
+		//  구조체의 읽기/쓰기 역시 동일하다. 그냥 값을 써넣은 후 Append/Extract를 사용해
 		//  읽고 쓸수 있다.
 		//  구조체는 통채로 복사되는 것이 아니라 각 멤버 하나 하나를 따로 쓰고 읽는다.
 		// 
@@ -192,7 +192,7 @@ namespace Example
 			public List<int> w;
 		};
 
-		static void Sample_simple_append_extract_struct()
+		static void Sample_simple_Append_Extract_struct()
 		{
 			// Decalre) 임시로 사용할 List를 선언한다.
 			TEST temp = new TEST();
@@ -206,12 +206,12 @@ namespace Example
 			CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
 
 			// APPEND) List<int>를 추가한다.
-			bufTemp.append(temp);
+			bufTemp.Append(temp);
 
 
 
 			// EXTRACT) 추가했던 문자열을 읽어낸다.
-			var tempRead = bufTemp.extract<TEST>();
+			var tempRead = bufTemp.Extract<TEST>();
 
 			// 2) 출력한다.
 			Console.WriteLine(tempRead.x);
@@ -223,7 +223,7 @@ namespace Example
 		//----------------------------------------------------------------------------
 		// Example 6) 다계층(Multiple-Layerd) struct 쓰기/읽기
 		//
-		//  구조체가 구조체를 가지고 있을 경우에도 크게 신경쓰지 않고 append/extract로
+		//  구조체가 구조체를 가지고 있을 경우에도 크게 신경쓰지 않고 Append/Extract로
 		//  읽고 쓸수 있다.
 		// 
 		//----------------------------------------------------------------------------
@@ -234,7 +234,7 @@ namespace Example
 			public TEST c;
 		};
 
-		static void Sample_simple_append_extract_struct2()
+		static void Sample_simple_Append_Extract_struct2()
 		{
 			// Declare) 임시로 사용할 List를 선언한다.
 			TEST2 temp = new TEST2();
@@ -250,10 +250,10 @@ namespace Example
 			CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
 
 			// APPEND 1) List<int>를 추가한다.
-			bufTemp.append(temp);
+			bufTemp.Append(temp);
 			
 			// EXTRACT 1) 추가했던 문자열을 읽어낸다.
-			var tempRead = bufTemp.extract<TEST2>();
+			var tempRead = bufTemp.Extract<TEST2>();
 
 			// 4) 출력한다.
 			Console.WriteLine(tempRead.a);
@@ -270,7 +270,7 @@ namespace Example
 		//  클래스를 쓰고 읽기 위해서는 CGDK.Serialize attribute를 붙여 주어야 한다.
 		// 
 		//----------------------------------------------------------------------------
-		[Serializable]
+		[CGDK.Attribute.Serializable]
 		public class TEST3
 		{
 			[CGDK.Attribute.Serializable]
@@ -287,7 +287,7 @@ namespace Example
 			public	int d = 0;
 		}
 
-		static void	Sample_simple_append_extract_class()
+		static void	Sample_simple_Append_Extract_class()
 		{
 			// Declare) 임시로 사용할 List를 선언한다.
 			TEST3 temp = new TEST3();
@@ -303,10 +303,10 @@ namespace Example
 			CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
 
 			// APPEND 1) List<int>를 추가한다.
-			bufTemp.append(temp);
+			bufTemp.Append(temp);
 			
 			// EXTRACT 1) 추가했던 문자열을 읽어낸다.
-			var tempRead = bufTemp.extract<TEST3>();
+			var tempRead = bufTemp.Extract<TEST3>();
 
 			// 4) 출력한다.
 			Console.WriteLine(tempRead.a);

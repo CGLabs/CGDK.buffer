@@ -15,15 +15,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.perfo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance_protobuf-net.NET", "unit_test.performance.protobuf-net\NET\CGDK.buffer.unit_test.performance_protobuf-net.NET.csproj", "{034762B5-F44A-460C-BF36-D70BC8787BC2}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance.msgpack", "unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.shproj", "{B093C521-1A6C-4E21-8744-BFA63981C9A0}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance.memorypack", "unit_test.performance.memorypack\CGDK.buffer.unit_test.performance.memorypack.shproj", "{E8124391-1EAA-4A6B-A713-CC49A8B6A173}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance.msgpack.NET", "unit_test.performance.msgpack\NET\CGDK.buffer.unit_test.performance.msgpack.NET.csproj", "{136C421D-FE37-4759-AFEB-B9981A1BB162}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance.memorypack.NET", "unit_test.performance.memorypack\NET\CGDK.buffer.unit_test.performance.memorypack.NET.csproj", "{9405C713-C3FE-4BEE-AAC9-C53FED545727}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protobuf", "protobuf", "{FAA39C3B-E28E-4965-973C-9D7DEDF9F645}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance.msgpack", "unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.shproj", "{82785382-B830-4F2C-BB62-6B50144A173A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "messagepack", "messagepack", "{0AA991B4-AE5C-47D8-A2B5-D4DB72BF3A66}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CGDK.buffer", "CGDK.buffer", "{1F66C439-2B0B-4F51-970C-CB272F8A96C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance.msgpack.NET", "unit_test.performance.msgpack\NET\CGDK.buffer.unit_test.performance.msgpack.NET.csproj", "{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,21 +41,17 @@ Global
 		{034762B5-F44A-460C-BF36-D70BC8787BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{034762B5-F44A-460C-BF36-D70BC8787BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{034762B5-F44A-460C-BF36-D70BC8787BC2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{136C421D-FE37-4759-AFEB-B9981A1BB162}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{136C421D-FE37-4759-AFEB-B9981A1BB162}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{136C421D-FE37-4759-AFEB-B9981A1BB162}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{136C421D-FE37-4759-AFEB-B9981A1BB162}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9405C713-C3FE-4BEE-AAC9-C53FED545727}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9405C713-C3FE-4BEE-AAC9-C53FED545727}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9405C713-C3FE-4BEE-AAC9-C53FED545727}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9405C713-C3FE-4BEE-AAC9-C53FED545727}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{047D3A5B-4233-4E5D-A5DA-B6A6389D962C} = {1F66C439-2B0B-4F51-970C-CB272F8A96C6}
-		{3DFAB9A5-71D0-49C6-9A5F-6CA630AE2262} = {FAA39C3B-E28E-4965-973C-9D7DEDF9F645}
-		{A81EC3E3-6288-4415-BC57-FD7844B35C64} = {1F66C439-2B0B-4F51-970C-CB272F8A96C6}
-		{034762B5-F44A-460C-BF36-D70BC8787BC2} = {FAA39C3B-E28E-4965-973C-9D7DEDF9F645}
-		{B093C521-1A6C-4E21-8744-BFA63981C9A0} = {0AA991B4-AE5C-47D8-A2B5-D4DB72BF3A66}
-		{136C421D-FE37-4759-AFEB-B9981A1BB162} = {0AA991B4-AE5C-47D8-A2B5-D4DB72BF3A66}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FB1F9CF7-D0D4-4111-B75F-C7BC625E7295}
@@ -65,11 +59,13 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.projitems*{034762b5-f44a-460c-bf36-d70bc8787bc2}*SharedItemsImports = 5
 		unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.projitems*{047d3a5b-4233-4e5d-a5da-b6a6389d962c}*SharedItemsImports = 13
-		unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.projitems*{136c421d-fe37-4759-afeb-b9981a1bb162}*SharedItemsImports = 5
 		unit_test.performance.protobuf-net\CGDK.buffer.unit_test.performance_protobuf-net.projitems*{3dfab9a5-71d0-49c6-9a5f-6ca630ae2262}*SharedItemsImports = 13
+		unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.projitems*{4a4d8461-dd32-4443-b8f8-d6b4fd1069f3}*SharedItemsImports = 5
+		unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.projitems*{82785382-b830-4f2c-bb62-6b50144a173a}*SharedItemsImports = 13
+		unit_test.performance.memorypack\CGDK.buffer.unit_test.performance.memorypack.projitems*{9405c713-c3fe-4bee-aac9-c53fed545727}*SharedItemsImports = 5
 		unit_test.functional\CGDK.buffer.unit_test.functional.projitems*{9d15bc44-fbcc-4d83-bc89-48e2a50485a5}*SharedItemsImports = 5
 		unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.projitems*{a81ec3e3-6288-4415-bc57-fd7844b35c64}*SharedItemsImports = 5
-		unit_test.performance.msgpack\CGDK.buffer.unit_test.performance.msgpack.projitems*{b093c521-1a6c-4e21-8744-bfa63981c9a0}*SharedItemsImports = 13
 		unit_test.functional\CGDK.buffer.unit_test.functional.projitems*{d52d57ad-d303-4f59-a918-0f6d1458e543}*SharedItemsImports = 13
+		unit_test.performance.memorypack\CGDK.buffer.unit_test.performance.memorypack.projitems*{e8124391-1eaa-4a6b-a713-cc49a8b6a173}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

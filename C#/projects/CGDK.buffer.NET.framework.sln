@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGDK.buffer.NET.framework", "buffer.NET.framework\CGDK.buffer.NET.framework.csproj", "{7D5B6392-B36F-4B81-B229-EE314090CD8C}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "buffer", "buffer\buffer.shproj", "{9F90C8CB-17EE-4F63-8AE0-FCAD54CC782F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,9 +27,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C17070B4-16EB-4E46-A52A-DDA2843FBF3D}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		buffer\buffer.projitems*{7d5b6392-b36f-4b81-b229-ee314090cd8c}*SharedItemsImports = 4
-		buffer\buffer.projitems*{9f90c8cb-17ee-4f63-8ae0-fcad54cc782f}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
