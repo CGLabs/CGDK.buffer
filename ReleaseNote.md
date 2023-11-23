@@ -13,7 +13,7 @@
        <br>
          append => __Append__ <br>
          extract => __Extract__ <br>
-         get_size_if => __GetSizeOf__ <br>
+         get_size_of => __GetSizeOf__ <br>
          get_front => __GetFront__ <br>
          set_front => __SetFront__ <br>
          ... <br>
