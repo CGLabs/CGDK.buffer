@@ -1630,8 +1630,10 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count==0);
 				Assert.IsTrue(list_int.Count==temp.Length);
+			#if NET
 				foreach(var (x,y) in list_int.Zip(temp))
 					Assert.AreEqual(x, y);
+			#endif
 			}
 		}
 
@@ -1656,8 +1658,10 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(temp != null);
 				Assert.IsTrue(list_int.Count==temp.Length);
+			#if NET
 				foreach (var (x, y) in list_int.Zip(temp))
 					Assert.AreEqual(x, y);
+			#endif
 			}
 		}
 
@@ -1682,8 +1686,10 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count==0);
 				Assert.IsTrue(array_string.Length==temp.Length);
+			#if NET
 				foreach (var (x, y) in array_string.Zip(temp))
 					Assert.AreEqual(x, y);
+			#endif
 			}
 		}
 
@@ -1703,13 +1709,19 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
+			#if NET
 				string[]? temp = buf_temp.GetFront<string[]>();
+			#else
+				string[] temp = buf_temp.GetFront<string[]>();
+			#endif
 
 				// check) 
 				Assert.IsTrue(temp != null);
 				Assert.IsTrue(array_string.Length==temp.Length);
+			#if NET
 				foreach (var (x, y) in array_string.Zip(temp))
 					Assert.AreEqual(x, y);
+			#endif
 			}
 		}
 
@@ -1734,8 +1746,10 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count==0);
 				Assert.IsTrue(list_string.Count==temp.Count);
+			#if NET
 				foreach (var (x, y) in list_string.Zip(temp))
 					Assert.AreEqual(x, y);
+			#endif
 			}
 		}
 
@@ -1760,8 +1774,10 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(temp != null);
 				Assert.IsTrue(list_string.Count == temp.Count);
+			#if NET
 				foreach (var (x, y) in list_string.Zip(temp))
 					Assert.AreEqual(x, y);
+			#endif
 			}
 		}
 
@@ -1786,11 +1802,13 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count==0);
 				Assert.IsTrue(dictionary_int_int.Count==temp.Count);
+			#if NET
 				foreach (var (x, y) in dictionary_int_int.Zip(temp))
 				{
 					Assert.AreEqual(x.Key, y.Key);
 					Assert.AreEqual(x.Value, y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -1816,11 +1834,13 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(temp != null);
 				Assert.IsTrue(dictionary_int_int.Count==temp.Count);
+			#if NET
 				foreach (var (x, y) in dictionary_int_int.Zip(temp))
 				{
 					Assert.AreEqual(x.Key, y.Key);
 					Assert.AreEqual(x.Value, y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -1845,11 +1865,13 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count==0);
 				Assert.IsTrue(dictionary_string_int.Count==temp.Count);
+			#if NET
 				foreach (var (x, y) in dictionary_string_int.Zip(temp))
 				{
 					Assert.AreEqual(x.Key, y.Key);
 					Assert.AreEqual(x.Value, y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -1874,11 +1896,13 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count == 0);
 				Assert.IsTrue(dictionary_string_int.Count == temp.Count);
+			#if NET
 				foreach (var (x, y) in dictionary_string_int.Zip(temp))
 				{
 					Assert.AreEqual(x.Key, y.Key);
 					Assert.AreEqual(x.Value, y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -1904,11 +1928,13 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(temp != null);
 				Assert.IsTrue(dictionary_string_int.Count==temp.Count);
+			#if NET
 				foreach (var (x, y) in dictionary_string_int.Zip(temp))
 				{
 					Assert.AreEqual(x.Key, y.Key);
 					Assert.AreEqual(x.Value, y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -1933,11 +1959,13 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count==0);
 				Assert.IsTrue(dictionary_string_string.Count==temp.Count);
+			#if NET
 				foreach (var (x, y) in dictionary_string_string.Zip(temp))
 				{
 					Assert.AreEqual(x.Key, y.Key);
 					Assert.AreEqual(x.Value, y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -1958,16 +1986,22 @@ namespace CGDBuffer_CSharp_UnitTest
 				Assert.IsTrue(size_source == buf_temp.Count);
 
 				// - 값 읽기
+			#if NET
 				Dictionary<string, string>? temp = buf_temp.GetFront<Dictionary<string, string>>();
+			#else
+				Dictionary<string, string> temp = buf_temp.GetFront<Dictionary<string, string>>();
+			#endif
 
 				// check) 
 				Assert.IsTrue(temp != null);
 				Assert.IsTrue(dictionary_string_string.Count==temp.Count);
+			#if NET
 				foreach (var (x, y) in dictionary_string_string.Zip(temp))
 				{
 					Assert.AreEqual(x.Key, y.Key);
 					Assert.AreEqual(x.Value, y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -1997,6 +2031,7 @@ namespace CGDBuffer_CSharp_UnitTest
 
 				// check) 
 				Assert.IsTrue(buf_temp.Count == size_source);
+			#if NET
 				foreach (var (x, y) in list_list_int.Zip(temp1))
 				{
 					foreach (var (z, w) in x.Zip(y))
@@ -2004,11 +2039,13 @@ namespace CGDBuffer_CSharp_UnitTest
 						Assert.AreEqual(z, w);
 					}
 				}
+			#endif
 
 				var temp2 = buf_temp.Extract<List<List<int>>>();
 
 				// check) 
 				Assert.IsTrue(buf_temp.Count == 0);
+			#if NET
 				foreach (var (x, y) in list_list_int.Zip(temp2))
 				{
 					foreach (var (z, w) in x.Zip(y))
@@ -2016,6 +2053,7 @@ namespace CGDBuffer_CSharp_UnitTest
 						Assert.AreEqual(z, w);
 					}
 				}
+			#endif
 			}
 		}
 
@@ -2198,7 +2236,6 @@ namespace CGDBuffer_CSharp_UnitTest
 			}
 		}
 
-
 		struct TEST_C
 		{
 			public int			x;
@@ -2282,14 +2319,18 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(buf_temp.Count == size_c + size_d);
 				Assert.IsTrue(a2.x   == temp.x  );
+			#if NET
 				foreach(var (x,y) in a2.y.Zip(temp.y))
 					Assert.IsTrue(x == y);
+			#endif
 				Assert.IsTrue(a2.t   == temp.t  );
 				Assert.IsTrue(a2.z.x == temp.z.x);
 				Assert.IsTrue(a2.z.y == temp.z.y);
 				Assert.IsTrue(a2.z.z == temp.z.z);
+			#if NET
 				foreach (var (x, y) in a2.z.w.Zip(temp.z.w))
 					Assert.IsTrue(x == y);
+			#endif
 				Assert.IsTrue(a2.a   == temp.a);
 				Assert.IsTrue(a2.w.x == 0);		// excepted
 				Assert.IsTrue(a2.w.y == null);  // excepted
@@ -2306,11 +2347,13 @@ namespace CGDBuffer_CSharp_UnitTest
 
 				// check) 
 				Assert.IsTrue(buf_temp.Size == 0);
+			#if NET
 				foreach (var (x,y) in a4.Zip(tempDic))
 				{
 					Assert.IsTrue(x.Key == y.Key);
 					Assert.IsTrue(x.Value == y.Value);
 				}
+			#endif
 			}
 		}
 
@@ -2339,8 +2382,14 @@ namespace CGDBuffer_CSharp_UnitTest
 			[CGDK.Attribute.Field]
 			public UInt32 f;
 
+		#if NET
 			[CGDK.Attribute.Field]
 			public int[]? g;
+		#else
+			[CGDK.Attribute.Field]
+			public int[] g;
+		#endif
+
 		};
 
 		[TestMethod]
