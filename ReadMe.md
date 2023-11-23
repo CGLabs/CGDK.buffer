@@ -86,11 +86,11 @@ bufTemp.append<std::string>("Test String"); // 문자열도 가능
 ``` C#
 CGDK.buffer bufTemp = new CGDK.buffer(new byte[256]);
        
-bufTemp.append<byte>(10);
-bufTemp.append<sbyte>(20);
-bufTemp.append<int>(-100);
-bufTemp.append<uint>(1000);
-bufTemp.append<string>("Test String");	// 문자열도 가능
+bufTemp.Append<byte>(10);
+bufTemp.Append<sbyte>(20);
+bufTemp.Append<int>(-100);
+bufTemp.Append<uint>(1000);
+bufTemp.Append<string>("Test String");	// 문자열도 가능
 ```
 <br><br>
 ### 2. 역직렬화하기(Schemaless)<br>
@@ -112,11 +112,11 @@ auto temp5 = bufTemp.extract<std::string>();
 
 [C#]
 ``` C#
-var temp1 = bufTemp.extract<byte>();
-var temp2 = bufTemp.extract<SByte>();
-var temp3 = bufTemp.extract<int>();
-var temp4 = bufTemp.extract<uint>();
-var temp5 = bufTemp.extract<string>();
+var temp1 = bufTemp.Extract<byte>();
+var temp2 = bufTemp.Extract<SByte>();
+var temp3 = bufTemp.Extract<int>();
+var temp4 = bufTemp.Extract<uint>();
+var temp5 = bufTemp.Extract<string>();
 ```
 
 복합형 데이터의 직렬화/역직렬화도 가능<br> 
@@ -155,17 +155,17 @@ Dictionary<int, List<string>>  dicListTest = new ...;
        
 CGD.buffer bufTemp = new CGD.buffer(new byte[256]);
        
-bufTemp.append(listTest);
-bufTemp.append(listStringTest);
-bufTemp.append(dicTest);
-bufTemp.append(dicListTest);
+bufTemp.Append(listTest);
+bufTemp.Append(listStringTest);
+bufTemp.Append(dicTest);
+bufTemp.Append(dicListTest);
        
 .................
 // 역직렬화
-var temp1 = bufTemp.extract<List<int>> ();
-var temp2 = bufTemp.extract<List<string>> ();
-var temp3 = bufTemp.extract<Dictionary<string,int>> ();
-var temp4 = bufTemp.extract<Dictionary<string,List<int>>> ();
+var temp1 = bufTemp.Extract<List<int>> ();
+var temp2 = bufTemp.Extract<List<string>> ();
+var temp3 = bufTemp.Extract<Dictionary<string,int>> ();
+var temp4 = bufTemp.Extract<Dictionary<string,List<int>>> ();
 
 bufTemp.append(maplistTemp);
 ```
@@ -248,7 +248,8 @@ struct TEST2
 TEST2  tempData;
 	    
 auto bufTemp = alloc_shared_buffer(get_size_of(tempData));
-	    
+
+// 직렬화	    
 bufTemp.append<TEST2>(tempData);
 	    
 .................
@@ -256,8 +257,22 @@ bufTemp.append<TEST2>(tempData);
 var temp1 = bufTemp.extract<TEST2>();
 
 ```
+[C#]
+``` C#
+TEST2  tempData;
+
+var bufTemp = new CGDK.buffer(CGDK.buffer.GetSizeOf(tempData));
+
+// 직렬화
+bufTemp.Append<TEST2>(tempData);
+
+.................
+// 역직렬화
+var temp1 = bufTemp.Extract<TEST2>();
+
+```
 이렇게 직렬화/역직렬화를 수행 <br>
-주의) 생성자와 virtaul 함수를 가져서는 안됨<br>
+주의) C++의 경우 생성자와 virtaul 함수를 가져서는 안됨<br>
 <br>
 <br>
 
@@ -284,18 +299,18 @@ auto value5 = bufTemp.front<std::string>(14); //
 
 [C#]
 ``` C#
-bufTemp.append<byte>(10);
-bufTemp.append<sbyte>(20);
-bufTemp.append<int>(-100);
-bufTemp.append<uint>(1000);
-bufTemp.append<string>("Test String");	// 문자열도 가능
+bufTemp.Append<byte>(10);
+bufTemp.Append<sbyte>(20);
+bufTemp.Append<int>(-100);
+bufTemp.Append<uint>(1000);
+bufTemp.Append<string>("Test String");	// 문자열도 가능
 
 // - get_front를 사용해 값을 읽을 수 있습니다.
-var value1 = bufTemp.get_front<byte>(); //
-var value2 = bufTemp.get_front<char>(1); //
-var value3 = bufTemp.get_front<int>(2); //
-var value4 = bufTemp.get_front<uint>(10); // 
-var value5 = bufTemp.get_front<string>(14); // 
+var value1 = bufTemp.GetFront<byte>(); //
+var value2 = bufTemp.GetFront<char>(1); //
+var value3 = bufTemp.GetFront<int>(2); //
+var value4 = bufTemp.GetFront<uint>(10); // 
+var value5 = bufTemp.GetFront<string>(14); // 
 ```
 
 <br>
@@ -308,7 +323,7 @@ bufTemp.front<int>(2) = 300; // offset 2 위치에 int값 300을 덥어씁니다
 ```
 [C#]
 ``` C#
-bufTemp.set_front<int>(2, 300); // offset 2위치에 int값 300을 덥어 씁니다.
+bufTemp.SetFront<int>(2, 300); // offset 2위치에 int값 300을 덥어 씁니다.
 ```
 <br>
 <br>
@@ -318,6 +333,7 @@ c++은 기본 자료형의 append 수행시 위치를 참조형 변수로 받아
 기본 자료형(char, short, int, float 등..)을 append할 경우 해당 위치의 참조형을 리턴해줍니다.<br>
 즉, int를 append하면 그 리턴 값은 int& 이 됩니다. 이것을 사용해서 추후 업데이트가 가능합니다.<br>
 front함수를 사용해 덥어 쓸 때 처럼 위치를 직접 지정해 주지 않아도 됩니다.<br>
+C#은 포인터가 없으므로 위치를 저장했다 SetFront<T>() 함수를 사용해서 업데이트 해야 합니다. (위치는 Append 전에 Offset으로 구해 저장해 놓을 수 있습니다.)
 
 [C++]
 ``` C++
