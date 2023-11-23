@@ -22,7 +22,7 @@
          <br>
    * 파일 분리 <br>
      - .NET, .NET core, .NET framework의 소스파일을 분리 <br>
-       (nullable, Unsafe, Linq 등 문법이 너무 상이해 더이상 공통사용이 힘들다고 판단) <br>
+       (nullable, Unsafe, Linq 등 문법이 너무 상이해 더이상 코드의 공용이 힘들다고 판단) <br>
 
    * Unit test 추가. <br>
 
