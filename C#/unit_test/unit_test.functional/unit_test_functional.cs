@@ -190,9 +190,17 @@ namespace CGDBuffer_CSharp_UnitTest
 			_buffer.Append<string>(array_string[7]);
 		}
 
+	#if NET
 		string?[] function_extract_STRING(ref CGDK.buffer _buffer)
+	#else
+		string[] function_extract_STRING(ref CGDK.buffer _buffer)
+	#endif
 		{
+		#if NET
 			string?[] temp = new string[8];
+		#else
+			string[] temp = new string[8];
+		#endif
 
 			temp[0] = _buffer.Extract<string>();
 			temp[1] = _buffer.Extract<string>();
@@ -1567,7 +1575,11 @@ namespace CGDBuffer_CSharp_UnitTest
 				// - Buffer 할당
 				var buf_temp = new CGDK.buffer(1024);
 
+			#if NET
 				string?[] strResult;
+			#else
+				string[] strResult;
+			#endif
 
 				// - 값 써넣기
 				function_append_STRING(ref buf_temp);

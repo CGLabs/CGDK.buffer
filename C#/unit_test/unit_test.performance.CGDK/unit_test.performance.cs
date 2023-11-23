@@ -173,9 +173,17 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			_Buffer.Append<string>(array_string[7]);
 		}
 
+	#if NET
 		string?[] function_extract_STRING(ref CGDK.buffer _Buffer)
+	#else
+		string[] function_extract_STRING(ref CGDK.buffer _Buffer)
+	#endif
 		{
+		#if NET
 			string?[] temp = new string[8];
+		#else
+			string[] temp = new string[8];
+		#endif
 
 			temp[0] = _Buffer.Extract<string>();
 			temp[1] = _Buffer.Extract<string>();
