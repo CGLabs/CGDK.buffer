@@ -2,7 +2,7 @@
    #### (C#)
    * 8년만에 완전 구조 변경
      - 실시간 Reflection를 사용하지 않고 Serializer를 생성해 직렬화/역직렬화 수행<br>
-       (즉, 매번 직렬화/역직렬화할 때마다 reflection을 통해 진행하지 않고 처음 한번만 Reflection을 통해 Serializer를 생성 후 직렬화/역직렬화를 함) <br>
+       (즉, 매번 직렬화/역직렬화할 때마다 reflection을 사용하지 않고 한번만 Reflection으로 Serializer를 생성해 직렬화/역직렬화를 함) <br>
      - 성능의 비약성 향상(struct & class를 제외하고는 MemoryPack에 비해서도 앞도적 성능을 제공)<br>
        (struct & class 직렬화/역직렬화 성능은 향상되지 않음.) <br>
      - Roslyn과 Souce Ganetratation을 이용한 버전은 이번 업데이트에서 제외 <br>
