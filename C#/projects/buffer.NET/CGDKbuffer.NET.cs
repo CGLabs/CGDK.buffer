@@ -35,7 +35,7 @@ namespace CGDK
 	{
 		/// <summary>
 		/// </summary>
-		[System.AttributeUsage(System.AttributeTargets.Class, Inherited = true)]
+		[System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct, Inherited = true)]
 		public class Serializable : System.Attribute
 		{
 			/// <summary>
