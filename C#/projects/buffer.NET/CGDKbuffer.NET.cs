@@ -91,6 +91,9 @@ namespace CGDK
 
 	public struct buffer
 	{
+		// ----------------------------------------------------------------
+		// Constructor/Destruction
+		// ----------------------------------------------------------------
 		public buffer(in byte[]? _buffer, in int _offset = 0, in int _count = 0)
 		{
 			this.m_buffer = _buffer;
@@ -110,6 +113,13 @@ namespace CGDK
 			this.m_count = 0;
 		}
 
+		// ----------------------------------------------------------------
+		// Alloc/SetBuffer/Clear/...
+		// ----------------------------------------------------------------
+		/// <summary>
+		/// 객체를 깊은 복사(Deep coyp)로 복제합니다.
+		/// </summary>
+		/// <returns></returns>
 		public readonly buffer Clone()
 		{
 			// 1(
@@ -134,12 +144,26 @@ namespace CGDK
 		public const int	SIZE_OF_CRC	 = sizeof(uint);
 
 		// 1) 생성/버퍼설정
+
+		/// <summary>
+		/// 메모리를 할당합니다.
+		/// </summary>
+		/// <param name="_Size"></param> 
+		/// 할당할 메모리의 크기
 		public void			Alloc(in int _Size)
 		{
 			this.m_buffer = new byte[_Size];
 			this.m_offset = 0;
 			this.m_count = 0;
 		}
+
+		/// <summary>
+		/// 배열을 대상 메모리로 설정합니다.
+		/// </summary>
+		/// <param name="_buffer"></param>
+		/// <param name="_offset"></param>
+		/// <param name="_length"></param>
+		/// <exception cref="CGDK.Exception.Serialize"></exception>
 		public void			SetBuffer(byte[] _buffer, in int _offset, in int _length)
 		{
 			// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
@@ -154,6 +178,13 @@ namespace CGDK
 			this.m_offset = _offset;
 			this.m_count = _length;
 		}
+
+		/// <summary>
+		/// 배열을 대상 메모리로 설정합니다.
+		/// </summary>
+		/// <param name="_buffer"></param>
+		/// <param name="_offset"></param>
+		/// <exception cref="CGDK.Exception.Serialize"></exception>
 		public void			SetBuffer(byte[] _buffer, in int _offset)
 		{
 			// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
@@ -166,7 +197,7 @@ namespace CGDK
 			// 1) 값을 적용한다.
 			this.m_buffer = _buffer;
 			this.m_offset = _offset;
-			this.m_count = _buffer.Length-_offset;
+			this.m_count = _buffer.Length - _offset;
 		}
 		public byte[]?		Clear()
 		{
@@ -195,27 +226,85 @@ namespace CGDK
 		// - for C# User															  
 		public byte[]?		Array { readonly get { return this.m_buffer; } set { this.m_buffer = value; } }
 
-// ----------------------------------------------------------------
-// 연산자 Overload
-// ----------------------------------------------------------------
-// 1) +offset (Offset 만큼 버퍼를 extract한 새로운 버퍼를 받는다. offset만큼 _offset는 증가하고 count는 뺀 버퍼. 음수도 가능)
-public static		buffer operator + (in buffer _lhs, in Offset _offset)
+		// ----------------------------------------------------------------
+		// Operator overload
+		// ----------------------------------------------------------------
+		/// <summary>
+		/// 오프셋(_offset)만큼 앞을 줄인 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">오프셋</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)(</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// 원본 버퍼(_lhs)의 앞쪽을 offset(bytes)만큼 포인터를 옮긴 줄인 버퍼를 얻는다.(Extract한 것과 같은 효과)
+		/// offset을 옮긴 만큼 크기(count)도 줄인다.(offset이 음수일 경우 반대)
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사(swallow copy))
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _lhs.m_offset + _offset.amount, _lhs.m_count - _offset.amount)를  생성한 돌려 받는다.
+		/// _offset값이 음수도 가능하다.
+		/// 원본 버퍼의 할당받은 메모리 범위를 벗어난 설정을 할 수는 없다.
+		/// 
+		/// [사용예]
+		///         var buf_source = new CGDK.buffer(1000);
+		///         buf_source.append<int>(100);
+		///         buf_source.append<int>(10);
+		///         
+		///         var buf_new = buf_source + CGDK.Offset(4); // 4byte만큼 offset을 준 버퍼를 얻는다.
+		///         var value = buf_new.extract<int>(); // value값은 10
+		///         
+		public static		buffer operator + (in buffer _lhs, in Offset _offset)
 		{
 			// check)
 			if(_lhs.Array == null)
 				throw new System.NullReferenceException("buffer is not allocated");
 
 			// check) 
-			Debug.Assert((_offset.amount > 0) ? (_offset.amount <= _lhs.Count) : (-_offset.amount <= _lhs.Offset));
+			Debug.Assert((_offset.amount >= 0) ? (_offset.amount <= _lhs.Count) : (-_offset.amount <= _lhs.Offset));
 
 			// check)
-			if((_offset.amount > 0) ? (_offset.amount > _lhs.Count) : (-_offset.amount > _lhs.Offset))
+			if((_offset.amount >= 0) ? (_offset.amount > _lhs.Count) : (-_offset.amount > _lhs.Offset))
 				throw new System.OverflowException("buffer overflow");
 
 			// 1) create
 			return new buffer(_lhs.Array, _lhs.Offset + _offset.amount, _lhs.Count - _offset.amount);
 		}
-		// 2) -offset (Offset 만큼 버퍼를 앞으로 늘린(prepend)한 버퍼를 받는다. _offset만큼 offset을 빼고 count를 늘린 버퍼. 음수도 가능)
+		/// <summary>
+		/// 오프셋(_offset)만큼 앞을 줄인 버퍼를 얻는다(_lhs + CGDK.Offset(_offset)과 동일)
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">옮길 오프셋값</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// operator + (in buffer _lhs, in Offset _offset)과 동일하다.
+		public static		buffer operator +(in buffer _lhs, in int _offset)
+		{
+			return _lhs + new CGDK.Offset(_offset);
+		}
+
+		/// <summary>
+		/// 오프셋(_offset)만큼 앞을 늘린 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">오프셋</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// 원본 버퍼(_lhs)에서 offset(bytes)만큼 앞쪽으로 포인터를 옮긴 늘린 버퍼를 얻는다.(Extract를 Rollback한 것과 같은 효과)
+		/// offset을 옮긴 크기(count)는 늘인다.(offset이 음수일 경우 반대)
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사(swallow copy))
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _lhs.m_offset - _offset.amount, _lhs.m_count + _offset.amount)를  생성한 돌려 받는다.
+		/// _offset값이 음수도 가능하다.
+		/// 원본 버퍼의 할당받은 메모리 범위를 벗어난 설정을 할 수는 없다.
+		/// 
+		/// [사용예]
+		///         var buf_source = new CGDK.buffer(1000);
+		///         buf_source.append<int>(100);
+		///         buf_source.append<int>(10);
+		///         
+		///         var value1 = buf_source.extract<int>(); // value값은 100
+		///         
+		///         var buf_new = buf_source - CGDK.Offset(4); // 4byte만큼 offset을 앞으로 다시 늘린 버퍼를 얻는다.
+		///         var value = buf_new.extract<int>(); // value값은 100
+		///         
 		public static		buffer operator - (in buffer _lhs, in Offset _offset)
 		{
 			// check)
@@ -223,50 +312,89 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				throw new System.NullReferenceException("buffer is not allocated");
 
 			// check) 
-			Debug.Assert((_offset.amount > 0) ? (-_offset.amount <= _lhs.Offset) : (-_offset.amount <= _lhs.Count) );
+			Debug.Assert((_offset.amount >= 0) ? (-_offset.amount <= _lhs.Offset) : (-_offset.amount <= _lhs.Count) );
 
 			// check)
-			if((_offset.amount > 0) ? (-_offset.amount > _lhs.Offset) : (-_offset.amount > _lhs.Count))
+			if((_offset.amount >= 0) ? (-_offset.amount > _lhs.Offset) : (-_offset.amount > _lhs.Count))
 				throw new System.OverflowException("buffer overflow");
 
 			// 1) create
 			return new buffer(_lhs.Array, _lhs.Offset - _offset.amount, _lhs.Count + _offset.amount);
 		}
-		// 3) +count (count 만큼 크기(count)를 늘린 새로운 버퍼. 음수도 가능)
-		public static		buffer operator + (in buffer _lhs, in Size _rhs)
+		/// <summary>
+		/// (_offset)만큼 앞을 늘린 버퍼를 얻는다(_lhs - CGDK.Offset(_offset)과 동일)
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">오프셋</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// operator - (in buffer _lhs, in Offset _offset)과 동일하다.
+		public static		buffer operator -(in buffer _lhs, in int _offset)
 		{
-			// check) 
-			Debug.Assert(_lhs.m_buffer != null && _lhs.Offset >= _rhs.amount && _rhs.amount <= (_lhs.Capacity - _lhs.Count)); 
+			return _lhs - new CGDK.Offset(_offset);
+		}
 
+		/// <summary>
+		/// 크기(offset)만큼 끝을 늘린 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">원본 버퍼</param>
+		/// <param name="_size">크기</param>
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		public static		buffer operator + (in buffer _lhs, in Size _size)
+		{
 			// check)
 			if(_lhs.Array == null)
 				throw new System.NullReferenceException("buffer is not allocated");
 
+			// check) 
+			Debug.Assert((_size.amount >= 0) ? (_lhs.Offset + _lhs.Count + _size.amount <= _lhs.Capacity) : (-_size.amount <= _lhs.Count));
+
 			// check)
-			if(_lhs.Offset < _rhs.amount || _rhs.amount > (_lhs.Capacity - _lhs.Count))
+			if ((_size.amount > 0) ? (_lhs.Offset + _lhs.Count + _size.amount > _lhs.Capacity) : (-_size.amount > _lhs.Count))
 				throw new System.OverflowException("buffer overflow");
 
 			// 1) create
-			return new buffer(_lhs.Array, _lhs.Offset, _lhs.Count + _rhs.amount);
+			return new buffer(_lhs.Array, _lhs.Offset, _lhs.Count + _size.amount);
 		}
-		// 4) -count (count 만큼 크기(count)를 줄인 새로운 버퍼. 음수도 가능)
-		public static		buffer operator - (in buffer _lhs, in Size _rhs)
-		{
-			// check) 
-			Debug.Assert(_lhs.m_buffer != null && _lhs.Offset >= _rhs.amount && _rhs.amount <= (_lhs.Capacity - _lhs.Count)); 
 
+		/// <summary>
+		/// 크기(offset)만큼 끝을 줄여 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">원본 버퍼</param>
+		/// <param name="_size">크기</param>
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// -count (count 만큼 크기(count)를 줄인 새로운 버퍼. 음수도 가능)
+		public static		buffer operator - (in buffer _lhs, in Size _size)
+		{
 			// check)
-			if(_lhs.Array == null)
+			if (_lhs.Array == null)
 				throw new System.NullReferenceException("buffer is not allocated");
 
+			// check) 
+			Debug.Assert((_size.amount >= 0) ? (_size.amount <= _lhs.Count) : (_lhs.Offset + _lhs.Count - _size.amount <= _lhs.Capacity));
+
 			// check)
-			if(_lhs.Offset < _rhs.amount || _rhs.amount > (_lhs.Capacity - _lhs.Count))
+			if ((_size.amount >= 0) ? (_size.amount > _lhs.Count) : (_lhs.Offset + _lhs.Count - _size.amount > _lhs.Capacity))
 				throw new System.OverflowException("buffer overflow");
 
 			// 1) create
-			return new buffer(_lhs.Array, _lhs.Offset, _lhs.Count + _rhs.amount);
+			return new buffer(_lhs.Array, _lhs.Offset, _lhs.Count - _size.amount);
 		}
-		// 5) Offset값만 교체한 새로운 버퍼(_lhs에서 Offset값만 교체한 버퍼를 받는다.)
+
+		/// <summary>
+		/// offset 변경 앝은 복사
+		/// </summary>
+		/// <param name="_lhs"></param>
+		/// <param name="_offset"></param>
+		/// <returns></returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// 원본 buffer에서 offset만 교체한 버퍼를 얕은 복사로 신규 생성해(wwallow copy)돌려 받는다.
 		public static		buffer operator ^(in buffer _lhs, in Offset _offset)
 		{
 			// check) 
@@ -278,12 +406,21 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 
 			// check)
 			if (_offset.amount < 0 || (_offset.amount + _lhs.Count) > _lhs.Capacity)
-				throw new System.NullReferenceException("'offset' out of range");
+				throw new System.OverflowException("'offset' out of range");
 
 			// 1) create 
-			return new buffer(_lhs.Array, _lhs.Offset, _offset.amount);
+			return new buffer(_lhs.Array, _offset.amount, _offset.amount);
 		}
-		// 6) Count값만 교체한 새로운 버퍼(_lhs에서 Count만 교체한 버퍼를 받는다.)
+
+		/// <summary>
+		/// count 변경 앝은 복사
+		/// </summary>
+		/// <param name="_lhs"></param>
+		/// <param name="_count"></param>
+		/// <returns></returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// 원본 buffer에서 count만 교체한 버퍼를 얕은 복사로 신규 생성해(wwallow copy)돌려 받는다.
 		public static		buffer operator ^(in buffer _lhs, in Size _count)
 		{
 			// check) 
@@ -295,16 +432,25 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 
 			// check)
 			if (_count.amount < 0 || (_lhs.Offset + _count.amount) > _lhs.Capacity)
-				throw new System.NullReferenceException("'offset' out of range");
+				throw new System.OverflowException("'offset' out of range");
 
 			// 1) create 
 			return new buffer(_lhs.Array, _lhs.Offset, _count.amount);
 		}
-		// 7) offset/count를 함께 교체한 새로운 버퍼
+
+		/// <summary>
+		/// offset과 count를 변경한 앝은 복사
+		/// </summary>
+		/// <param name="_lhs"></param>
+		/// <param name="_rhs"></param>
+		/// <returns>복제된 buffer</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// 원본 buffer에서 offset과 count을 교체해 버퍼를 얕은 복사로 생성해(wwallow copy)돌려 받는다.
 		public static		buffer operator ^(in buffer _lhs, in (Offset offset,Size size) _rhs)
 		{
 			// check) 
-			Debug.Assert(_lhs.m_buffer != null && _rhs.offset.amount >= 0 && _rhs.size.amount >= 0 && (_rhs.offset.amount + _rhs.size.amount <= _lhs.Capacity));
+			Debug.Assert(_lhs.m_buffer != null && _rhs.offset.amount >= 0 && _rhs.size.amount >= 0 && ((_rhs.offset.amount + _rhs.size.amount) <= _lhs.Capacity));
 
 			// check)
 			if (_lhs.IsEmpty())
@@ -312,31 +458,36 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 
 			// check)
 			if (_rhs.offset.amount < 0 || _rhs.size.amount < 0 || (_rhs.offset.amount + _rhs.size.amount) > _lhs.Capacity)
-				throw new System.NullReferenceException("'offset' out of range");
+				throw new System.OverflowException("'offset' out of range");
 
 			// 1) create 
 			return new buffer(_lhs.Array, _rhs.offset.amount, _rhs.size.amount);
 		}
 
-		// ----------------------------------------------------------------
-		//  직렬화
-		//
-		//  1. 먼저해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
-		//     (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
-		//  2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
-		//  3. Serializer가 Extract나 GetSizeOf 과정에서 만들어 질 수도 있다.
-		//  4. 직렬화에 필요한 파라미터들을 얻는다.
-		//
-		//     ptr_pre   -> ProcessAppend 함수가 수행된 후 쓰여진 길이를 구하기 위해 저장해 놓는다.
-		//     ptr_now   -> 쓰여질 위치 포인터. 버퍼에서 쓰여진 멘 끝을 가르킨다.(m_buffer + m_offset + m_count)
-		//    ptr_bound -> 할당된 버퍼의 제일 끝을 가르킨다. bound 검사에 사용된다.
-		//
-		//  5. Serializer에 이 파라미터들을 넘겨 ProcessAppend를 호출하면 직렬화를 시작한다.
-		//  6. 직렬화가 모두 끝난후 ptr_now - ptr_pre를 해서 쓰여진 길이를 구해 m_count에 더해 준다.
-		//  7. 직렬화 끝!
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// _value를 버퍼에 직렬화해서 써넣는다. 
+		/// </summary>
+		/// <typeparam name="T">대상 클래스</typeparam> 
+		/// <param name="_value"?대상 객체</param> 
 		public unsafe void	Append<T>(in T _value)
 		{
+			// ----------------------------------------------------------------
+			//  동작설명
+			//
+			//  1. 먼저해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
+			//     (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
+			//  2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
+			//  3. Serializer가 Extract나 GetSizeOf 과정에서 만들어 질 수도 있다.
+			//  4. 직렬화에 필요한 파라미터들을 얻는다.
+			//
+			//     ptr_pre   -> ProcessAppend 함수가 수행된 후 쓰여진 길이를 구하기 위해 저장해 놓는다.
+			//     ptr_now   -> 쓰여질 위치 포인터. 버퍼에서 쓰여진 멘 끝을 가르킨다.(m_buffer + m_offset + m_count)
+			//    ptr_bound -> 할당된 버퍼의 제일 끝을 가르킨다. bound 검사에 사용된다.
+			//
+			//  5. Serializer에 이 파라미터들을 넘겨 ProcessAppend를 호출하면 직렬화를 시작한다.
+			//  6. 직렬화가 모두 끝난후 ptr_now - ptr_pre를 해서 쓰여진 길이를 구해 m_count에 더해 준다.
+			//  7. 직렬화 끝!
+			// ----------------------------------------------------------------
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
@@ -359,6 +510,12 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="_buffer"></param>
+		/// <param name="_offset"></param>
+		/// <param name="_count"></param>
 		public void			Append (in byte[] _buffer, in int _offset, in int _count)
 		{
 			// check) 
@@ -378,15 +535,19 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 
 			this.m_count += _count; 
 		}
-		// ----------------------------------------------------------------
-		// raw 문자열 Append
-		//
-		//  1. string을 append할 경우 먼저 Int32크기의 문자열 길이를 저장한 후 문자열을 저장한다.
-		//     하지만 AppendText는 문자열의 길이 정보(Int32)를 쓰지 않고 그냥 바로 문자열 정보만 저장해 놓는다.
-		//  2. 여러 문자열을 합쳐야 할 경우 혹은 문자열 데이터만 만들어야 할 경우(대표적으로 Web)에서 유용한다.			        
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// raw 문자열 Append
+		/// </summary>
+		/// <param name="_object"></param>
 		public void			AppendText (in string _object)
 		{
+			// ----------------------------------------------------------------
+			//  동작설명
+			//
+			//  1. string을 append할 경우 먼저 Int32크기의 문자열 길이를 저장한 후 문자열을 저장한다.
+			//     하지만 AppendText는 문자열의 길이 정보(Int32)를 쓰지 않고 그냥 바로 문자열 정보만 저장해 놓는다.
+			//  2. 여러 문자열을 합쳐야 할 경우 혹은 문자열 데이터만 만들어야 할 경우(대표적으로 Web)에서 유용한다.			        
+			// ----------------------------------------------------------------
 			// 1) 문자열을 배열로 변경하고 길이를 구한다.
 			var temp_array = _object.ToCharArray();
 			var iStringLength = temp_array.Length;
@@ -410,9 +571,10 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 			// 3) [버퍼_길이]를 더해준다.
 			this.m_count += (iStringLength * sizeof(char));
 		}
-		// ----------------------------------------------------------------
-		// raw 문자열 Append 함수 (Connection)
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="_Collection"></param>
 		public void			AppendText (in ICollection<string> _Collection)
 		{
 			foreach (var iter in _Collection)
@@ -420,9 +582,10 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				this.AppendText(iter);
 			}
 		}
-		// ----------------------------------------------------------------
-		// raw 문자열 Append 함수 (Params)
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// 문자열 배열 Append
+		/// </summary>
+		/// <param name="_Array"></param>
 		public void			AppendText (params string[] _Array)
 		{
 			foreach (var iter in _Array)
@@ -430,9 +593,10 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				this.AppendText(iter);
 			}
 		}
-		// ----------------------------------------------------------------
-		// 전체 버퍼 데이타에 대한 CRC 추가 (지원안함)
-		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 
+		/// </summary>
 		public void			AppendCRC ()
 		{
 			// (!) 이 버전에서는 지원하지 않는다.
@@ -441,9 +605,13 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 			// 1) 길이만 늘려준다.
 			this.m_count += SIZE_OF_CRC;
 		}
-		// ----------------------------------------------------------------
-		// 전체 버퍼 데이타에 대한 CRC 추가 (지원안함)
-		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="K"></typeparam>
+		/// <typeparam name="V"></typeparam>
+		/// <param name="_value"></param>
 		public unsafe void	Append<K, V>(in Dictionary<K, V> _value) where K : notnull
 		{
 			// check) 
@@ -469,6 +637,12 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="_value"></param>
 		public unsafe void	Append<T>(in List<T> _value)
 		{
 			// check) 
@@ -505,6 +679,11 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="_rhs"></param>
 		public static implicit operator ArraySegment<byte>(in buffer _rhs)
 		{
 			// check) 
@@ -513,15 +692,21 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 			// 1) create 
 			return new ArraySegment<byte>(_rhs.Array, _rhs.Offset, _rhs.Count);
 		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="_rhs"></param>
 		public static explicit operator buffer(in ArraySegment<byte> _rhs)
 		{
 			// 1) create 
 			return new buffer(_rhs.Array, _rhs.Offset, _rhs.Count);
 		}
 
-		// ----------------------------------------------------------------
-		// Skip Append (_amount만큼 띄우기)
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// Skip Append (_amount만큼 띄우기)
+		/// </summary>
+		/// <param name="_amount"></param>
 		public void AppendSkip(in int _amount)
 		{
 			// check) 
@@ -531,25 +716,30 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 			this.m_count += _amount;
 		}
 
-		// ----------------------------------------------------------------
-		// 역직렬화
-		// 
-		//  1. 먼저 해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
-		//     (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
-		//  2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
-		//  3. Serializer가 Append나 GetSizeOf 과정에서 만들어 질 수도 있다.
-		//  4. 역직렬화에 필요한 파라미터들을 얻는다.
-		//
-		//     ptr_now -> 현재 읽어낼 위치 버퍼 데이터의 제일 처음을 가르킨다.(m_buffer + m_offset)
-		//	   count -> 현재 남은 데이터의 길이. Bound 체크 정보로 사용한다.
-		//
-		//  5. Serializer에 이 파라미터들을 넘겨 ProcessExtract를 호출하면 직렬화를 시작한다.
-		//  6. 역직렬화가 모두 끝아면 return값으로 역직렬화한 데이터가 넘어 온다.
-		//  7. 역직렬화가 읽어낸 만큼 m_offert 값을 옮겨주모 _count는 그대로 m_cout에 저장한다.
-		//  8. 역직렬화 끝!
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
 		public unsafe T?	Extract<T>()
 		{
+			// ----------------------------------------------------------------
+			// 역직렬화
+			// 
+			//  1. 먼저 해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
+			//     (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
+			//  2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
+			//  3. Serializer가 Append나 GetSizeOf 과정에서 만들어 질 수도 있다.
+			//  4. 역직렬화에 필요한 파라미터들을 얻는다.
+			//
+			//     ptr_now -> 현재 읽어낼 위치 버퍼 데이터의 제일 처음을 가르킨다.(m_buffer + m_offset)
+			//	   count -> 현재 남은 데이터의 길이. Bound 체크 정보로 사용한다.
+			//
+			//  5. Serializer에 이 파라미터들을 넘겨 ProcessExtract를 호출하면 직렬화를 시작한다.
+			//  6. 역직렬화가 모두 끝아면 return값으로 역직렬화한 데이터가 넘어 온다.
+			//  7. 역직렬화가 읽어낸 만큼 m_offert 값을 옮겨주모 _count는 그대로 m_cout에 저장한다.
+			//  8. 역직렬화 끝!
+			// ----------------------------------------------------------------
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
@@ -579,18 +769,23 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				return temp;
 			}
 		}
-		// 3) set_front (값 써넣기/읽기)
-		// ----------------------------------------------------------------
-		// 설명) Poke함수
-		//       1. 버퍼 데이터의 크기에는 아무런 영향없이 특정 위치의 데이터를 써넣을 때 사용횐다.
-		//       2. _offset 만큼 떠어진 위치에 데이터를 써넣는다.
-		//       3. 이 함수는 Append기능이 아니므로 써넣은 이후 버퍼의 Offset이나 Count값에 영향을 주지 않는다.ㄴ
-		//       4. 버퍼의 데이터가 존재하는 영역 내에서만 쓰기가 가능하다.
-		//           즉 m_buffer + m_offset 에서 m_bufer + m_offset + m_count 안에만 변경할 수 있다.
-		//       5. 써넣는 데이터는 임의의 자료형도 모두 가능하지만 자료형 안정성(Type Safe)는 제공하지 않는다.
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="_object"></param>
+		/// <param name="_offset"></param>
 		public unsafe void	SetFront<T>(in T _object, in int _offset = 0)
 		{
+			// ----------------------------------------------------------------
+			// 설명) Poke함수
+			//       1. 버퍼 데이터의 크기에는 아무런 영향없이 특정 위치의 데이터를 써넣을 때 사용횐다.
+			//       2. _offset 만큼 떠어진 위치에 데이터를 써넣는다.
+			//       3. 이 함수는 Append기능이 아니므로 써넣은 이후 버퍼의 Offset이나 Count값에 영향을 주지 않는다.ㄴ
+			//       4. 버퍼의 데이터가 존재하는 영역 내에서만 쓰기가 가능하다.
+			//           즉 m_buffer + m_offset 에서 m_bufer + m_offset + m_count 안에만 변경할 수 있다.
+			//       5. 써넣는 데이터는 임의의 자료형도 모두 가능하지만 자료형 안정성(Type Safe)는 제공하지 않는다.
+			// ----------------------------------------------------------------
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
@@ -609,17 +804,23 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 				BufferSerializer.Get<T>.instance.ProcessAppend(ref ptr_now, ptr_bound, _object);
 			}
 		}
-		// ----------------------------------------------------------------
-		// 설명) Peek함수
-		//       1. 버퍼 데이터의 크기에는 아무런 영향없이 특정 위치의 데이터를 읽어 올 때  사용횐다.
-		//       2. _offset 만큼 떠어진 위치에 데이터를 읽어 온다.
-		//       3. 이 함수는 Extract가 아니므로 Offset이나 Count값에 영향을 주지 않는다.
-		//       4. 버퍼의 데이터가 존재하는 영역 내에서만 쓰기가 가능하다.
-		//           즉 m_buffer + m_offset 에서 m_bufer + m_offset + m_count 안에만 변경할 수 있다.
-		//       5. 읽어내는 데이터는 임의의 자료형도 모두 가능하지만 자료형 안정성(Type Safe)는 제공하지 않는다.
-		// ----------------------------------------------------------------
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="_offset"></param>
+		/// <returns></returns>
 		public unsafe T?	GetFront<T>(in int _offset = 0)
 		{
+			// ----------------------------------------------------------------
+			// 설명) Peek함수
+			//       1. 버퍼 데이터의 크기에는 아무런 영향없이 특정 위치의 데이터를 읽어 올 때  사용횐다.
+			//       2. _offset 만큼 떠어진 위치에 데이터를 읽어 온다.
+			//       3. 이 함수는 Extract가 아니므로 Offset이나 Count값에 영향을 주지 않는다.
+			//       4. 버퍼의 데이터가 존재하는 영역 내에서만 쓰기가 가능하다.
+			//           즉 m_buffer + m_offset 에서 m_bufer + m_offset + m_count 안에만 변경할 수 있다.
+			//       5. 읽어내는 데이터는 임의의 자료형도 모두 가능하지만 자료형 안정성(Type Safe)는 제공하지 않는다.
+			// ----------------------------------------------------------------
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
@@ -643,16 +844,28 @@ public static		buffer operator + (in buffer _lhs, in Offset _offset)
 		}
 
 		// ----------------------------------------------------------------
-		// Static) 직렬화 크기 구하는 정적(static)함수
-		//  1. _object를 직렬화했을 때 메모리 크기를 구한다.
-		//  2. 정적함수이므로 객체 없이 클래스명으로 바로 실행이 가능하다.
-		//  3. 데이터의 크기가 실시간으로 계산되므로 성능에는 영향을 미친다.
+		// Static)
 		// ----------------------------------------------------------------
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="_object"></param>
+		/// <returns></returns>
 		public static int	GetSizeOf<T>(in T _object)
 		{
+			// ----------------------------------------------------------------
+			// Static) 직렬화 크기 구하는 정적(static)함수
+			//  1. _object를 직렬화했을 때 메모리 크기를 구한다.
+			//  2. 정적함수이므로 객체 없이 클래스명으로 바로 실행이 가능하다.
+			//  3. 데이터의 크기가 실시간으로 계산되므로 성능에는 영향을 미친다.
+			// ----------------------------------------------------------------
 			return BufferSerializer.Get<T>.instance.ProcessGetSizeOf(_object);
 		}
 
+		// ----------------------------------------------------------------
+		// member variable
+		// ----------------------------------------------------------------
 		// 1) Buffer
 		private byte[]?		m_buffer;
 
