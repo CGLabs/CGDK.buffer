@@ -3,6 +3,8 @@
    * Roslyn을 사용해 Source generator를 추가
      - Serializer를 struct & class 전용 Serializer를 Source generator를 사용해 생성<br>
      - struct & class의 성능 대폭 향상
+   * Documentation Comment 
+     - C#에서 제공하는 xml을 사용한 Documentation Comment에 맞춰 주요 클래스와 주요 함수의 주석화 처리를 했습니다.
 
 ## CGDK 3.03.(5) (2023.11.23)
    #### (C#)
