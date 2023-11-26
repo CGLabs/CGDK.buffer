@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-
+using Microsoft.CodeAnalysis;
 
 //----------------------------------------------------------------------------
 //
@@ -47,7 +47,7 @@ namespace CGDK
 		/// <summary>
 		/// 
 		/// </summary>
-		[System.AttributeUsage(System.AttributeTargets.Field)]
+		[System.AttributeUsage(System.AttributeTargets.Field | System.AttributeTargets.Property)]
 		public class Field : System.Attribute
 		{
 			private readonly bool _is_serializable;
@@ -5903,11 +5903,42 @@ namespace CGDK
 				// return) 
 				return result;
 			}
+			internal static void ProcessRegisterCustomSerializer<T>(IBase<T> _serializer)
+			{
+				// check)
+				if (_serializer == null)
+					return;
+
+				// declare) 
+				object? result = null;
+
+				// 2) get type
+				var type = typeof(T);
+
+				lock (dictionary_serializer)
+				{
+					// 3) 이미 존재하는 가?
+					var is_exist = dictionary_serializer.TryGetValue(type, out result);
+
+					// 4) 존재하지 않으면 추가 존재하면 교체
+					if (is_exist == false)
+						dictionary_serializer.Add(type, _serializer);
+					else
+						dictionary_serializer[type] = _serializer;
+				}
+			}
 		}
 
-		internal static class Get<T>
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		public static class Get<T>
 		{
-			static public readonly IBase<T> instance = Builder.ProcessGetSerializer<T>();
+			/// <summary>
+			/// 
+			/// </summary>
+			public static readonly IBase<T> instance = Builder.ProcessGetSerializer<T>();
 		}
 		internal static class Get_Dictionary<K,V> where K : notnull
 		{
@@ -5916,6 +5947,22 @@ namespace CGDK
 		internal static class Get_List<V>
 		{
 			static public readonly IBase<List<V>> instance = Builder.ProcessSerializer_List<V>();
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		public static class Custom
+		{
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <typeparam name="T"></typeparam>
+			/// <param name="_custom_builder"></param>
+			public static void RegisterSerializer<T>(IBase<T> _custom_builder)
+			{
+				Builder.ProcessRegisterCustomSerializer<T>(_custom_builder);
+			}
 		}
 	}
 }

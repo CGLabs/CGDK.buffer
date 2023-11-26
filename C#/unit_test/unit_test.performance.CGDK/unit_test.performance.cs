@@ -117,7 +117,8 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			{"eleven",	new List<string> {"zero", "zero", "zero", "zero"}}
 		};
 
-		struct TEST
+		[CGDK.Attribute.Serializable]
+		public struct TEST
 		{
 			public	sbyte	v0;
 			public	byte	v1;
@@ -173,7 +174,12 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			_Buffer.Append<string>(array_string[7]);
 		}
 
-	#if NET
+		[TestInitialize]
+		public void TestInitialize()
+		{
+			CGDK.BufferSerializer.Generator.Initialize();
+		}
+#if NET
 		string?[] function_extract_STRING(ref CGDK.buffer _Buffer)
 	#else
 		string[] function_extract_STRING(ref CGDK.buffer _Buffer)
@@ -390,12 +396,17 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			}
 		}
 
-		struct TEST_EX
+		[CGDK.Attribute.Serializable]
+		public struct TEST_EX
 		{
 			public int v1;
+
 			public string v2;
+
 			public List<int> v3;
+
 			public UInt64 v4;
+
 			public Dictionary<string, int> v5;
 		}
 		[TestMethod]
@@ -420,8 +431,60 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				bufferTemp.Append<TEST_EX>(foo);
 
 				// - 역직렬화
-				var value2 = bufferTemp.Extract<TEST>();
+				var value2 = bufferTemp.Extract<TEST_EX>();
 			}
 		}
+
+
+		[CGDK.Attribute.Serializable]
+		public class TEST_EX2
+		{
+			[CGDK.Attribute.Field]
+			public int v1;
+
+			[CGDK.Attribute.Field]
+			public string? v2;
+
+			private List<int>? v3;
+
+			[CGDK.Attribute.Field]
+			public UInt64 v4;
+
+			[CGDK.Attribute.Field]
+			public Dictionary<string, int>? v5;
+
+			[CGDK.Attribute.Field]
+			public int value_6 { get { return this.v6; } set { this.v6 = value; } }
+
+			private int v6;
+		}
+
+		[TestMethod]
+		public void CGDKb_benchmark_10_class_composite()
+		{
+			// - 버퍼 준비
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+
+			var foo = new TEST_EX2();
+			foo.v1 = 100;
+			foo.v2 = new string("test_string");
+			//foo.v3 = new List<int> { 1, 2, 3, 4, 5 };
+			foo.v4 = 10000;
+			foo.v5 = new Dictionary<string, int> { { "a", 1 }, { "b", 2 }, { "c", 3 } };
+			foo.value_6 = 10;
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 1) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// - 직렬화
+				bufferTemp.Append<TEST_EX2>(foo);
+
+				// - 역직렬화
+				var value2 = bufferTemp.Extract<TEST_EX2>();
+			}
+		}
+
 	}
 }

@@ -7,8 +7,9 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningLevel>9999</WarningLevel>
   </PropertyGroup>
@@ -25,6 +26,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\projects\CGDK.buffer.Generator\CGDK.buffer.Generator.csproj" 
+					  OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CGDK.buffer.Generator">
+      <HintPath>..\..\..\dll\CGDK.buffer.Generator.dll</HintPath>
+    </Reference>
     <Reference Include="CGDK.buffer.NET">
       <HintPath>..\..\..\dll\CGDK.buffer.NET.dll</HintPath>
     </Reference>
