@@ -20,7 +20,7 @@ C# 버전은 CGDK.buffer<br>
       * 문자열(char*, wchar_t*, std::string, std::wstring, std_string_view, ...)<br>
       * 배열(T[N], std::array<T,N>)<br>
       * 컨테이너(std::vector<T>, std::list<T>, std::set<T>,std::map<K,V>, ...)<br>
-      * 시간(chrono::time_stamp, chrono::duration, ...) <br>
+      * 시간(chrono::time_point, chrono::duration, ...) <br>
       * 포인터(std::shared_ptr<T>, std::unique_ptr<T>)<br>
       * buffer (CGDK::buffer_veiew, CGDK::buffer,CGDK::shared_buffer)<br>
       * struct<br>
