@@ -454,7 +454,11 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			public Dictionary<string, int>? v5;
 
 			[CGDK.Attribute.Field]
-			public int value_6 { get { return this.v6; } set { this.v6 = value; } }
+			public int value_6 
+			{
+				get { return this.v6; }
+				set { this.v6 = value; }
+			}
 
 			private int v6;
 		}
