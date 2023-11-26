@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.NET.core", "buffer.NET.core\CGDK.buffer.NET.core.csproj", "{2782B330-F947-46BE-9A2A-3D211819C5E8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.Generator", "CGDK.buffer.Generator\CGDK.buffer.Generator.csproj", "{1B74A3B6-BE1F-42AB-8225-386CB5A27764}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,14 @@ Global
 		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Release|x64.ActiveCfg = Release|x64
 		{2782B330-F947-46BE-9A2A-3D211819C5E8}.Release|x64.Build.0 = Release|x64
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Debug|x64.Build.0 = Debug|Any CPU
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Release|x64.ActiveCfg = Release|Any CPU
+		{1B74A3B6-BE1F-42AB-8225-386CB5A27764}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

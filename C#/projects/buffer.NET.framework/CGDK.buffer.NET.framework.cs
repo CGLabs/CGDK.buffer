@@ -16,7 +16,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
@@ -158,7 +157,7 @@ namespace CGDK
 		/// <param name="_buffer">메모리 버퍼</param>
 		/// <param name="_offset">오프셋</param>
 		/// <param name="_count">크기</param>
-		public buffer(in byte[]? _buffer, in int _offset = 0, in int _count = 0)
+		public buffer(in byte[] _buffer, in int _offset = 0, in int _count = 0)
 		{
 			this.m_buffer = _buffer;
 			this.m_offset = _offset;
@@ -284,7 +283,7 @@ namespace CGDK
 		/// <remarks>
 		/// 버퍼를 null로 리셋한다. 오프셋과 크기 모두 0으로 리셋한다.
 		/// </remarks>
-		public byte[]?		Clear()
+		public byte[]		Clear()
 		{
 			// 1) 임시로 보관
 			var temp = this.m_buffer;
@@ -344,7 +343,7 @@ namespace CGDK
 		/// <summary>
 		/// 설정된 메모리 배열(Array와 같은값)
 		/// </summary>
-		public readonly byte[]? Data 
+		public readonly byte[] Data 
 		{
 			get { return this.m_buffer;}
 		}
@@ -352,7 +351,7 @@ namespace CGDK
 		/// <summary>
 		/// 설정된 메모리 배열(Data와 같은 값)
 		/// </summary>
-		public byte[]?		Array 
+		public byte[]		Array 
 		{
 			readonly get { return this.m_buffer; }
 			set { this.m_buffer = value; } 
@@ -949,7 +948,7 @@ namespace CGDK
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
 		/// <see cref="GetSizeOf{T}(in T)"/>
-		public unsafe void	Append<K, V>(in Dictionary<K, V> _value) where K : notnull
+		public unsafe void	Append<K,V>(in Dictionary<K,V> _value) where K : notnull
 		{
 			// check) 
 			Debug.Assert(this.m_buffer != null);
@@ -966,7 +965,7 @@ namespace CGDK
 				var ptr_bound = ptr + this.m_buffer.Length;
 
 				// 2) append
-				BufferSerializer.Get_Dictionary<K, V>.instance.ProcessAppend(ref ptr_now, ptr_bound, _value);
+				BufferSerializer.Get_Dictionary<K,V>.instance.ProcessAppend(ref ptr_now, ptr_bound, _value);
 
 				// 3) update offset & count
 				this.m_count += (int)(ptr_now - ptr_pre);
@@ -1032,7 +1031,7 @@ namespace CGDK
 		//
 		// Extract (de-serialize)
 		//
-		//  1) T? Extract<T>()
+		//  1) T Extract<T>()
 		//
 		// ----------------------------------------------------------------
 
@@ -1053,7 +1052,7 @@ namespace CGDK
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
 		/// <see cref="GetSizeOf{T}(in T)"/>
-		public unsafe T?	Extract<T>()
+		public unsafe T	Extract<T>()
 		{
 			// ----------------------------------------------------------------
 			// 역직렬화
@@ -1108,7 +1107,7 @@ namespace CGDK
 		// SetFront/GetFront
 		//
 		//   1) void SetFront<T>(T,int)
-		//   2) T? GetFront<T>(int)
+		//   2) T GetFront<T>(int)
 		//
 		// ----------------------------------------------------------------
 
@@ -1162,7 +1161,7 @@ namespace CGDK
 		/// 버퍼의 offset이나 count값을 변경하지 않고 특정 위치에서 데이터를 읽어온다.<br/>
 		/// </remarks>
 		/// <see cref="SetFront{T}(in T, in int)"/>
-		public unsafe T?	GetFront<T>(in int _offset = 0)
+		public unsafe T	GetFront<T>(in int _offset = 0)
 		{
 			// 설명) Peek함수
 			//       1. 버퍼 데이터의 크기에는 아무런 영향없이 특정 위치의 데이터를 읽어 올 때  사용횐다.
@@ -1232,7 +1231,7 @@ namespace CGDK
 		// ----------------------------------------------------------------
 
 		// 1) Buffer
-		private byte[]?		m_buffer;
+		private byte[]		m_buffer;
 
 		// 2) Buffer중 시작 위치
 		private int			m_offset;
@@ -1255,20 +1254,20 @@ namespace CGDK
 			/// <param name="_ptr"></param>
 			/// <param name="_ptr_bound"></param>
 			/// <param name="_object"></param>
-			unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object);
+			unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object);
 			/// <summary>
 			/// 
 			/// </summary>
 			/// <param name="_ptr"></param>
 			/// <param name="_count"></param>
 			/// <returns></returns>
-			unsafe T? ProcessExtract(ref byte* _ptr, ref int _count);
+			unsafe T ProcessExtract(ref byte* _ptr, ref int _count);
 			/// <summary>
 			/// 
 			/// </summary>
 			/// <param name="_object"></param>
 			/// <returns></returns>
-			unsafe int ProcessGetSizeOf(T? _object);
+			unsafe int ProcessGetSizeOf(T _object);
 		}
 
 		internal class SerializerPrimitive<T> : IBase<T> where T : unmanaged
@@ -1276,7 +1275,7 @@ namespace CGDK
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				// 1) write
-				Unsafe.Write<T>(_ptr, _object);
+				*(T*)_ptr = _object;
 
 				// 2) update ptr
 				_ptr += sizeof(T);
@@ -1284,7 +1283,7 @@ namespace CGDK
 			public unsafe T ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) read
-				var p = Unsafe.Read<T>(_ptr);
+				var p = *(T*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(T);
@@ -1297,21 +1296,21 @@ namespace CGDK
 		}
 		internal class SerializerPrimitive_object<T> : IBase<object> where T : unmanaged
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
 
 				// 1) write
-				Unsafe.Write<T>(_ptr, (T)_object);
+				*(T*)_ptr = (T)_object;
 
 				// 2) update ptr
 				_ptr += sizeof(T);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) read
-				var p = Unsafe.Read<T>(_ptr);
+				var p = *(T*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(T);
@@ -1320,23 +1319,24 @@ namespace CGDK
 				// return) 
 				return p;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				return sizeof(T);
 			}
 		}
 		internal class SerializerDateTime : IBase<DateTime>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, DateTime _object) { Unsafe.AsRef<long>(_ptr) = _object.Ticks; _ptr += sizeof(long); }
-			public unsafe DateTime ProcessExtract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(Unsafe.AsRef<long>(p)); }
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, DateTime _object) { *(long*)_ptr = _object.Ticks; _ptr += sizeof(long); }
+			public unsafe DateTime ProcessExtract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(*(long*)p); }
 			public unsafe int ProcessGetSizeOf(DateTime _object) { return sizeof(long); }
 		}
 		internal class Serialize_DateTime_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object) { Debug.Assert(_object != null); Unsafe.AsRef<long>(_ptr) = ((DateTime)_object).Ticks; _ptr += sizeof(long); }
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(Unsafe.AsRef<long>(p)); }
-			public unsafe int ProcessGetSizeOf(object? _object) { return sizeof(long); }
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object) { Debug.Assert(_object != null); *(long*)_ptr= ((DateTime)_object).Ticks; _ptr += sizeof(long); }
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(*(long*)p); }
+			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(long); }
 		}
+	#if NET
 		internal class SerializerVector2 : IBase<Vector2>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Vector2 _object)
@@ -1364,7 +1364,7 @@ namespace CGDK
 		}
 		internal class SerializerVector2_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1391,7 +1391,7 @@ namespace CGDK
 				// return) 
 				return temp;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object) { return sizeof(float) * 2; }
+			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 2; }
 		}
 		internal class SerializerVector3 : IBase<Vector3>
 		{
@@ -1422,7 +1422,7 @@ namespace CGDK
 		}
 		internal class SerializerVector3_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1435,7 +1435,7 @@ namespace CGDK
 				*(float*)_ptr = temp.Y; _ptr += sizeof(float);
 				*(float*)_ptr = temp.Z; _ptr += sizeof(float);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) make 
 				var temp = new Vector3(
@@ -1451,7 +1451,7 @@ namespace CGDK
 				// return) 
 				return temp;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object) { return sizeof(float) * 3; }
+			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 3; }
 		}
 		internal class SerializerVector4 : IBase<Vector4>
 		{
@@ -1484,7 +1484,7 @@ namespace CGDK
 		}
 		internal class SerializerVector4_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1498,7 +1498,7 @@ namespace CGDK
 				*(float*)_ptr = temp.Z; _ptr += sizeof(float);
 				*(float*)_ptr = temp.W; _ptr += sizeof(float);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) make 
 				var temp = new Vector4(
@@ -1515,7 +1515,7 @@ namespace CGDK
 				// return) 
 				return temp;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object) { return sizeof(float) * 4; }
+			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 4; }
 		}
 		internal class SerializerPlane : IBase<Plane>
 		{
@@ -1547,7 +1547,7 @@ namespace CGDK
 		}
 		internal class SerializerPlane_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1561,7 +1561,7 @@ namespace CGDK
 				*(float*)_ptr = temp.Normal.Z; _ptr += sizeof(float);
 				*(float*)_ptr = temp.D; _ptr += sizeof(float);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				var temp = new Plane(
 						*(float*)(_ptr + 0),
@@ -1577,7 +1577,7 @@ namespace CGDK
 				// return) 
 				return temp;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object) { return sizeof(float) * 4; }
+			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 4; }
 		}
 		internal class SerializerQuaternion : IBase<Quaternion>
 		{
@@ -1610,7 +1610,7 @@ namespace CGDK
 		}
 		internal class SerializerQuaternion_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1624,7 +1624,7 @@ namespace CGDK
 				*(float*)_ptr = temp.Z; _ptr += sizeof(float);
 				*(float*)_ptr = temp.W; _ptr += sizeof(float);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) make 
 				var temp = new Quaternion(
@@ -1641,7 +1641,7 @@ namespace CGDK
 				// return) 
 				return temp;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object) { return sizeof(float) * 4; }
+			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 4; }
 		}
 		internal class SerializerMatrix3x2 : IBase<Matrix3x2>
 		{
@@ -1685,7 +1685,7 @@ namespace CGDK
 		}
 		internal class SerializerMatrix3x2_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1703,7 +1703,7 @@ namespace CGDK
 				*(float*)_ptr = temp.M31; _ptr += sizeof(float);
 				*(float*)_ptr = temp.M32; _ptr += sizeof(float);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) make 
 				var temp = new Matrix3x2(
@@ -1724,7 +1724,7 @@ namespace CGDK
 				// return) 
 				return temp;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				return sizeof(float) * 6;
 			}
@@ -1793,7 +1793,7 @@ namespace CGDK
 		}
 		internal class SerializerMatrix4x4_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1822,7 +1822,7 @@ namespace CGDK
 				*(float*)_ptr = temp.M43; _ptr += sizeof(float);
 				*(float*)_ptr = temp.M44; _ptr += sizeof(float);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) make 
 				var temp = new Matrix4x4(
@@ -1854,28 +1854,32 @@ namespace CGDK
 				// return) 
 				return temp;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				return sizeof(float) * 16;
 			}
 		}
-
+	#endif
 		internal class SerializerEnum<T> : IBase<T>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				Debug.Assert(_object != null);
 
 				// 1) write
-				Unsafe.Write<T>(_ptr, _object);
+			#pragma warning disable CS8500
+				*(T*)_ptr = _object;
+			#pragma warning restore CS8500
 
 				// 2) update ptr
 				_ptr += sizeof(int);
 			}
-			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe T ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) read
-				var p = Unsafe.Read<T>(_ptr);
+			#pragma warning disable CS8500
+				var p = *(T*)_ptr;
+			#pragma warning restore CS8500
 
 				// 2) update ptr & count
 				_ptr += sizeof(int);
@@ -1884,7 +1888,7 @@ namespace CGDK
 				// return) 
 				return p;
 			}
-			public unsafe int ProcessGetSizeOf(T? _object)
+			public unsafe int ProcessGetSizeOf(T _object)
 			{
 				Debug.Assert(_object != null);
 
@@ -1893,7 +1897,7 @@ namespace CGDK
 		}
 		internal class SerializerEnum_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_object != null);
@@ -1904,7 +1908,7 @@ namespace CGDK
 				// 2) add ptr
 				_ptr += sizeof(int);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// 1) store pointer
 				var p = _ptr;
@@ -1916,7 +1920,7 @@ namespace CGDK
 				// return) 
 				return *(int*)p;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				return sizeof(int);
 			}
@@ -1935,7 +1939,7 @@ namespace CGDK
 				if (buf == null)
 				{
 					// - 0을 쓰고 끝낸다.
-					Unsafe.AsRef<Int64>(_ptr) = 0;
+					*(Int64*)_ptr = 0;
 					_ptr += sizeof(Int64);
 					return;
 				}
@@ -1946,7 +1950,7 @@ namespace CGDK
 					Debug.Assert(_ptr + sizeof(Int64) + _object.Count<= _ptr_bound);
 
 					// 1) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-					Unsafe.AsRef<Int64>(_ptr) = _object.Count;
+					*(Int64*)_ptr = _object.Count;
 					_ptr += sizeof(Int64);
 
 					// check)
@@ -1974,7 +1978,7 @@ namespace CGDK
 			#endif
 
 				// 1) extract  string length
-				var size_temp = Unsafe.AsRef<Int64>(_ptr);
+				var size_temp = *(Int64*)_ptr;
 				var buf_size = (int)size_temp;
 
 				// 2) update ptr & count
@@ -2015,7 +2019,7 @@ namespace CGDK
 		}
 		internal class SerializerBuffer_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// Attention) buffer의 size는 int64이다.
 
@@ -2023,37 +2027,31 @@ namespace CGDK
 				Debug.Assert(_object == null);
 
 				// 1) casting to 
-				var temp = (buffer?)_object;
-
-				// check)
-				Debug.Assert(temp != null);
-
-				// 2) get buf
-				var temp_buf = temp.Value;
+				var temp_buf = (buffer)_object;
 
 				// check)
 				Debug.Assert(temp_buf.Count >= 0);
 
-				// 3) get buffer
+				// 2) get buffer
 				var buf = temp_buf.Array;
 
 				// check)
 				if (buf == null || temp_buf.Count <= 0)
 				{
 					// - 0을 쓰고 끝낸다.
-					Unsafe.AsRef<Int64>(_ptr) = 0;
+					*(Int64*)_ptr = 0;
 					_ptr += sizeof(Int64);
 					return;
 				}
 
-				// 4) write to buffer
+				// 3) write to buffer
 				fixed (byte* buf_source = buf)
 				{
 					// check)
 					Debug.Assert(_ptr + sizeof(Int64) + temp_buf.Count <= _ptr_bound);
 
 					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-					Unsafe.AsRef<Int64>(_ptr) = temp_buf.Count;
+					*(Int64*)_ptr = temp_buf.Count;
 					_ptr += sizeof(Int64);
 
 					// check)
@@ -2067,21 +2065,21 @@ namespace CGDK
 					_ptr += temp_buf.Count;
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// Attention) buffer의 size는 int64이다.
 
 				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
 				Debug.Assert(sizeof(Int64) <= _count);
 
-			#if _USE_BOUND_CHECK
+#if _USE_BOUND_CHECK
 				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
 				if(sizeof(int)>this.m_count) 
 					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-			#endif
+#endif
 
 				// 1) extract  string length
-				var size_temp = Unsafe.AsRef<Int64>(_ptr);
+				var size_temp = *(Int64*)_ptr;
 				var buf_size = (int)size_temp;
 
 				// 2) update ptr & count
@@ -2115,22 +2113,19 @@ namespace CGDK
 				// 6) [string]로 변환해 최종 리턴한다.
 				return new buffer(new_buf, 0, buf_size);
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// 1) casting to 
-				var temp_buf = (buffer?)_object;
-
-				// check)
-				Debug.Assert(temp_buf != null);
+				var temp_buf = (buffer)_object;
 
 				// return) 
-				return sizeof(Int64) + temp_buf.Value.Count;
+				return sizeof(Int64) + temp_buf.Count;
 			}
 		}
 
 		internal class SerializerString : IBase<string>
 		{
-			public static unsafe void XProcessAppend(ref byte* _ptr, byte* _ptr_bound, string? _object)
+			public static unsafe void XProcessAppend(ref byte* _ptr, byte* _ptr_bound, string _object)
 			{
 				// check) 데이터가 null이면 -1만 쓰고 끝냄.
 				if (_object == null)
@@ -2146,13 +2141,13 @@ namespace CGDK
 				Debug.Assert(_ptr + sizeof(Int32) + string_length + sizeof(char) <= _ptr_bound);
 
 				// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-				Unsafe.AsRef<Int32>(_ptr) = _object.Length + 1;
+				*(Int32*)_ptr = _object.Length + 1;
 
 				// 4) add size
 				_ptr += sizeof(Int32);
 
 				// 5) [문자열]을 복사해 넣는다.
-				fixed (char* str = (string?)_object)
+				fixed (char* str = (string)_object)
 				{
 
 					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length + sizeof(char)); // NULL 포함 복사
@@ -2161,18 +2156,18 @@ namespace CGDK
 				// 6) 써넣은 bytes만큼 더해준다. (NULL문자열의 길이까지 포함)
 				_ptr += string_length + sizeof(char);
 			}
-			public static unsafe string? XProcessExtract(ref byte* _ptr, ref int _count)
+			public static unsafe string XProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
 				Debug.Assert(sizeof(Int32) <= _count);
 
-			#if _USE_BOUND_CHECK
+#if _USE_BOUND_CHECK
 				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
 				if(sizeof(int)>this.m_count) 
 					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-			#endif
+#endif
 				// 1) extract  string length
-				var length_string = Unsafe.AsRef<Int32>(_ptr);
+				var length_string = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2206,7 +2201,7 @@ namespace CGDK
 				// 6) [string]로 변환해 최종 리턴한다.
 				return new string((char*)p, 0, length_string - 1);
 			}
-			public static unsafe int XProcessGetSizeOf(string? _object)
+			public static unsafe int XProcessGetSizeOf(string _object)
 			{
 				// check)
 				if (_object == null)
@@ -2216,38 +2211,38 @@ namespace CGDK
 				return sizeof(Int32) + (_object.Length + 1) * sizeof(char);
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, string? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, string _object)
 			{
 				XProcessAppend(ref _ptr, _ptr_bound, _object);
 			}
-			public unsafe string? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe string ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				return XProcessExtract(ref _ptr, ref _count);
 			}
-			public unsafe int ProcessGetSizeOf(string? _object)
+			public unsafe int ProcessGetSizeOf(string _object)
 			{
 				return XProcessGetSizeOf(_object);
 			}
 		}
 		internal class SerializerString_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
-				SerializerString.XProcessAppend(ref _ptr, _ptr_bound, (string?)_object);
+				SerializerString.XProcessAppend(ref _ptr, _ptr_bound, (string)_object);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				return SerializerString.XProcessExtract(ref _ptr, ref _count);
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
-				return SerializerString.XProcessGetSizeOf((string?)_object);
+				return SerializerString.XProcessGetSizeOf((string)_object);
 			}
 		}
 
 		internal class SerializerArray_typed<V> : IBase<V[]>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, V[]? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, V[] _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2266,7 +2261,7 @@ namespace CGDK
 				}
 
 				// 2) write count 
-				Unsafe.AsRef<Int32>(_ptr) = _object.Length;
+				*(Int32*)_ptr = _object.Length;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -2275,10 +2270,10 @@ namespace CGDK
 				var iter_item = _object.GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Current);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V)iter_item.Current);
 				}
 			}
-			public unsafe V[]? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe V[] ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2287,7 +2282,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2298,7 +2293,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+				var obj_array = (V[])Activator.CreateInstance(typeof(V[]), item_count);
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2307,7 +2302,7 @@ namespace CGDK
 				for (int i = 0; i < item_count; ++i)
 				{
 					// - get item
-					var item = (V?)serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item = (V)serializer_value.ProcessExtract(ref _ptr, ref _count);
 
 					// - add item
 					obj_array.SetValue(item, i);
@@ -2319,7 +2314,7 @@ namespace CGDK
 				// return) 
 				return obj_array;
 			}
-			public unsafe int ProcessGetSizeOf(V[]? _object)
+			public unsafe int ProcessGetSizeOf(V[] _object)
 			{
 				// check)
 				Debug.Assert(serializer_value != null);
@@ -2335,18 +2330,18 @@ namespace CGDK
 				var iter_item = _object.GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Current);
+					size += serializer_value.ProcessGetSizeOf((V)iter_item.Current);
 				}
 
 				// return) 
 				return size;
 			}
 
-			private static readonly IBase<V>? serializer_value = Builder.ProcessGetSerializer<V>();
+			private static readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
 		internal class SerializerArray_typed_primitive<V> : IBase<V[]> where V:unmanaged
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, V[]? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, V[] _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2362,7 +2357,7 @@ namespace CGDK
 				}
 
 				// 2) write count 
-				Unsafe.AsRef<Int32>(_ptr) = _object.Length;
+				*(Int32*)_ptr = _object.Length;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -2373,13 +2368,13 @@ namespace CGDK
 					System.Buffer.MemoryCopy(ptr_src, _ptr, _ptr_bound - _ptr,  sizeof(V) * _object.Length); // NULL 포함 복사
 				}
 			}
-			public unsafe V[]? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe V[] ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2390,7 +2385,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+				var obj_array = (V[])Activator.CreateInstance(typeof(V[]), item_count);
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2410,7 +2405,7 @@ namespace CGDK
 				// return) 
 				return obj_array;
 			}
-			public unsafe int ProcessGetSizeOf(V[]? _object)
+			public unsafe int ProcessGetSizeOf(V[] _object)
 			{
 				// check)
 				if (_object == null)
@@ -2422,7 +2417,7 @@ namespace CGDK
 		}
 		internal class SerializerArray_no_typed<T> : IBase<T>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2441,10 +2436,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<IList>(_object);
+				var obj_list = (IList)_object;
 
 				// 2) write count 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+				*(Int32*)_ptr = obj_list.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -2459,7 +2454,7 @@ namespace CGDK
 					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
-			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe T ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2468,7 +2463,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2479,13 +2474,13 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj = (T?)Activator.CreateInstance(typeof(T), item_count);
+				var obj = (T)Activator.CreateInstance(typeof(T), item_count);
 
 				// check)
 				Debug.Assert(obj != null);
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<IList>(obj);
+				var obj_list = (IList)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -2509,7 +2504,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public unsafe int ProcessGetSizeOf(T? _object)
+			public unsafe int ProcessGetSizeOf(T _object)
 			{
 				// check)
 				Debug.Assert(serializer_value != null);
@@ -2522,7 +2517,7 @@ namespace CGDK
 				int size = sizeof(Int32);
 
 				// 2) casting to IList
-				var obj_list = Unsafe.As<IList>(_object);
+				var obj_list = (IList)_object;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -2538,11 +2533,11 @@ namespace CGDK
 				return size;
 			}
 
-			private static readonly IBase<object>? serializer_value = (IBase<object>?)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
+			private static readonly IBase<object> serializer_value = (IBase<object>)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
 		}
 		internal class SerializerArray_object_typed<V> : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2558,10 +2553,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<V[]>(_object);
+				var obj_list = (V[])_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Length;
+				*(Int32*)_ptr = obj_list.Length;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -2573,10 +2568,10 @@ namespace CGDK
 				var iter_item = obj_list.GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Current);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V)iter_item.Current);
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2585,7 +2580,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2596,7 +2591,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+				var obj_array = (V[])Activator.CreateInstance(typeof(V[]), item_count);
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2617,7 +2612,7 @@ namespace CGDK
 				// return) 
 				return obj_array;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				Debug.Assert(serializer_value != null);
@@ -2630,7 +2625,7 @@ namespace CGDK
 				int size = sizeof(Int32);
 
 				// 2) cast to 'List<V>;
-				var obj_array = Unsafe.As<V[]>(_object);
+				var obj_array = (V[])_object;
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2639,18 +2634,18 @@ namespace CGDK
 				var iter_item = obj_array.GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Current);
+					size += serializer_value.ProcessGetSizeOf((V)iter_item.Current);
 				}
 
 				// return) 
 				return size;
 			}
 
-			private readonly IBase<V>? serializer_value = Builder.ProcessGetSerializer<V>();
+			private readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
 		internal class SerializerArray_object_typed_primitive<V> : IBase<object> where V : unmanaged
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2669,10 +2664,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_array= Unsafe.As<V[]>(_object);
+				var obj_array = (V[])_object;
 
 				// 2) write count 
-				Unsafe.AsRef<Int32>(_ptr) = obj_array.Length;
+				*(Int32*)_ptr = obj_array.Length;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -2683,13 +2678,13 @@ namespace CGDK
 					System.Buffer.MemoryCopy(ptr_src, _ptr, _ptr_bound - _ptr, sizeof(V) * obj_array.Length); // NULL 포함 복사
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2700,7 +2695,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+				var obj_array = (V[])Activator.CreateInstance(typeof(V[]), item_count);
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2720,14 +2715,14 @@ namespace CGDK
 				// return) 
 				return obj_array;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				if (_object == null)
 					return sizeof(Int32);
 
 				// 1) casting to list
-				var obj_array = Unsafe.As<V[]>(_object);
+				var obj_array = (V[])_object;
 
 				// return 
 				return sizeof(Int32) + obj_array.Length * sizeof(V);
@@ -2735,7 +2730,7 @@ namespace CGDK
 		}
 		internal class SerializerArray_object_no_typed : IBase<object>
 		{
-			public SerializerArray_object_no_typed(Type? _type_create, IBase<object>? _serializer_value)
+			public SerializerArray_object_no_typed(Type _type_create, IBase<object> _serializer_value)
 			{
 				this.type_create = _type_create;
 				this.serializer_value = _serializer_value;
@@ -2744,7 +2739,7 @@ namespace CGDK
 				Debug.Assert(this.serializer_value != null);
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2766,10 +2761,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<IList>(_object);
+				var obj_list = (IList)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+				*(Int32*)_ptr = obj_list.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -2784,7 +2779,7 @@ namespace CGDK
 					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -2796,7 +2791,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2810,7 +2805,7 @@ namespace CGDK
 				var obj = Activator.CreateInstance(type_create, item_count);
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<IList>(obj);
+				var obj_list = (IList)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -2834,7 +2829,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				Debug.Assert(serializer_value != null);
@@ -2847,7 +2842,7 @@ namespace CGDK
 				int size = sizeof(Int32);
 
 				// 2) 'items'
-				var iter_item = Unsafe.As<IList>(_object).GetEnumerator();
+				var iter_item = ((IList)_object).GetEnumerator();
 				while (iter_item.MoveNext())
 				{
 					size += serializer_value.ProcessGetSizeOf(iter_item.Current);
@@ -2857,13 +2852,13 @@ namespace CGDK
 				return size;
 			}
 
-			private readonly Type? type_create;
-			private readonly IBase<object>? serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<object> serializer_value;
 		}
 
-		internal class SerializerDictionary<K, V> : IBase<Dictionary<K, V>> where K : notnull
+		internal class SerializerDictionary<K,V> : IBase<Dictionary<K,V>> where K : notnull
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Dictionary<K, V>? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Dictionary<K,V> _object)
 			{
 				// check)
 				Debug.Assert(serializer_key != null);
@@ -2882,7 +2877,7 @@ namespace CGDK
 				}
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+				*(Int32*)_ptr = _object.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -2899,7 +2894,7 @@ namespace CGDK
 					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Value);
 				}
 			}
-			public unsafe Dictionary<K, V>? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe Dictionary<K,V> ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(serializer_key != null);
@@ -2908,7 +2903,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -2919,7 +2914,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj_create = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+				var obj_create = (Dictionary<K,V>)Activator.CreateInstance(typeof(Dictionary<K,V>));
 
 				// check)
 				Debug.Assert(obj_create != null);
@@ -2944,7 +2939,7 @@ namespace CGDK
 				// return) 
 				return obj_create;
 			}
-			public unsafe int ProcessGetSizeOf(Dictionary<K, V>? _object)
+			public unsafe int ProcessGetSizeOf(Dictionary<K,V> _object)
 			{
 				// chaeck)
 				Debug.Assert(serializer_key != null);
@@ -2975,12 +2970,12 @@ namespace CGDK
 
 			}
 
-			private static readonly IBase<K>? serializer_key = Builder.ProcessGetSerializer<K>();
-			private static readonly IBase<V>? serializer_value = Builder.ProcessGetSerializer<V>();
+			private static readonly IBase<K> serializer_key = Builder.ProcessGetSerializer<K>();
+			private static readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
-		internal class SerializerDictionary_primitive_primitive<K,V> : IBase<Dictionary<K, V>> where K : unmanaged where V : unmanaged
+		internal class SerializerDictionary_primitive_primitive<K,V> : IBase<Dictionary<K,V>> where K : unmanaged where V : unmanaged
 		{
-			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, Dictionary<K,V>? _object)
+			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, Dictionary<K,V> _object)
 			{
 				// check) is null?
 				if (_object == null)
@@ -2993,16 +2988,16 @@ namespace CGDK
 				}
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+				*(Int32*)_ptr = _object.Count;
 
 				// check)
 				Debug.Assert((_ptr + sizeof(Int32) + (sizeof(K) + sizeof(V)) * _object.Count) <= _ptr_bound);
 
-			#if _USE_BOUND_CHECK
+#if _USE_BOUND_CHECK
 				// check)
 				if((_ptr + sizeof(Int32) + (sizeof(K) + sizeof(V)) * _object.Count) > _ptr_bound)
 					throw new System.OverflowException("buffer overflow");
-			#endif
+#endif
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -3020,10 +3015,10 @@ namespace CGDK
 				}
 			}
 
-			public static unsafe Dictionary<K,V>? Xprocess_extract(ref byte* _ptr, ref int _count)
+			public static unsafe Dictionary<K,V> Xprocess_extract(ref byte* _ptr, ref int _count)
 			{
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3034,7 +3029,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj_create = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+				var obj_create = (Dictionary<K,V>)Activator.CreateInstance(typeof(Dictionary<K,V>));
 
 				// check)
 				Debug.Assert(obj_create != null);
@@ -3042,11 +3037,11 @@ namespace CGDK
 				// check)
 				Debug.Assert((sizeof(K) + sizeof(V)) * item_count <= _count);
 
-			#if _USE_BOUND_CHECK
+#if _USE_BOUND_CHECK
 				// check)
 				if(((sizeof(K) + sizeof(V)) * item_count > _count)
 					throw new System.OverflowException("buffer overflow");
-			#endif
+#endif
 				// 4) count
 				_count -= (sizeof(K) + sizeof(V)) * item_count;
 
@@ -3070,7 +3065,7 @@ namespace CGDK
 				// return) 
 				return obj_create;
 			}
-			public static unsafe int Xprocess_get_size_of(Dictionary<K, V>? _object)
+			public static unsafe int Xprocess_get_size_of(Dictionary<K,V> _object)
 			{
 				// check)
 				if (_object == null)
@@ -3080,22 +3075,22 @@ namespace CGDK
 				return sizeof(UInt32) + (sizeof(K) + sizeof(V)) * _object.Count;
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Dictionary<K, V>? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Dictionary<K,V> _object)
 			{
 				Xprocess_append(ref _ptr, _ptr_bound, _object);
 			}
-			public unsafe Dictionary<K,V>? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe Dictionary<K,V> ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				return Xprocess_extract(ref _ptr, ref _count);
 			}
-			public unsafe int ProcessGetSizeOf(Dictionary<K,V>? _object)
+			public unsafe int ProcessGetSizeOf(Dictionary<K,V> _object)
 			{
 				return Xprocess_get_size_of(_object);
 			}
 		}
 		internal class SerializerDictionary<T, K, V> : IBase<T> where K : notnull
 		{
-			public SerializerDictionary(IBase<K>? _serializer_key, IBase<V> _serializer_value) 
+			public SerializerDictionary(IBase<K> _serializer_key, IBase<V> _serializer_value) 
 			{
 				this.serializer_key = _serializer_key;
 				this.serializer_value = _serializer_value;
@@ -3104,7 +3099,7 @@ namespace CGDK
 				Debug.Assert(this.serializer_key != null);
 				Debug.Assert(this.serializer_value != null);
 			}
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				// check)
 				Debug.Assert(serializer_key != null);
@@ -3126,7 +3121,7 @@ namespace CGDK
 				var dictionary_object = (IDictionary)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = dictionary_object.Count;
+				*(Int32*)_ptr = dictionary_object.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -3140,10 +3135,10 @@ namespace CGDK
 				{
 					// - write key & value
 					serializer_key.ProcessAppend(ref _ptr, _ptr_bound, (K)iter_item.Key);
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Value);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V)iter_item.Value);
 				}
 			}
-			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe T ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(serializer_key != null);
@@ -3152,7 +3147,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3163,7 +3158,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj_create = (T?)Activator.CreateInstance(typeof(T));
+				var obj_create = (T)Activator.CreateInstance(typeof(T));
 
 				// check)
 				Debug.Assert(obj_create != null);
@@ -3191,7 +3186,7 @@ namespace CGDK
 				// return) 
 				return obj_create;
 			}
-			public unsafe int ProcessGetSizeOf(T? _object)
+			public unsafe int ProcessGetSizeOf(T _object)
 			{
 				// chaeck)
 				Debug.Assert(serializer_key != null);
@@ -3217,19 +3212,19 @@ namespace CGDK
 				{
 					// - add size of 'key' & 'value'
 					size += serializer_key.ProcessGetSizeOf((K)iter_item.Key);
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Value);
+					size += serializer_value.ProcessGetSizeOf((V)iter_item.Value);
 				}
 
 				// return) 
 				return size;
 			}
 
-			private readonly IBase<K>? serializer_key;
-			private readonly IBase<V>? serializer_value;
+			private readonly IBase<K> serializer_key;
+			private readonly IBase<V> serializer_value;
 		}
-		internal class SerializerDictionary_object_typed<K, V> : IBase<object> where K : notnull
+		internal class SerializerDictionary_object_typed<K,V> : IBase<object> where K : notnull
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3254,10 +3249,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_dictionary = Unsafe.As<Dictionary<K, V>>(_object);
+				var obj_dictionary = (Dictionary<K,V>)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
+				*(Int32*)_ptr = obj_dictionary.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -3273,7 +3268,7 @@ namespace CGDK
 					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Value);
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3285,7 +3280,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3296,13 +3291,13 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+				var obj = (Dictionary<K,V>)Activator.CreateInstance(typeof(Dictionary<K,V>));
 
 				// check)
 				Debug.Assert(obj != null);
 
 				// 4) get Dictionary
-				var obj_dictionary = Unsafe.As<Dictionary<K, V>>(obj);
+				var obj_dictionary = (Dictionary<K, V>)obj;
 
 				// check)
 				Debug.Assert(obj_dictionary != null);
@@ -3327,7 +3322,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				Debug.Assert(serializer_key != null);
@@ -3343,7 +3338,7 @@ namespace CGDK
 					return size;
 
 				// 3) get Dictionary
-				var iter_item = Unsafe.As<Dictionary<K, V>>(_object).GetEnumerator();
+				var iter_item = ((Dictionary<K,V>)_object).GetEnumerator();
 
 				// 4) add size of items
 				while (iter_item.MoveNext())
@@ -3356,27 +3351,27 @@ namespace CGDK
 				return size;
 			}
 
-			private readonly IBase<K>? serializer_key = Builder.ProcessGetSerializer<K>();
-			private readonly IBase<V>? serializer_value = Builder.ProcessGetSerializer<V>();
+			private readonly IBase<K> serializer_key = Builder.ProcessGetSerializer<K>();
+			private readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
-		internal class SerializerDictionary_object_primitive_primitive<K, V> : IBase<object> where K : unmanaged where V : unmanaged
+		internal class SerializerDictionary_object_primitive_primitive<K,V> : IBase<object> where K : unmanaged where V : unmanaged
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
-				SerializerDictionary_primitive_primitive<K, V>.Xprocess_append(ref _ptr, _ptr_bound, (Dictionary<K, V>?)_object);
+				SerializerDictionary_primitive_primitive<K,V>.Xprocess_append(ref _ptr, _ptr_bound, (Dictionary<K,V>)_object);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
-				return SerializerDictionary_primitive_primitive<K, V>.Xprocess_extract(ref _ptr, ref _count);
+				return SerializerDictionary_primitive_primitive<K,V>.Xprocess_extract(ref _ptr, ref _count);
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
-				return SerializerDictionary_primitive_primitive<K, V>.Xprocess_get_size_of((Dictionary<K, V>?)_object);
+				return SerializerDictionary_primitive_primitive<K,V>.Xprocess_get_size_of((Dictionary<K,V>)_object);
 			}
 		}
-		internal class SerializerDictionary_object_no_typed<K, V> : IBase<object>
+		internal class SerializerDictionary_object_no_typed<K,V> : IBase<object>
 		{
-			public SerializerDictionary_object_no_typed(Type? _type_create, IBase<K>? _serializer_key, IBase<V>? _serializer_value)
+			public SerializerDictionary_object_no_typed(Type _type_create, IBase<K> _serializer_key, IBase<V> _serializer_value)
 			{
 				this.type_create = _type_create;
 				this.serializer_key = _serializer_key;
@@ -3387,7 +3382,7 @@ namespace CGDK
 				Debug.Assert(this.serializer_value != null);
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3412,10 +3407,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_dictionary = Unsafe.As<IDictionary>(_object);
+				var obj_dictionary = (IDictionary)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
+				*(Int32*)_ptr = obj_dictionary.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -3428,10 +3423,10 @@ namespace CGDK
 				while (iter_item.MoveNext())
 				{
 					serializer_key.ProcessAppend(ref _ptr, _ptr_bound, (K)iter_item.Key);
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Value);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V)iter_item.Value);
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3446,7 +3441,7 @@ namespace CGDK
 				Debug.Assert(type_create != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3459,11 +3454,8 @@ namespace CGDK
 				// 3) create list
 				var obj = Activator.CreateInstance(type_create);
 
-				// check)
-				Debug.Assert(obj != null);
-
 				// 4) get Dictionary
-				var obj_dictionary = Unsafe.As<IDictionary>(obj);
+				var obj_dictionary = (IDictionary)obj;
 
 				// check)
 				Debug.Assert(obj_dictionary != null);
@@ -3488,7 +3480,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				Debug.Assert(serializer_key != null);
@@ -3504,26 +3496,26 @@ namespace CGDK
 					return size;
 
 				// 3) get Dictionary
-				var iter_item = Unsafe.As<IDictionary>(_object).GetEnumerator();
+				var iter_item = ((IDictionary)_object).GetEnumerator();
 
 				// 4) add size of items
 				while (iter_item.MoveNext())
 				{
 					size += serializer_key.ProcessGetSizeOf((K)iter_item.Key);
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Value);
+					size += serializer_value.ProcessGetSizeOf((V)iter_item.Value);
 				}
 
 				// return) 
 				return size;
 			}
 
-			private readonly Type? type_create;
-			private readonly IBase<K>? serializer_key;
-			private readonly IBase<V>? serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<K> serializer_key;
+			private readonly IBase<V> serializer_value;
 		}
 		internal class SerializerDictionary_object : IBase<object>
 		{
-			public SerializerDictionary_object(Type? _type_create, IBase<object>? _serializer_key, IBase<object>? _serializer_value)
+			public SerializerDictionary_object(Type _type_create, IBase<object> _serializer_key, IBase<object> _serializer_value)
 			{
 				this.type_create = _type_create;
 				this.serializer_key = _serializer_key;
@@ -3533,7 +3525,7 @@ namespace CGDK
 				Debug.Assert(this.serializer_key != null);
 				Debug.Assert(this.serializer_value != null);
 			}
-			public static unsafe void XProcessAppend<X, Y>(ref byte* _ptr, byte* _ptr_bound, object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			public static unsafe void XProcessAppend<X, Y>(ref byte* _ptr, byte* _ptr_bound, object _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
 			{
 				// check) is null?
 				if (_object == null)
@@ -3546,10 +3538,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_dictionary = Unsafe.As<IDictionary>(_object);
+				var obj_dictionary = (IDictionary)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
+				*(Int32*)_ptr = obj_dictionary.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -3562,13 +3554,13 @@ namespace CGDK
 				while (iter_item.MoveNext())
 				{
 					_serializer_key.ProcessAppend(ref _ptr, _ptr_bound, (X)iter_item.Key);
-					_serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (Y?)iter_item.Value);
+					_serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (Y)iter_item.Value);
 				}
 			}
-			public static unsafe object? XProcessExtract<X, Y>(ref byte* _ptr, ref int _count, Type _Type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			public static unsafe object XProcessExtract<X, Y>(ref byte* _ptr, ref int _count, Type _Type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value)
 			{
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3585,7 +3577,7 @@ namespace CGDK
 				Debug.Assert(obj != null);
 
 				// 4) casting to IList
-				var obj_dictionary = Unsafe.As<IDictionary>(obj);
+				var obj_dictionary = (IDictionary)obj;
 
 				// check)
 				Debug.Assert(obj_dictionary != null);
@@ -3610,7 +3602,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public static unsafe int XProcessGetSizeOf<X, Y>(object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			public static unsafe int XProcessGetSizeOf<X, Y>(object _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
 			{
 				// 1) get header size
 				int size = sizeof(Int32);
@@ -3620,20 +3612,20 @@ namespace CGDK
 					return size;
 
 				// 3) get Dictionary
-				var iter_item = Unsafe.As<IDictionary>(_object).GetEnumerator();
+				var iter_item = ((IDictionary)_object).GetEnumerator();
 
 				// 4) add size of items
 				while (iter_item.MoveNext())
 				{
 					size += _serializer_key.ProcessGetSizeOf((X)iter_item.Key);
-					size += _serializer_value.ProcessGetSizeOf((Y?)iter_item.Value);
+					size += _serializer_value.ProcessGetSizeOf((Y)iter_item.Value);
 				}
 
 				// return) 
 				return size;
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3650,7 +3642,7 @@ namespace CGDK
 				// 1) press append
 				XProcessAppend(ref _ptr, _ptr_bound, _object, serializer_key, serializer_value);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3667,7 +3659,7 @@ namespace CGDK
 				// 1) process extract
 				return XProcessExtract(ref _ptr, ref _count, type_create, serializer_key, serializer_value);
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				Debug.Assert(serializer_key != null);
@@ -3679,14 +3671,14 @@ namespace CGDK
 				return XProcessGetSizeOf(_object, serializer_key, serializer_value);
 			}
 
-			private readonly Type? type_create;
-			private readonly IBase<object>? serializer_key;
-			private readonly IBase<object>? serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<object> serializer_key;
+			private readonly IBase<object> serializer_value;
 		}
 
 		internal class SerializerList_typed<V> : IBase<List<V>>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<V>? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<V> _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3708,10 +3700,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<List<V>>(_object);
+				var obj_list = (List<V>)_object;
 
 				// 2) write count 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+				*(Int32*)_ptr = obj_list.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -3726,7 +3718,7 @@ namespace CGDK
 					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
-			public unsafe List<V>? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe List<V> ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3735,7 +3727,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3749,7 +3741,7 @@ namespace CGDK
 				var obj = Activator.CreateInstance(typeof(List<V>));
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<List<V>>(obj);
+				var obj_list = (List<V>)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -3773,7 +3765,7 @@ namespace CGDK
 				// return) 
 				return obj_list;
 			}
-			public unsafe int ProcessGetSizeOf(List<V>? _object)
+			public unsafe int ProcessGetSizeOf(List<V> _object)
 			{
 				// check)
 				Debug.Assert(serializer_value != null);
@@ -3796,11 +3788,11 @@ namespace CGDK
 				return size;
 			}
 
-			private static readonly IBase<V>? serializer_value = Builder.ProcessGetSerializer<V>();
+			private static readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
 		internal class SerializerList_typed_primitive<V> : IBase<List<V>> where V: unmanaged
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<V>? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<V> _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3819,7 +3811,7 @@ namespace CGDK
 				}
 
 				// 2) write count 
-				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+				*(Int32*)_ptr = _object.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -3835,13 +3827,13 @@ namespace CGDK
 					_ptr += sizeof(V);
 				}
 			}
-			public unsafe List<V>? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe List<V> ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3855,7 +3847,7 @@ namespace CGDK
 				var obj = Activator.CreateInstance(typeof(List<V>));
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<List<V>>(obj);
+				var obj_list = (List<V>)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -3882,7 +3874,7 @@ namespace CGDK
 				// return) 
 				return obj_list;
 			}
-			public unsafe int ProcessGetSizeOf(List<V>? _object)
+			public unsafe int ProcessGetSizeOf(List<V> _object)
 			{
 				// check)
 				if (_object == null)
@@ -3894,7 +3886,7 @@ namespace CGDK
 		}
 		internal class SerializerList_string : IBase<List<string>>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<string>? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<string> _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3913,7 +3905,7 @@ namespace CGDK
 				}
 
 				// 1) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = _object.Count;
+				*(Int32*)_ptr = _object.Count;
 
 				// 2) update ptr
 				_ptr += sizeof(Int32);
@@ -3925,13 +3917,13 @@ namespace CGDK
 					SerializerString.XProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
-			public unsafe List<string>? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe List<string> ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -3945,7 +3937,7 @@ namespace CGDK
 				var obj = Activator.CreateInstance(typeof(List<string>));
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<List<string>>(obj);
+				var obj_list = (List<string>)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -3969,7 +3961,7 @@ namespace CGDK
 				// return) 
 				return obj_list;
 			}
-			public unsafe int ProcessGetSizeOf(List<string>? _object)
+			public unsafe int ProcessGetSizeOf(List<string> _object)
 			{
 				// check)
 				if (_object == null)
@@ -3990,7 +3982,7 @@ namespace CGDK
 		}
 		internal class SerializerList_no_typed<T> : IBase<T>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4012,10 +4004,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<IList>(_object);
+				var obj_list = (IList)_object;
 
 				// 2) write count 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+				*(Int32*)_ptr = obj_list.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -4030,7 +4022,7 @@ namespace CGDK
 					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
-			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe T ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4039,7 +4031,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -4050,13 +4042,13 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj = (T?)Activator.CreateInstance(typeof(T));
+				var obj = (T)Activator.CreateInstance(typeof(T));
 
 				// check)
 				Debug.Assert(obj != null);
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<IList>(obj);
+				var obj_list = (IList)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -4080,7 +4072,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public unsafe int ProcessGetSizeOf(T? _object)
+			public unsafe int ProcessGetSizeOf(T _object)
 			{
 				// check)
 				Debug.Assert(serializer_value != null);
@@ -4093,7 +4085,7 @@ namespace CGDK
 				int size = sizeof(Int32);
 
 				// 2) casting to IList
-				var obj_list = Unsafe.As<IList>(_object);
+				var obj_list = (IList)_object;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -4109,11 +4101,11 @@ namespace CGDK
 				return size;
 			}
 
-			private static readonly IBase<object>? serializer_value = (IBase<object>?)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
+			private static readonly IBase<object> serializer_value = (IBase<object>)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
 		}
 		internal class SerializerList_object_typed_primitive<V> : IBase<object> where V : unmanaged
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4129,10 +4121,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<List<V>>(_object);
+				var obj_list = (List<V>)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+				*(Int32*)_ptr = obj_list.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -4151,13 +4143,13 @@ namespace CGDK
 					_ptr += sizeof(V);
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -4171,7 +4163,7 @@ namespace CGDK
 				var obj = Activator.CreateInstance(typeof(List<V>));
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<List<V>>(obj);
+				var obj_list = (List<V>)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -4198,14 +4190,14 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				if (_object == null)
 					return sizeof(Int32);
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<List<V>>(_object);
+				var obj_list = (List<V>)_object;
 
 				// return) 
 				return sizeof(Int32) + obj_list.Count * sizeof(V);
@@ -4213,7 +4205,7 @@ namespace CGDK
 		}
 		internal class SerializerList_obejct_string : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4232,10 +4224,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<List<string>>(_object);
+				var obj_list = (List<string>)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+				*(Int32*)_ptr = obj_list.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -4247,13 +4239,13 @@ namespace CGDK
 					SerializerString.XProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -4267,7 +4259,7 @@ namespace CGDK
 				var obj = Activator.CreateInstance(typeof(List<string>));
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<List<string?>>(obj);
+				var obj_list = (List<string>)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -4291,7 +4283,7 @@ namespace CGDK
 				// return) 
 				return obj_list;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				if (_object == null)
@@ -4301,7 +4293,7 @@ namespace CGDK
 				int size = sizeof(Int32);
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<List<string>>(_object);
+				var obj_list = (List<string>)_object;
 
 				// 2) add size of 'items'
 				var iter_item = obj_list.GetEnumerator();
@@ -4316,13 +4308,13 @@ namespace CGDK
 
 		internal class SerializerList_object_no_typed : IBase<object>
 		{
-			public SerializerList_object_no_typed(Type? _type_create, IBase<object>? _serializer_value)
+			public SerializerList_object_no_typed(Type _type_create, IBase<object> _serializer_value)
 			{
 				this.type_create = _type_create;
 				this.serializer_value = _serializer_value;
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4344,10 +4336,10 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_list = Unsafe.As<IList>(_object);
+				var obj_list = (IList)_object;
 
 				// 2) write -1 
-				Unsafe.AsRef<Int32>(_ptr) = obj_list.Count;
+				*(Int32*)_ptr = obj_list.Count;
 
 				// 3) update ptr
 				_ptr += sizeof(Int32);
@@ -4362,7 +4354,7 @@ namespace CGDK
 					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4374,7 +4366,7 @@ namespace CGDK
 				Debug.Assert(serializer_value != null);
 
 				// 1) get count of list
-				Int32 item_count = Unsafe.AsRef<Int32>(_ptr);
+				Int32 item_count = *(Int32*)_ptr;
 
 				// 2) update ptr & count
 				_ptr += sizeof(Int32);
@@ -4388,7 +4380,7 @@ namespace CGDK
 				var obj = Activator.CreateInstance(type_create);
 
 				// 4) casting to IList
-				var obj_list = Unsafe.As<IList>(obj);
+				var obj_list = (IList)obj;
 
 				// check)
 				Debug.Assert(obj_list != null);
@@ -4412,7 +4404,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				Debug.Assert(serializer_value != null);
@@ -4425,7 +4417,7 @@ namespace CGDK
 				int size = sizeof(Int32);
 
 				// 2) 'items'
-				var iter_item = Unsafe.As<IList>(_object).GetEnumerator();
+				var iter_item = ((IList)_object).GetEnumerator();
 				while (iter_item.MoveNext())
 				{
 					size += serializer_value.ProcessGetSizeOf(iter_item.Current);
@@ -4435,8 +4427,8 @@ namespace CGDK
 				return size;
 			}
 
-			private readonly Type? type_create;
-			private readonly IBase<object>? serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<object> serializer_value;
 		}
 
 		internal readonly struct MemberSerializationInfo
@@ -4459,7 +4451,7 @@ namespace CGDK
 				this.list_member_serialization_info = _list_member_serialization_info;
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				// check)
 				Debug.Assert(list_member_serialization_info != null);
@@ -4467,15 +4459,15 @@ namespace CGDK
 				// 1) append - members
 				SerializerClass_object.Xprocess_append(ref _ptr, _ptr_bound, _object, list_member_serialization_info);
 			}
-			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe T ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(list_member_serialization_info != null);
 
 				// 1) extract - members
-				return (T?)SerializerClass_object.XProcessExtract(ref _ptr, ref _count, typeof(T), list_member_serialization_info);
+				return (T)SerializerClass_object.XProcessExtract(ref _ptr, ref _count, typeof(T), list_member_serialization_info);
 			}
-			public unsafe int ProcessGetSizeOf(T? _object)
+			public unsafe int ProcessGetSizeOf(T _object)
 			{
 				// check)
 				Debug.Assert(list_member_serialization_info != null);
@@ -4488,13 +4480,13 @@ namespace CGDK
 		}
 		internal class SerializerClass_object : IBase<object>
 		{
-			public SerializerClass_object(Type? _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
+			public SerializerClass_object(Type _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				this.type_create = _type_create;
 				this.list_member_serialization_info = _list_member_serialization_info;
 			}
 
-			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
+			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// check) is null?
 				if (_object == null)
@@ -4508,7 +4500,7 @@ namespace CGDK
 				while (iter_member.MoveNext())
 					iter_member.Current.serializer.ProcessAppend(ref _ptr, _ptr_bound, iter_member.Current.field_info.GetValue(_object));
 			}
-			public static unsafe object? XProcessExtract(ref byte* _ptr, ref int _count, Type _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
+			public static unsafe object XProcessExtract(ref byte* _ptr, ref int _count, Type _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// 1) 객체를 생성한다.
 				var temp_object = Activator.CreateInstance(_type_create);
@@ -4524,7 +4516,7 @@ namespace CGDK
 				// return) 
 				return temp_object;
 			}
-			public static unsafe int XProcessGetSizeOf(object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
+			public static unsafe int XProcessGetSizeOf(object _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// check)
 				if (_object == null)
@@ -4542,12 +4534,12 @@ namespace CGDK
 				return size;
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// 1) process append
 				Xprocess_append(ref _ptr, _ptr_bound, _object, list_member_serialization_info);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4561,13 +4553,13 @@ namespace CGDK
 				// 1) process extract
 				return XProcessExtract(ref _ptr, ref _count, type_create, list_member_serialization_info);
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// 1) process get size of
 				return XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private readonly Type? type_create;
+			private readonly Type type_create;
 			private readonly List<MemberSerializationInfo> list_member_serialization_info;
 		}
 
@@ -4578,7 +4570,7 @@ namespace CGDK
 				this.list_member_serialization_info = _list_member_serialization_info;
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
 				// check)
 				Debug.Assert(list_member_serialization_info != null);
@@ -4586,15 +4578,15 @@ namespace CGDK
 				// 1) process append
 				SerializerStruct_object.Xprocess_append(ref _ptr, _ptr_bound, _object, list_member_serialization_info);
 			}
-			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe T ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(list_member_serialization_info != null);
 
 				// 1) process extract
-				return (T?)SerializerStruct_object.XProcessExtract(ref _ptr, ref _count, typeof(T), list_member_serialization_info);
+				return (T)SerializerStruct_object.XProcessExtract(ref _ptr, ref _count, typeof(T), list_member_serialization_info);
 			}
-			public unsafe int ProcessGetSizeOf(T? _object)
+			public unsafe int ProcessGetSizeOf(T _object)
 			{
 				// check)
 				Debug.Assert(list_member_serialization_info != null);
@@ -4607,13 +4599,13 @@ namespace CGDK
 		}
 		internal class SerializerStruct_object : IBase<object>
 		{
-			public SerializerStruct_object(Type? _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
+			public SerializerStruct_object(Type _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				this.type_create = _type_create;
 				this.list_member_serialization_info = _list_member_serialization_info ;
 			}
 
-			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
+			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// check) is null?
 				if (_object == null)
@@ -4629,7 +4621,7 @@ namespace CGDK
 					iter_member.Current.serializer.ProcessAppend(ref _ptr, _ptr_bound, iter_member.Current.field_info.GetValue(_object));
 				}
 			}
-			public static unsafe object XProcessExtract(ref byte* _ptr, ref int _count, Type _Type_create, List<MemberSerializationInfo>? _list_member_serialization_info)
+			public static unsafe object XProcessExtract(ref byte* _ptr, ref int _count, Type _Type_create, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// 1) 객체를 생성한다.
 				var temp_object = Activator.CreateInstance(_Type_create);
@@ -4650,7 +4642,7 @@ namespace CGDK
 				// return) 
 				return temp_object;
 			}
-			public static unsafe int XProcessGetSizeOf(object? _object, List<MemberSerializationInfo>? _list_member_serialization_info)
+			public static unsafe int XProcessGetSizeOf(object _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				if (_object == null)
 					return sizeof(Int32);
@@ -4672,7 +4664,7 @@ namespace CGDK
 				return size;
 			}
 
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4686,7 +4678,7 @@ namespace CGDK
 				// 1) process append
 				Xprocess_append(ref _ptr, _ptr_bound, _object, list_member_serialization_info);
 			}
-			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4700,7 +4692,7 @@ namespace CGDK
 				// 1) process extract
 				return XProcessExtract(ref _ptr, ref _count, type_create, list_member_serialization_info);
 			}
-			public unsafe int ProcessGetSizeOf(object? _object)
+			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// check)
 				Debug.Assert(list_member_serialization_info != null);
@@ -4709,7 +4701,7 @@ namespace CGDK
 				return XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private readonly Type? type_create;
+			private readonly Type type_create;
 			private readonly List<MemberSerializationInfo> list_member_serialization_info = new();
 		}
 
@@ -4717,18 +4709,18 @@ namespace CGDK
 		{
 			public static unsafe void ProcessAppend_Empty(ref byte* ptr)
 			{
-				Unsafe.AsRef<int>(ptr) = -1;
+				*(int*)ptr = -1;
 				ptr += sizeof(int);
 			}
 
 			private static bool IsSerializableType(Type _type)
 			{
 				// check) 
-			#if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
 				object obj = System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(_type);
-			#else
+#else
 				object obj = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(_type);
-			#endif
+#endif
 				// check) 
 				if (obj == null)
 					return false;
@@ -4749,7 +4741,7 @@ namespace CGDK
 				Type type = typeof(T);
 
 				// declare) 
-				object? result = null;
+				object result = null;
 
 				// 1) build by type
 				if (type.IsPrimitive)
@@ -4786,7 +4778,7 @@ namespace CGDK
 			private static object BuildSerialize_object(Type _type)
 			{
 				// declare) 
-				object? result = null;
+				object result = null;
 
 				// 1) build by type
 				if (_type.IsPrimitive)
@@ -4821,7 +4813,7 @@ namespace CGDK
 				return result;
 			}
 
-			private static object? BuildSerailizer_Primitive(Type _type)
+			private static object BuildSerailizer_Primitive(Type _type)
 			{
 				if (_type == typeof(long))
 					return new SerializerPrimitive<long>();
@@ -4848,7 +4840,7 @@ namespace CGDK
 				else
 					return null;
 			}
-			private static object? BuildSerailizer_Primitive_object(Type _type)
+			private static object BuildSerailizer_Primitive_object(Type _type)
 			{
 				if (_type == typeof(long))
 					return new SerializerPrimitive_object<long>();
@@ -4876,12 +4868,13 @@ namespace CGDK
 					return null;
 			}
 
-			private static object? BuildSerailizer_ValueType<T>(Type _type)
+			private static object BuildSerailizer_ValueType<T>(Type _type)
 			{
 				if (typeof(DateTime).Equals(_type))
 					return new SerializerDateTime();
 				else if (typeof(CGDK.buffer).Equals(_type))
 					return new SerializerBuffer();
+			#if NET
 				else if (typeof(Vector2).Equals(_type))
 					return new SerializerVector2();
 				else if (typeof(Vector3).Equals(_type))
@@ -4896,15 +4889,17 @@ namespace CGDK
 					return new SerializerMatrix3x2();
 				else if (typeof(Matrix4x4).Equals(_type))
 					return new SerializerMatrix4x4();
+			#endif
 				else
 					return BuildSerializer_struct<T>();
 			}
-			private static object? BuildSerailizer_ValueType_object(Type _type)
+			private static object BuildSerailizer_ValueType_object(Type _type)
 			{
 				if (typeof(DateTime).Equals(_type))
 					return new Serialize_DateTime_object();
 				else if (typeof(CGDK.buffer).Equals(_type))
 					return new SerializerBuffer_object();
+			#if NET
 				else if (typeof(Vector2).Equals(_type))
 					return new SerializerVector2_object();
 				else if (typeof(Vector3).Equals(_type))
@@ -4919,6 +4914,7 @@ namespace CGDK
 					return new SerializerMatrix3x2_object();
 				else if (typeof(Matrix4x4).Equals(_type))
 					return new SerializerMatrix4x4_object();
+			#endif
 				else
 					return BuildSerializer_struct_object(_type);
 			}
@@ -4936,7 +4932,7 @@ namespace CGDK
 						continue;
 
 					// - ger serializer
-					var serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType);
+					var serializer = (IBase<object>)ProcessGetSerializer_object(iter.FieldType);
 
 					// check)
 					Debug.Assert(serializer != null);
@@ -4972,10 +4968,10 @@ namespace CGDK
 				return new SerializerStruct_object (_type, list_member_serialization_info);
 			} 
 
-			private static object? BuildSerailizer_Dictionary<T>()
+			private static object BuildSerailizer_Dictionary<T>()
 			{
 				// declare) 
-				object? result;
+				object result;
 
 				// 1) try make knowed parametered
 				result = BuildSerializer_Dictionary_typed<T>() 
@@ -4984,7 +4980,7 @@ namespace CGDK
 				// return)
 				return result;
 			}
-			private static object? BuildSerializer_Dictionary_typed<T>()
+			private static object BuildSerializer_Dictionary_typed<T>()
 			{
 				// 2) get argument type
 				var types = typeof(T).GetGenericArguments();
@@ -5018,7 +5014,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_typed_o<T>(type_value);
 			}
-			private static object? BuildSerializer_Dictionary_typed_key_primitive<T, K>(Type _type_second) where K : unmanaged
+			private static object BuildSerializer_Dictionary_typed_key_primitive<T, K>(Type _type_second) where K : unmanaged
 			{
 				if (_type_second == typeof(char))
 					return BuildSerializer_Dictionary_typed_key_value_primitive<K, char>();
@@ -5051,7 +5047,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_typed_key_o<T, K>();
 			}
-			private static object? BuildSerializer_Dictionary_typed_key_string<T>(Type _type_second)
+			private static object BuildSerializer_Dictionary_typed_key_string<T>(Type _type_second)
 			{
 				if (_type_second == typeof(char))
 					return BuildSerializer_Dictionary_typed_key_value<string, char>();
@@ -5084,7 +5080,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_typed_key_o<T, string>();
 			}
-			private static object? BuildSerializer_Dictionary_typed_key_List<T, K>(Type _type_second) where K : notnull
+			private static object BuildSerializer_Dictionary_typed_key_List<T, K>(Type _type_second) where K : notnull
 			{
 				// 1) get type of param
 				var type_param = _type_second.GetGenericArguments()[0];
@@ -5117,11 +5113,11 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_typed_key_o<T, K>();
 			}
-			private static object? BuildSerializer_Dictionary_typed_key_Directory<T, K>() where K : notnull
+			private static object BuildSerializer_Dictionary_typed_key_Directory<T, K>() where K : notnull
 			{
 				return BuildSerializer_Dictionary_typed_key_o<T, K>();
 			}
-			private static object? BuildSerializer_Dictionary_typed_o<T>(Type _type_second)
+			private static object BuildSerializer_Dictionary_typed_o<T>(Type _type_second)
 			{
 				if (_type_second == typeof(char))
 					return BuildSerializer_Dictionary_typed_o_value<T, char>();
@@ -5150,12 +5146,12 @@ namespace CGDK
 				else
 					return null;
 			}
-			private static object? BuildSerializer_Dictionary_object(Type _type)
+			private static object BuildSerializer_Dictionary_object(Type _type)
 			{
 				return BuildSerializer_Dictionary_object_typed(_type) 
 					?? BuildSerializer_Dictionary_object_o_o(_type);
 			}
-			private static object? BuildSerializer_Dictionary_object_typed(Type _type_object)
+			private static object BuildSerializer_Dictionary_object_typed(Type _type_object)
 			{
 				// 1) get argument type
 				var types = _type_object.GetGenericArguments();
@@ -5188,7 +5184,7 @@ namespace CGDK
 				else
 					return null;
 			}
-			private static object? BuildSerializer_Dictionary_object_typed_key_primitive<K>(Type _type_object) where K : unmanaged
+			private static object BuildSerializer_Dictionary_object_typed_key_primitive<K>(Type _type_object) where K : unmanaged
 			{
 				// 2) get argument type
 				var types = _type_object.GetGenericArguments();
@@ -5226,7 +5222,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_object_key_o<K>(type_value); ;
 			}
-			private static object? BuildSerializer_Dictionary_object_typed_key_string(Type _type_object)
+			private static object BuildSerializer_Dictionary_object_typed_key_string(Type _type_object)
 			{
 				// 1) get argument type
 				var types = _type_object.GetGenericArguments();
@@ -5264,7 +5260,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_object_key_o<string>(type_value); ;
 			}
-			private static object? BuildSerializer_Dictionary_object_typed_key_List<K>(Type _type_object) where K : notnull
+			private static object BuildSerializer_Dictionary_object_typed_key_List<K>(Type _type_object) where K : notnull
 			{
 				// 1) get argument type
 				var types = _type_object.GetGenericArguments();
@@ -5299,78 +5295,78 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_object_key_o<K>(_type_object);
 			}
-			private static object? BuildSerializer_Dictionary_object_typed_key_Directory<K>() where K : notnull
+			private static object BuildSerializer_Dictionary_object_typed_key_Directory<K>() where K : notnull
 			{
 				return null;
 			}
-			private static SerializerDictionary<K, V> BuildSerializer_Dictionary_typed_key_value<K, V>() where K : notnull
+			private static SerializerDictionary<K,V> BuildSerializer_Dictionary_typed_key_value<K,V>() where K : notnull
 			{
-				return new SerializerDictionary<K, V>();
+				return new SerializerDictionary<K,V>();
 			}
-			private static SerializerDictionary_primitive_primitive<K, V> BuildSerializer_Dictionary_typed_key_value_primitive<K, V>() where K:unmanaged where V:unmanaged
+			private static SerializerDictionary_primitive_primitive<K,V> BuildSerializer_Dictionary_typed_key_value_primitive<K,V>() where K:unmanaged where V:unmanaged
 			{
-				return new SerializerDictionary_primitive_primitive<K, V>();
+				return new SerializerDictionary_primitive_primitive<K,V>();
 			}
 			private static SerializerDictionary<T, K, object> BuildSerializer_Dictionary_typed_key_o<T, K>() where K : notnull
 			{
 				return new SerializerDictionary<T, K, object> (
 					ProcessGetSerializer<K>(),
-					(IBase<object>?)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[1])!
+					(IBase<object>)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[1])!
 				);
 			}
 
 			private static SerializerDictionary<T, object, V> BuildSerializer_Dictionary_typed_o_value<T, V>()
 			{
 				return new SerializerDictionary<T, object, V> (
-					(IBase<object>?)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]),
+					(IBase<object>)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]),
 					ProcessGetSerializer<V>());
 			}
 			private static SerializerDictionary<T, object, object> BuildSerializer_Dictionary_typed_o_o<T>()
 			{
 				var types_argument = typeof(T).GetGenericArguments();
 				return new SerializerDictionary<T, object, object> (
-						(IBase<object>?)ProcessGetSerializer_object(types_argument[0]),
-						(IBase<object>?)ProcessGetSerializer_object(types_argument[1])!
+						(IBase<object>)ProcessGetSerializer_object(types_argument[0]),
+						(IBase<object>)ProcessGetSerializer_object(types_argument[1])!
 					);
 			}
-			private static SerializerDictionary_object_typed<K, V> BuildSerializer_Dictionary_object_typed_key_value<K, V>() where K : notnull
+			private static SerializerDictionary_object_typed<K,V> BuildSerializer_Dictionary_object_typed_key_value<K,V>() where K : notnull
 			{
-				return new SerializerDictionary_object_typed<K, V>();
+				return new SerializerDictionary_object_typed<K,V>();
 			}
-			private static SerializerDictionary_object_primitive_primitive<K, V> BuildSerializer_Dictionary_object_typed_key_value_primitivie<K, V>() where K : unmanaged where V : unmanaged
+			private static SerializerDictionary_object_primitive_primitive<K,V> BuildSerializer_Dictionary_object_typed_key_value_primitivie<K,V>() where K : unmanaged where V : unmanaged
 			{
-				return new SerializerDictionary_object_primitive_primitive<K, V>();
+				return new SerializerDictionary_object_primitive_primitive<K,V>();
 			}
 			private static SerializerDictionary_object_no_typed<K, object> BuildSerializer_Dictionary_object_key_o<K>(Type _type) where K : notnull
 			{
 				return new SerializerDictionary_object_no_typed<K, object>(
 					_type,
 					ProcessGetSerializer<K>(),
-					(IBase<object>?)ProcessGetSerializer_object(_type.GetGenericArguments()[1])
+					(IBase<object>)ProcessGetSerializer_object(_type.GetGenericArguments()[1])
 				);
 			}
 			private static SerializerDictionary_object BuildSerializer_Dictionary_object_o_o(Type _type)
 			{
 				return new SerializerDictionary_object (
 						_type,
-						(IBase<object>?)ProcessGetSerializer_object(_type.GetGenericArguments()[0]),
-						(IBase<object>?)ProcessGetSerializer_object(_type.GetGenericArguments()[1])
+						(IBase<object>)ProcessGetSerializer_object(_type.GetGenericArguments()[0]),
+						(IBase<object>)ProcessGetSerializer_object(_type.GetGenericArguments()[1])
 					);
 			}
 
-			private static object? BuildSerializer_Array<T>()
+			private static object BuildSerializer_Array<T>()
 			{
 				// 1) try make knowed parametered
 				return BuildSerializer_Array(typeof(T))
 					   ?? BuildSerailizer_Array_no_typed<T>();
 			}
-			private static object? BuildSerializer_Array_object(Type _type)
+			private static object BuildSerializer_Array_object(Type _type)
 			{
 				// 1) try make knowed parametered
 				return BuildSerializer_Array_object_primitive(_type)
 					   ?? BuildSerailizer_Array_object_no_typed(_type);
 			}
-			private static object? BuildSerializer_Array(Type _type)
+			private static object BuildSerializer_Array(Type _type)
 			{
 				// 1) get argument type
 				var type_param = _type.GetElementType();
@@ -5406,11 +5402,11 @@ namespace CGDK
 				else
 					return null;
 			}
-			private static object? BuildSerailizer_Array_typed_Dictionary()
+			private static object BuildSerailizer_Array_typed_Dictionary()
 			{
 				return null;
 			}
-			private static object? BuildSerailizer_Array_typed_List(Type _type)
+			private static object BuildSerailizer_Array_typed_List(Type _type)
 			{
 				// 1) get argument type
 				var type_value = _type.GetElementType();
@@ -5449,7 +5445,7 @@ namespace CGDK
 				else
 					return null;
 			}
-			private static object? BuildSerializer_Array_object_primitive(Type _type)
+			private static object BuildSerializer_Array_object_primitive(Type _type)
 			{
 				// 1) get argument type
 				var type_param = _type.GetElementType();
@@ -5507,22 +5503,22 @@ namespace CGDK
 			{
 				return new SerializerArray_object_no_typed (
 						_type,
-						(IBase<object>?)ProcessGetSerializer_object(_type.GetGenericArguments()[0])
+						(IBase<object>)ProcessGetSerializer_object(_type.GetGenericArguments()[0])
 					);
 			}
 
-			private static object? BuildSerailizer_List<T>()
+			private static object BuildSerailizer_List<T>()
 			{
 				return BuildSerializer_List_primitive(typeof(T))
 					   ?? BuildSerailizer_List_no_typed<T>();
 			}
-			private static object? BuildSerailizer_List_object(Type _type)
+			private static object BuildSerailizer_List_object(Type _type)
 			{
 				// 1) try make knowed parametered
 				return BuildSerializer_List_object_primitive(_type)
 					   ?? BuildSerailizer_List_object_no_typed(_type);
 			}
-			private static object? BuildSerializer_List_primitive(Type _type)
+			private static object BuildSerializer_List_primitive(Type _type)
 			{
 				// 1) get argument type
 				var type_param = _type.GetGenericArguments()[0];
@@ -5559,11 +5555,11 @@ namespace CGDK
 				else
 					return null;
 			}
-			private static object? BuildSerailizer_List_typed_Dictionary()
+			private static object BuildSerailizer_List_typed_Dictionary()
 			{
 				return null;
 			}
-			private static object? BuildSerailizer_List_typed_List(Type _type)
+			private static object BuildSerailizer_List_typed_List(Type _type)
 			{
 				// 1) get argument type
 				var type_value = _type.GetGenericArguments()[0];
@@ -5601,7 +5597,7 @@ namespace CGDK
 				else
 					return null;
 			}
-			private static object? BuildSerializer_List_object_primitive(Type _type)
+			private static object BuildSerializer_List_object_primitive(Type _type)
 			{
 				// 1) get argument type
 				var type_param = _type.GetGenericArguments()[0];
@@ -5663,15 +5659,15 @@ namespace CGDK
 			{
 				return new SerializerList_object_no_typed (
 						_type,
-						(IBase<object>?)ProcessGetSerializer_object(_type.GetGenericArguments()[0])
+						(IBase<object>)ProcessGetSerializer_object(_type.GetGenericArguments()[0])
 					);
 			}
 
-			private static object? BuildSerailizer_Collection<T>()
+			private static object BuildSerailizer_Collection<T>()
 			{
 				return null;
 			}
-			private static object? BuildSerailizer_Collection_object()
+			private static object BuildSerailizer_Collection_object()
 			{
 				return null;
 			}
@@ -5702,7 +5698,7 @@ namespace CGDK
 					// - set serializer
 					var temp_membeer_serialization_info = new MemberSerializationInfo (
 							iter,
-							(IBase<object>?)ProcessGetSerializer_object(iter.FieldType)!,
+							(IBase<object>)ProcessGetSerializer_object(iter.FieldType)!,
 							0
 						);
 
@@ -5751,7 +5747,7 @@ namespace CGDK
 			internal static IBase<T> ProcessGetSerializer<T>()
 			{
 				// declare) 
-				object? result = null;
+				object result = null;
 
 				// 2) get type
 				var type = typeof(T);
@@ -5776,7 +5772,7 @@ namespace CGDK
 				}
 
 				// 4) casting
-				var result_casted = (IBase<T>?)result;
+				var result_casted = (IBase<T>)result;
 
 				// check)
 				Debug.Assert(result_casted != null);
@@ -5784,13 +5780,13 @@ namespace CGDK
 				// return) 
 				return result_casted;
 			}
-			internal static IBase<Dictionary<K,V>> ProcessGetSerializer_Dictionary<K, V>() where K : notnull
+			internal static IBase<Dictionary<K,V>> ProcessGetSerializer_Dictionary<K,V>() where K : notnull
 			{
 				// declare) 
-				object? result = null;
+				object result = null;
 
 				// 2) get type
-				var type = typeof(Dictionary<K, V>);
+				var type = typeof(Dictionary<K,V>);
 
 				lock (dictionary_serializer)
 				{
@@ -5801,7 +5797,7 @@ namespace CGDK
 					if (is_exist == true)
 					{
 						// - 아니라면 교체
-						if (result is IBase<Dictionary<K, V>>)
+						if (result is IBase<Dictionary<K,V>>)
 						{
 							is_exist = false;
 						}
@@ -5811,8 +5807,8 @@ namespace CGDK
 					if (is_exist == false)
 					{
 						// - 먼저 시돈
-						result = BuildSerializer_Dictionary_typed<Dictionary<K, V>>()
-							   ?? BuildSerializer_Dictionary_typed_key_value<K, V>();
+						result = BuildSerializer_Dictionary_typed<Dictionary<K,V>>()
+							   ?? BuildSerializer_Dictionary_typed_key_value<K,V>();
 
 						// check)
 						Debug.Assert(result != null);
@@ -5823,7 +5819,7 @@ namespace CGDK
 				}
 
 				// 4) casting
-				var result_casted = Unsafe.As<IBase<Dictionary<K, V>>?>(result);
+				var result_casted = (IBase<Dictionary<K,V>>)result;
 
 				// check)
 				Debug.Assert(result_casted != null);
@@ -5834,7 +5830,7 @@ namespace CGDK
 			internal static IBase<List<V>> ProcessSerializer_List<V>()
 			{
 				// declare) 
-				object? result = null;
+				object result = null;
 
 				// 2) get type
 				var type = typeof(List<V>);
@@ -5870,7 +5866,7 @@ namespace CGDK
 				}
 
 				// 4) casting
-				var result_casted = Unsafe.As<IBase<List<V>>?>(result);
+				var result_casted = (IBase<List<V>>)result;
 
 				// check)
 				Debug.Assert(result_casted != null);
@@ -5878,10 +5874,10 @@ namespace CGDK
 				// return) 
 				return result_casted;
 			}
-			internal static object? ProcessGetSerializer_object(Type _type)
+			internal static object ProcessGetSerializer_object(Type _type)
 			{
 				// declare) 
-				object? result = null;
+				object result = null;
 
 				lock (dictionary_serializer_object)
 				{
@@ -5912,7 +5908,7 @@ namespace CGDK
 					return;
 
 				// declare) 
-				object? result = null;
+				object result = null;
 
 				// 2) get type
 				var type = typeof(T);
@@ -5944,7 +5940,7 @@ namespace CGDK
 		}
 		internal static class Get_Dictionary<K,V> where K : notnull
 		{
-			static public readonly IBase<Dictionary<K,V>> instance = Builder.ProcessGetSerializer_Dictionary<K, V>();
+			static public readonly IBase<Dictionary<K,V>> instance = Builder.ProcessGetSerializer_Dictionary<K,V>();
 		}
 		internal static class Get_List<V>
 		{

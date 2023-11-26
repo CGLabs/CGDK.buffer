@@ -13,13 +13,15 @@
 //*                          http://www.CGCII.co.kr                           *
 //*                                                                           *
 //*****************************************************************************
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Microsoft.CodeAnalysis;
+using System.Linq;
 
 //----------------------------------------------------------------------------
 //

@@ -1,9 +1,9 @@
-﻿
-using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 
 namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
@@ -177,9 +177,12 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		[TestInitialize]
 		public void TestInitialize()
 		{
+		#if NET
 			CGDK.BufferSerializer.Generator.Initialize();
+		#endif
+
 		}
-#if NET
+	#if NET
 		string?[] function_extract_STRING(ref CGDK.buffer _Buffer)
 	#else
 		string[] function_extract_STRING(ref CGDK.buffer _Buffer)
@@ -443,15 +446,27 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			public int v1;
 
 			[CGDK.Attribute.Field]
+#if NET
 			public string? v2;
+#else
+			public string v2;
+#endif
 
+#if NET
 			private List<int>? v3;
+#else
+			private List<int> v3;
+#endif
 
 			[CGDK.Attribute.Field]
 			public UInt64 v4;
 
 			[CGDK.Attribute.Field]
+#if NET
 			public Dictionary<string, int>? v5;
+#else
+			public Dictionary<string, int> v5;
+#endif
 
 			[CGDK.Attribute.Field]
 			public int value_6 
@@ -471,7 +486,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 
 			var foo = new TEST_EX2();
 			foo.v1 = 100;
-			foo.v2 = new string("test_string");
+			foo.v2 = "test_string";
 			//foo.v3 = new List<int> { 1, 2, 3, 4, 5 };
 			foo.v4 = 10000;
 			foo.v5 = new Dictionary<string, int> { { "a", 1 }, { "b", 2 }, { "c", 3 } };

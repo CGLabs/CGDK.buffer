@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.NET", "buffer.N
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.Generator", "CGDK.buffer.Generator\CGDK.buffer.Generator.csproj", "{2D9A77C5-ABEF-41A7-9BCE-7BE15751BF46}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance.CGDK.NET", "..\unit_test\unit_test.performance.CGDK\NET\CGDK.buffer.unit_test.performance.CGDK.NET.csproj", "{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.performance.CGDK", "..\unit_test\unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.shproj", "{047D3A5B-4233-4E5D-A5DA-B6A6389D962C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,23 +31,11 @@ Global
 		{2D9A77C5-ABEF-41A7-9BCE-7BE15751BF46}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2D9A77C5-ABEF-41A7-9BCE-7BE15751BF46}.Release|x64.ActiveCfg = Release|Any CPU
 		{2D9A77C5-ABEF-41A7-9BCE-7BE15751BF46}.Release|x64.Build.0 = Release|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Debug|x64.Build.0 = Debug|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Release|x64.ActiveCfg = Release|Any CPU
-		{D2B6FEC0-289F-4424-BC1D-DB5B43AC829E}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {764A3190-AB9C-4EC4-B3F2-D8D252AB5689}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\unit_test\unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.projitems*{047d3a5b-4233-4e5d-a5da-b6a6389d962c}*SharedItemsImports = 13
-		..\unit_test\unit_test.performance.CGDK\CGDK.buffer.unit_test.performance.CGDK.projitems*{d2b6fec0-289f-4424-bc1d-db5b43ac829e}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
