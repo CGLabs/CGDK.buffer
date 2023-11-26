@@ -1,3 +1,9 @@
+## CGDK 3.10 (2023.11.26)
+   #### (C#)
+   * Roslyn을 사용해 Source generator를 추가
+     - Serializer를 struct & class 전용 Serializer를 Source generator를 사용해 생성<br>
+     - struct & class의 성능 대폭 향상
+
 ## CGDK 3.03.(5) (2023.11.23)
    #### (C#)
    * 8년만에 완전 구조 변경

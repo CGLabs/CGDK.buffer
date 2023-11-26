@@ -15,17 +15,9 @@ namespace CGDK.BufferGenerator.Generator;
 [Generator(LanguageNames.CSharp)]
 public partial class CGDKbufferGenerator : ISourceGenerator
 {
-	//public const string MemoryPackableAttributeFullName = "MemoryPack.MemoryPackableAttribute";
-	//public const string GenerateTypeScriptAttributeFullName = "MemoryPack.GenerateTypeScriptAttribute";
-
 	public void Initialize(GeneratorInitializationContext context)
 	{
-		//context.RegisterForSyntaxNotifications(SyntaxContextReceiver.Create);
-
-		//throw new System.Exception("Y1");
 	}
-
-	//public List<string> result = new List<string>();
 
 	private struct MEMBER_NODE_INFO
 	{
