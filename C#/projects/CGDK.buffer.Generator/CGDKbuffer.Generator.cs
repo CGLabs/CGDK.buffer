@@ -238,7 +238,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				class_info.name_sub = MakeSerializerClassName(list_namespace, str_name);
 
 				// 6) make 'member_node_info' list
-				class_info.list_member_node_info = new List<MEMBER_NODE_INFO>();
+				class_info.list_member_node_info = [];
 
 				// 7) gather members info
 				foreach (var member in iter.Members
@@ -321,12 +321,14 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine( "	{"																									);
 		_out.AppendLine($"		var temp = new {_class_info.name}();"															);
 
+		int count_primitive = 0;
 		foreach (var iter_member in _class_info.list_member_node_info)
 		{
 			// - primitive type
 			if (iter_member.type == 1)
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
+				++count_primitive;
 			}
 			// - non primitive type
 			else
@@ -335,36 +337,41 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				
 			}
 		}
-
-		foreach (var iter_member in _class_info.list_member_node_info)
+		if (count_primitive != 0)
 		{
-			// - primitive type
-			if (iter_member.type == 1)
+			_out.AppendLine("");
+			_out.Append("		_count += ");
+			foreach (var iter_member in _class_info.list_member_node_info)
 			{
-				_out.AppendLine($"		_count += sizeof({iter_member.type_name});");
+				if (iter_member.type == 1)
+					_out.Append($"sizeof({iter_member.type_name})+");
 			}
+			_out.Remove(_out.Length - 1, 1);
+			_out.AppendLine(";");
 		}
+
 		_out.AppendLine( "		return temp;");
 		_out.AppendLine( "	}");
 
 		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_class_info.name} _object)"										);
 		_out.AppendLine( "	{"																									);
-		_out.AppendLine("		int size = 0;");
-
-
-		foreach (var iter_member in _class_info.list_member_node_info)
+		if (_class_info.list_member_node_info.Count != 0)
 		{
-			// - primitive type
-			if (iter_member.type == 1)
+			_out.Append("		return ");
+			foreach (var iter_member in _class_info.list_member_node_info)
 			{
-				_out.AppendLine($"		size += sizeof({iter_member.type_name});");
+				if (iter_member.type == 1)
+					_out.Append($"sizeof({iter_member.type_name})+");
+				else
+					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier})+");
 			}
-			else
-			{
-				_out.AppendLine($"		size += serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier});");
-			}
+			_out.Remove(_out.Length - 1, 1);
+			_out.AppendLine(";");
 		}
-		_out.AppendLine("		return size;");
+		else
+		{
+			_out.AppendLine("		return 0;");
+		}
 		_out.AppendLine("	}");
 
 		_out.AppendLine("#nullable enable");
@@ -453,7 +460,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				}
 				struct_info.name = MakeName(list_namespace, str_name);
 				struct_info.name_sub = MakeSerializerClassName(list_namespace, str_name);
-				struct_info.list_member_node_info = new List<MEMBER_NODE_INFO>();
+				struct_info.list_member_node_info = [];
 
 				// - gather members info
 				foreach (var member in iter.Members.Where(x => x.IsKind(SyntaxKind.FieldDeclaration)).ToList())
@@ -516,12 +523,14 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine( "	{"																									);
 		_out.AppendLine($"		var temp = new {_struct_info.name}();"															);
 
+		int count_primitive = 0;
 		foreach (var iter_member in _struct_info.list_member_node_info)
 		{
 			// - primitive type
 			if (iter_member.type == 1)
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
+				++count_primitive;
 			}
 			// - non primitive type
 			else
@@ -530,36 +539,41 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				
 			}
 		}
-
-		foreach (var iter_member in _struct_info.list_member_node_info)
+		if (count_primitive != 0)
 		{
-			// - primitive type
-			if (iter_member.type == 1)
+			_out.AppendLine("");
+			_out.Append("		_count += ");
+			foreach (var iter_member in _struct_info.list_member_node_info)
 			{
-				_out.AppendLine($"		_count += sizeof({iter_member.type_name});");
+				if (iter_member.type == 1)
+					_out.Append($"sizeof({iter_member.type_name})+");
 			}
+			_out.Remove(_out.Length - 1, 1);
+			_out.AppendLine(";");
 		}
+
 		_out.AppendLine( "		return temp;");
 		_out.AppendLine( "	}");
 
 		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_struct_info.name} _object)"										);
 		_out.AppendLine( "	{"																										);
-		_out.AppendLine("		int size = 0;");
-
-
-		foreach (var iter_member in _struct_info.list_member_node_info)
+		if (_struct_info.list_member_node_info.Count != 0)
 		{
-			// - primitive type
-			if (iter_member.type == 1)
+			_out.Append("		return ");
+			foreach (var iter_member in _struct_info.list_member_node_info)
 			{
-				_out.AppendLine($"		size += sizeof({iter_member.type_name});");
+				if (iter_member.type == 1)
+					_out.Append($"sizeof({iter_member.type_name})+");
+				else
+					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier})+");
 			}
-			else
-			{
-				_out.AppendLine($"		size += serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier});");
-			}
+			_out.Remove(_out.Length - 1, 1);
+			_out.AppendLine(";");
 		}
-		_out.AppendLine("		return size;");
+		else
+		{
+			_out.AppendLine("		return 0;");
+		}
 		_out.AppendLine("	}");
 
 		_out.AppendLine("#nullable enable");

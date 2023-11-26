@@ -49,18 +49,15 @@ namespace CGDK
 		/// <summary>
 		/// 
 		/// </summary>
+		/// <remarks>
+		/// 
+		/// </remarks>
+		/// <param name="is_serializable"></param>
 		[System.AttributeUsage(System.AttributeTargets.Field | System.AttributeTargets.Property)]
-		public class Field : System.Attribute
+		public class Field(bool is_serializable = true) : System.Attribute
 		{
-			private readonly bool _is_serializable;
-			/// <summary>
-			/// 
-			/// </summary>
-			/// <param name="is_serializable"></param>
-			public Field(bool is_serializable= true)
-			{
-				this._is_serializable = is_serializable;
-			}
+			private readonly bool _is_serializable = is_serializable;
+
 			/// <summary>
 			/// 
 			/// </summary>
@@ -108,17 +105,16 @@ namespace CGDK
 	/// <summary>
 	/// 
 	/// </summary>
-	public struct Offset
+	/// <remarks>
+	/// 
+	/// </remarks>
+	/// <param name="_amount"></param>
+	public struct Offset(in int _amount = 0)
 	{
 		/// <summary>
 		/// 
 		/// </summary>
-		/// <param name="_amount"></param>
-		public Offset(in int _amount = 0) { this.amount = _amount; }
-		/// <summary>
-		/// 
-		/// </summary>
-		public int amount;
+		public int amount = _amount;
 	}
 
 	/// <summary>
@@ -4314,14 +4310,8 @@ namespace CGDK
 			}
 		}
 
-		internal class SerializerList_object_no_typed : IBase<object>
+		internal class SerializerList_object_no_typed(Type? _type_create, IBase<object>? _serializer_value) : IBase<object>
 		{
-			public SerializerList_object_no_typed(Type? _type_create, IBase<object>? _serializer_value)
-			{
-				this.type_create = _type_create;
-				this.serializer_value = _serializer_value;
-			}
-
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)
 			{
 				// check)
@@ -4435,30 +4425,18 @@ namespace CGDK
 				return size;
 			}
 
-			private readonly Type? type_create;
-			private readonly IBase<object>? serializer_value;
+			private readonly Type? type_create = _type_create;
+			private readonly IBase<object>? serializer_value = _serializer_value;
 		}
 
-		internal readonly struct MemberSerializationInfo
+		internal readonly struct MemberSerializationInfo(FieldInfo _field_info, IBase<object> _serializer, int _offset)
 		{
-			public readonly FieldInfo field_info;
-			public readonly IBase<object> serializer;
-			public readonly int offset;
-
-			public MemberSerializationInfo(FieldInfo _field_info, IBase<object> _serializer, int _offset)
-			{
-				this.field_info = _field_info;
-				this.serializer = _serializer;
-				this.offset = _offset;
-			}
+			public readonly FieldInfo field_info = _field_info;
+			public readonly IBase<object> serializer = _serializer;
+			public readonly int offset = _offset;
 		}
-		internal class SerializerClass<T> : IBase<T>
+		internal class SerializerClass<T>(List<MemberSerializationInfo> _list_member_serialization_info) : IBase<T>
 		{
-			public SerializerClass(List<MemberSerializationInfo> _list_member_serialization_info)
-			{
-				this.list_member_serialization_info = _list_member_serialization_info;
-			}
-
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
 			{
 				// check)
@@ -4484,16 +4462,10 @@ namespace CGDK
 				return SerializerClass_object.XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			public readonly List<MemberSerializationInfo> list_member_serialization_info;
+			public readonly List<MemberSerializationInfo> list_member_serialization_info = _list_member_serialization_info;
 		}
-		internal class SerializerClass_object : IBase<object>
+		internal class SerializerClass_object(Type? _type_create, List<MemberSerializationInfo> _list_member_serialization_info) : IBase<object>
 		{
-			public SerializerClass_object(Type? _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
-			{
-				this.type_create = _type_create;
-				this.list_member_serialization_info = _list_member_serialization_info;
-			}
-
 			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// check) is null?
@@ -4567,17 +4539,12 @@ namespace CGDK
 				return XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private readonly Type? type_create;
-			private readonly List<MemberSerializationInfo> list_member_serialization_info;
+			private readonly Type? type_create = _type_create;
+			private readonly List<MemberSerializationInfo> list_member_serialization_info = _list_member_serialization_info;
 		}
 
-		internal class SerializerStruct<T> : IBase<T>
+		internal class SerializerStruct<T>(List<MemberSerializationInfo> _list_member_serialization_info) : IBase<T>
 		{
-			public SerializerStruct(List<MemberSerializationInfo> _list_member_serialization_info)
-			{
-				this.list_member_serialization_info = _list_member_serialization_info;
-			}
-
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T? _object)
 			{
 				// check)
@@ -4603,16 +4570,10 @@ namespace CGDK
 				return SerializerStruct_object.XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private readonly List<MemberSerializationInfo> list_member_serialization_info;
+			private readonly List<MemberSerializationInfo> list_member_serialization_info = _list_member_serialization_info;
 		}
-		internal class SerializerStruct_object : IBase<object>
+		internal class SerializerStruct_object(Type? _type_create, List<MemberSerializationInfo> _list_member_serialization_info) : IBase<object>
 		{
-			public SerializerStruct_object(Type? _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
-			{
-				this.type_create = _type_create;
-				this.list_member_serialization_info = _list_member_serialization_info ;
-			}
-
 			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, object? _object, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
 				// check) is null?
@@ -4709,8 +4670,8 @@ namespace CGDK
 				return XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private readonly Type? type_create;
-			private readonly List<MemberSerializationInfo> list_member_serialization_info = new();
+			private readonly Type? type_create = _type_create;
+			private readonly List<MemberSerializationInfo> list_member_serialization_info = _list_member_serialization_info;
 		}
 
 		internal class Builder
@@ -4740,8 +4701,8 @@ namespace CGDK
 				return list_att.Length != 0;
 			}
 
-			private static readonly Dictionary<Type, object> dictionary_serializer = new();
-			private static readonly Dictionary<Type, object> dictionary_serializer_object = new();
+			private static readonly Dictionary<Type, object> dictionary_serializer = [];
+			private static readonly Dictionary<Type, object> dictionary_serializer_object = [];
 
 			private static object BuildSerialize<T>()
 			{
@@ -5911,16 +5872,13 @@ namespace CGDK
 				if (_serializer == null)
 					return;
 
-				// declare) 
-				object? result = null;
-
 				// 2) get type
 				var type = typeof(T);
 
 				lock (dictionary_serializer)
 				{
 					// 3) 이미 존재하는 가?
-					var is_exist = dictionary_serializer.TryGetValue(type, out result);
+					var is_exist = dictionary_serializer.TryGetValue(type, out object? result);
 
 					// 4) 존재하지 않으면 추가 존재하면 교체
 					if (is_exist == false)
