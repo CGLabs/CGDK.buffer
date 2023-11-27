@@ -95,11 +95,11 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 			// - build souce for registering class serializer
 			foreach (var iter in list_class_declaration)
-				sb_source_code.AppendLine($"		CGDK.BufferSerializer.Custom.RegisterSerializer<{iter.name}>(new {iter.name_sub}_serializer());");
+				sb_source_code.AppendLine($"		CGDK.BufferSerializer.Custom.RegisterSerializer<{iter.type_name}>(new {iter.identifier}_serializer());");
 
 			// - build souce for registering struct serializer
 			foreach (var iter in list_struct_declaration)
-				sb_source_code.AppendLine($"		CGDK.BufferSerializer.Custom.RegisterSerializer<{iter.name}>(new {iter.name_sub}_serializer());");
+				sb_source_code.AppendLine($"		CGDK.BufferSerializer.Custom.RegisterSerializer<{iter.type_name}>(new {iter.identifier}_serializer());");
 
 			sb_source_code.AppendLine("	}");
 			sb_source_code.AppendLine("	}");
@@ -112,26 +112,35 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 3. definitions and functions
+	// 3. definitions (struct)
 	//------------------------------------------------------------------
+	// 1) MEMBER에 대한 정보입니다.
+	// CLASS_INFO와 STRUCT_INFO에서 사용됩니다.
 	private struct MEMBER_NODE_INFO
 	{
-		public int type;
-		public string type_name;
-		public string identifier;
+		public int type;			// MEBER의 type 정보.(1:primitive type, 2:others
+		public string type_name;	// type의 문자열 이름(int, char, long, string, ...)
+		public string identifier;	// 멤버 변수명
 	}
+	// 2) class 정보
 	private struct CLASS_INFO
 	{
-		public string name;
-		public string name_sub;
+		public string type_name;	// 클래스의 type 문자열 이름(namespace까지 포함)
+		public string identifier;	// serializer class의 이름으로 사용될 이름(.없이 _로 연결)
 		public List<MEMBER_NODE_INFO> list_member_node_info;
 	}
+	// 2) struct 정보
 	private struct STRUCT_INFO
 	{
-		public string name;
-		public string name_sub;
+		public string type_name;    // 구조체의 type 문자열 이름(namespace까지 포함)
+		public string identifier;   // serializer class의 이름으로 사용될 이름(.없이 _로 연결)
 		public List<MEMBER_NODE_INFO> list_member_node_info;
 	}
+
+	//------------------------------------------------------------------
+	// 4. functions
+	//------------------------------------------------------------------
+	// 1) primitive type인가?
 	private static readonly string[] primitive_types = { "char","byte","sbyte","Int8","UInt8","short","ushort","Int16","UInt16","int","uint","Int32","UInt32","long","ulong","Int64","UInt64","float","double"};
 	private static int IsPrimitive(string _type_name)
 	{
@@ -145,9 +154,11 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		// return) others;
 		return 0;
 	}
+	// 5) 타임명 만들기
+	//    - namespace와 typename을 .로 결합해서 full name을 만들어 줍니다.
 	private static string MakeName(List<string> _namespace, string _name)
 	{
-		// 1) make full name 
+		// 1) make full type_name 
 		var temp = new StringBuilder();
 		foreach (var iter in _namespace.Reverse<string>())
 		{
@@ -159,9 +170,11 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		// return)
 		return temp.ToString();
 	}
+	// 6) identifier명 만들기
+	//    - namespace와 typename을 _ 결합해서 고유명을 만들어 줍니다.
 	private static string MakeSerializerClassName(List<string> _namespace, string _name)
 	{
-		// 1) make generate serializer class name
+		// 1) make generate serializer class type_name
 		var temp = new StringBuilder();
 		foreach (var iter in _namespace.Reverse<string>())
 		{
@@ -175,7 +188,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 4. class 추축해 내기
+	// 5. class 추축해 내기
 	//
 	//    Serialier로 생성할 class를 추축해 낸다.
 	//
@@ -186,16 +199,17 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//    3) 먼저 구조체의 이름을 얻어 놓는다.
 	//    4) class 정보를 담을 CLASS_INFO를 생성한다.
 	//    5) namespace와 부도 클래스가 있을 경우 이걸 얻어 full name을 생성한다.
-	//       - name => .로 연결된 full name (ex) CGDK.foo.bar.tee
-	//       - name_sub => _로 연경될 full name (ex) CGDK_foo_bar_tee
+	//       - type_name => .로 연결된 full type_name (ex) CGDK.foo.bar.tee
+	//       - identifier => _로 연경될 full type_name (ex) CGDK_foo_bar_tee
 	//		   serializer class의 이름으로 사용할 것이다.
 	//
 	//	  6) member_info를 담을 MEMBER_INFO의 list를 생성한다.
-	//	  7) class의 MEMBER_INFO들을 얻어낸다. 
+	//	  7) type name 문자열과 serializer class에 사용될 이름을 만든다.
+	//	  8) class의 MEMBER_INFO들을 얻어낸다. 
 	//       class의 MEMBER 중에서 '[CGDK.Attribute.Field]' Attribute를 가진 멤버 변수나 멤버 Property 얻는다.
 	//       얻은 멤버들의 자료형 이름(type_name),변수명(identifier)을 얻어낸다.
-	//    8) 이렇게 만들어진 CLASS_INFO를 list에 등록한다.
-	//	  r) 이렇게 만들어진 CLASS_INFO들을 리턴한다.
+	//    9) 이렇게 만들어진 CLASS_INFO를 list에 등록한다.
+	//	  r) 최종적으로 만들어진 CLASS_INFO list을 리턴한다.
 	//
 	//------------------------------------------------------------------
 	private static  List<CLASS_INFO> GetClassDeclarationInfo(in IEnumerable<SyntaxTree> _syntax_nodes)
@@ -213,7 +227,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 									.Where(x => x.ToString() == "[CGDK.Attribute.Serializable]").Any()))
 								.ToList()) // (5) 리스트로~
 			{
-				// 3) get name
+				// 3) get type_name
 				var str_name = iter.Identifier.ToString();
 
 				// check)
@@ -223,7 +237,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				// 4) alloc CLASS_INFO
 				var class_info = new CLASS_INFO();
 
-				// 5) alloc CLASS_INFO
+				// 5) get members info
 				var list_namespace = new List<string>();
 				foreach (var ancestors in iter.Ancestors())
 				{
@@ -234,13 +248,15 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					else if (ancestors.IsKind(SyntaxKind.StructDeclaration))
 						list_namespace.Add(((StructDeclarationSyntax)ancestors).Identifier.ToString());
 				}
-				class_info.name = MakeName(list_namespace, str_name);
-				class_info.name_sub = MakeSerializerClassName(list_namespace, str_name);
 
-				// 6) make 'member_node_info' list
+				// 6) make full typ name string and identifier name
+				class_info.type_name = MakeName(list_namespace, str_name);
+				class_info.identifier = MakeSerializerClassName(list_namespace, str_name);
+
+				// 7) make 'member_node_info' list
 				class_info.list_member_node_info = [];
 
-				// 7) gather members info
+				// 8) gather members info
 				foreach (var member in iter.Members
 									.Where(x => x.IsKind(SyntaxKind.FieldDeclaration) || x.IsKind(SyntaxKind.PropertyDeclaration)) // 1) Field(변수) 혹은 Property 만 얻어서
 									.Where(x => (x.AttributeLists // (2) Attribute 중에 "CGDK.Field"을 가진 것만 골라낸다!
@@ -260,7 +276,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 						var iter_member = x.Declaration.ChildNodes().GetEnumerator();
 						iter_member.MoveNext();
 
-						// - get type name
+						// - get type type_name
 						member_node_info.type_name = iter_member.Current.ToString();
 						member_node_info.type = IsPrimitive(member_node_info.type_name);
 						iter_member.MoveNext();
@@ -270,7 +286,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					}
 					else if(member is PropertyDeclarationSyntax y)
 					{
-						// - get type name
+						// - get type type_name
 						member_node_info.type_name = y.Type.ToString();
 						member_node_info.type = IsPrimitive(member_node_info.type_name);
 
@@ -282,7 +298,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					class_info.list_member_node_info.Add(member_node_info);
 				}
 
-				// 8) add struct info
+				// 9) add struct info
 				list_class_info.Add(class_info);
 			}
 		}
@@ -292,14 +308,14 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 5. class용 'serializer class' source 작성하기
+	// 6. class용 'serializer class' source 작성하기
 	//
 	//------------------------------------------------------------------
 	private static void MakeClassSerializaerSource(ref StringBuilder _out, in CLASS_INFO _class_info)
 	{
-		_out.AppendLine($"public class {_class_info.name_sub}_serializer : CGDK.BufferSerializer.IBase<{_class_info.name}>"		);
+		_out.AppendLine($"public class {_class_info.identifier}_serializer : CGDK.BufferSerializer.IBase<{_class_info.type_name}>"		);
 		_out.AppendLine( "{"																									);
-		_out.AppendLine($"	public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, {_class_info.name} _object)"		);
+		_out.AppendLine($"	public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, {_class_info.type_name} _object)"		);
 		_out.AppendLine( "	{"																									);
 
 		foreach (var iter_member in _class_info.list_member_node_info)
@@ -317,9 +333,9 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		}
 		_out.AppendLine("	}");
 
-		_out.AppendLine($"	public unsafe {_class_info.name} ProcessExtract(ref byte* _ptr, ref int _count)"					);
+		_out.AppendLine($"	public unsafe {_class_info.type_name} ProcessExtract(ref byte* _ptr, ref int _count)"					);
 		_out.AppendLine( "	{"																									);
-		_out.AppendLine($"		var temp = new {_class_info.name}();"															);
+		_out.AppendLine($"		var temp = new {_class_info.type_name}();"															);
 
 		int count_primitive = 0;
 		foreach (var iter_member in _class_info.list_member_node_info)
@@ -353,7 +369,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine( "		return temp;");
 		_out.AppendLine( "	}");
 
-		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_class_info.name} _object)"										);
+		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_class_info.type_name} _object)"										);
 		_out.AppendLine( "	{"																									);
 		if (_class_info.list_member_node_info.Count != 0)
 		{
@@ -389,7 +405,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 6. struct 추축해 내기
+	// 7. struct 추축해 내기
 	//
 	//    Serialier로 생성할 struct를 추축해 낸다.
 	//
@@ -399,17 +415,18 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//       - '[CGDK.Attribute.Serializable]'를 Attribute로 가지고 있는 struct
 	//    3) 먼저 구조체의 이름을 얻어 놓는다.
 	//    4) struct 정보를 담을 STRUCT_INFO를 생성한다.
-	//    5) namespace와 부도 클래스가 있을 경우 이걸 얻어 full name을 생성한다.
-	//       - name => .로 연결된 full name (ex) CGDK.foo.bar.tee
-	//       - name_sub => _로 연경될 full name (ex) CGDK_foo_bar_tee
+	//    5) namespace와 부모 클래스가 있을 경우 이걸 얻어 full name을 생성한다.
+	//       - type_name => .로 연결된 full type_name (ex) CGDK.foo.bar.tee
+	//       - identifier => _로 연경될 full type_name (ex) CGDK_foo_bar_tee
 	//		   serializer struct의 이름으로 사용할 것이다.
 	//
 	//	  6) member_info를 담을 MEMBER_INFO의 list를 생성한다.
-	//	  7) struct의 MEMBER_INFO들을 얻어낸다. 
+	//	  7) type name 문자열과 serializer class에 사용될 이름을 만든다.
+	//	  8) struct의 MEMBER_INFO들을 얻어낸다. 
 	//       struct의 MEMBER 중에서 '[CGDK.Attribute.Field]' Attribute를 가진 멤버 변수나 멤버 Property 얻는다.
 	//       얻은 멤버들의 자료형 이름(type_name),변수명(identifier)을 얻어낸다.
-	//    8) 이렇게 만들어진 STRUCT_INFO를 list에 등록한다.
-	//	  9) 이렇게 만들어진 STRUCT_INFO들을 리턴한다.
+	//    9) 이렇게 만들어진 STRUCT_INFO를 list에 등록한다.
+	//	  r) 최종적으로 만들어진 STRUCT_INFO list를 리턴한다.
 	//
 	//------------------------------------------------------------------
 	private static List<STRUCT_INFO> GetStructDeclarationInfo(in IEnumerable<SyntaxTree> _syntax_nodes)
@@ -427,20 +444,20 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 									.Where(x => x.ToString() == "[CGDK.Attribute.Serializable]").Any() ?? false)
 								.ToList()) // (5) List로...
 			{
-				// - get name
+				// 3) get type_name
 				var str_name = iter.Identifier.ToString();
 
-				// - alloc STRUCT_INFO
+				// 4) alloc STRUCT_INFO
 				var struct_info = new STRUCT_INFO();
 
-				// - namespace
+				// 5) get members info
 				var list_namespace = new List<string>();
 				foreach (var ancestors in iter.Ancestors())
 				{
 					// declare) 
 					string? x = null;
 
-					// - get name
+					// - get type_name
 					if (ancestors.IsKind(SyntaxKind.NamespaceDeclaration) || ancestors.IsKind(SyntaxKind.FileScopedNamespaceDeclaration))
 						x = ((BaseNamespaceDeclarationSyntax)ancestors).Name.ToString();
 					else if(ancestors.IsKind(SyntaxKind.ClassDeclaration))
@@ -458,11 +475,13 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					// - add
 					list_namespace.Add(x);
 				}
-				struct_info.name = MakeName(list_namespace, str_name);
-				struct_info.name_sub = MakeSerializerClassName(list_namespace, str_name);
+
+				// 6) make full typ name string and identifier name
+				struct_info.type_name = MakeName(list_namespace, str_name);
+				struct_info.identifier = MakeSerializerClassName(list_namespace, str_name);
 				struct_info.list_member_node_info = [];
 
-				// - gather members info
+				// 7) gather members info
 				foreach (var member in iter.Members.Where(x => x.IsKind(SyntaxKind.FieldDeclaration)).ToList())
 				{
 					// - create member_node_info
@@ -472,7 +491,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					var iter_member = ((FieldDeclarationSyntax)member).Declaration.ChildNodes().GetEnumerator();
 					iter_member.MoveNext();
 
-					// - get type name
+					// - get type type_name
 					member_node_info.type_name = iter_member.Current.ToString();
 					member_node_info.type = IsPrimitive(member_node_info.type_name);
 					iter_member.MoveNext();
@@ -480,11 +499,11 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					// - get identifier
 					member_node_info.identifier = iter_member.Current.ToString();
 
-					// - add member_node_info
+					// 8) add member_node_info
 					struct_info.list_member_node_info.Add(member_node_info);
 				}
 
-				// - add struct info
+				// 9) add struct info
 				list_struct_info.Add(struct_info);
 			}
 		}
@@ -494,14 +513,14 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 7. struct용 'serializer class' source 작성하기
+	// 8. struct용 'serializer class' source 작성하기
 	//
 	//------------------------------------------------------------------
 	private static void MakeStructSerializaerSource(ref StringBuilder _out, in STRUCT_INFO _struct_info)
 	{
-		_out.AppendLine($"public class {_struct_info.name_sub}_serializer : CGDK.BufferSerializer.IBase<{_struct_info.name}>"	);
+		_out.AppendLine($"public class {_struct_info.identifier}_serializer : CGDK.BufferSerializer.IBase<{_struct_info.type_name}>"	);
 		_out.AppendLine( "{"																									);
-		_out.AppendLine($"	public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, {_struct_info.name} _object)"	);
+		_out.AppendLine($"	public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, {_struct_info.type_name} _object)"	);
 		_out.AppendLine( "	{"																									);
 
 		foreach (var iter_member in _struct_info.list_member_node_info)
@@ -519,9 +538,9 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		}
 		_out.AppendLine("	}");
 
-		_out.AppendLine($"	public unsafe {_struct_info.name} ProcessExtract(ref byte* _ptr, ref int _count)"					);
+		_out.AppendLine($"	public unsafe {_struct_info.type_name} ProcessExtract(ref byte* _ptr, ref int _count)"					);
 		_out.AppendLine( "	{"																									);
-		_out.AppendLine($"		var temp = new {_struct_info.name}();"															);
+		_out.AppendLine($"		var temp = new {_struct_info.type_name}();"															);
 
 		int count_primitive = 0;
 		foreach (var iter_member in _struct_info.list_member_node_info)
@@ -555,7 +574,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine( "		return temp;");
 		_out.AppendLine( "	}");
 
-		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_struct_info.name} _object)"										);
+		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_struct_info.type_name} _object)"										);
 		_out.AppendLine( "	{"																										);
 		if (_struct_info.list_member_node_info.Count != 0)
 		{
