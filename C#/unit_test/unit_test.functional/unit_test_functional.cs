@@ -2829,7 +2829,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				Assert.IsTrue(buf_temp.Offset == 12);
 				Assert.IsTrue(buf_temp.Count == 0);
 
-				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer만 정상 통과합니다.
+				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer dll을 쓸때만 정상 통과합니다.
 				try
 				{
 					// - Bound를 넘기는 offset
@@ -2838,7 +2838,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.OverflowException)
+				catch (System.IndexOutOfRangeException)
 				{
 				}
 			}
@@ -2870,7 +2870,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp3 = buf_temp + new CGDK.Offset(-8);
 
 				// - Bound owerflow
-				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer만 정상 통과합니다.
+				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer dll을 쓸때만 정상 통과합니다.
 				try
 				{
 					// - Bound를 넘기는 offset
@@ -2879,7 +2879,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.OverflowException)
+				catch (System.IndexOutOfRangeException)
 				{
 				}
 			}
@@ -2910,7 +2910,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp2 = buf_Alloc - new CGDK.Size(12);
 
 				// - Bound owerflow
-				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer만 정상 통과합니다.
+				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer dll을 쓸때만 정상 통과합니다.
 				try
 				{
 					// - Bound를 넘기는 offset
@@ -2919,7 +2919,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.OverflowException)
+				catch (System.IndexOutOfRangeException)
 				{
 				}
 			}
@@ -2950,7 +2950,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp2 = buf_Alloc + new CGDK.Size(12);
 
 				// - Bound owerflow
-				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer만 정상 통과합니다.
+				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer dll을 쓸때만 정상 통과합니다.
 				try
 				{
 					// - Bound를 넘기는 offset
@@ -2959,7 +2959,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.OverflowException)
+				catch (System.IndexOutOfRangeException)
 				{
 				}
 			}
@@ -2989,7 +2989,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp2 = buf_temp ^ new CGDK.Size(244);
 
 				// - Bound owerflow
-				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer만 정상 통과합니다.
+				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer dll을 쓸때만 정상 통과합니다.
 				try
 				{
 					// - Bound를 넘기는 offset
@@ -2998,7 +2998,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.OverflowException)
+				catch (System.IndexOutOfRangeException)
 				{
 				}
 			}
@@ -3028,7 +3028,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp2 = buf_temp ^ new CGDK.Size(256);
 
 				// - Bound owerflow
-				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer만 정상 통과합니다.
+				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer dll을 쓸때만 정상 통과합니다.
 				try
 				{
 					// - Bound를 넘기는 offset
@@ -3037,7 +3037,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.OverflowException)
+				catch (System.IndexOutOfRangeException)
 				{
 				}
 			}
@@ -3067,7 +3067,7 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp2 = buf_temp ^ (new CGDK.Offset(12), new CGDK.Size(244));
 
 				// - Bound owerflow
-				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer만 정상 통과합니다.
+				// 주의) 이 부분은 CGDK.buffe가 Debug일 때 Assert가 걸리므로 Reelase로 컴파일된 CGDK.buffer dll을 쓸때만 정상 통과합니다.
 				try
 				{
 					// - Bound를 넘기는 offset
@@ -3076,7 +3076,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.OverflowException)
+				catch (System.IndexOutOfRangeException)
 				{
 				}
 			}

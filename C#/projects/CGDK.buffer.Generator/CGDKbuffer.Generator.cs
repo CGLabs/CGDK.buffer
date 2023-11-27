@@ -31,27 +31,31 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//------------------------------------------------------------------
 	// 2. Execute 함수 (여기가 시작!!!)
 	//
-	//    인자로 전달 받은 contex 중에 Conpilation.SyntaxTrees를 뒤져서
+	//	  이 Source Generator를 포함한 프로젝트가 컴파일된 후
+	//	  이 Execute()함수가 호출된다.
+	//    이때 컴파일 결과를 context 인자로 전달해 오는데
+	//    이 context 인자 중에 contex의 SyntaxTree를 뒤져서
 	//
 	//    1) class Declaration를 찾아 정보를 추출해 낸다.
 	//    2) struct Declartaion을 찾아 정보를 추출해 낸다.
-	//    3) 추출한 clss와 struct의 serializer를 정의한 source를 작성해 등록한다.
+	//    3) 추출한 clss와 struct의 serializer 소스를 작성해 등록한다.
+	//       이 작업 내역은
 	//		 - 일단 source를 작성해 놓을 임시 string builder를 생성한다.
 	//       - class별 Serializer class를 정의한 source를 작성한다.
 	//       - struct별 Serializer class를 정의한 source를 작성한다.
 	//       - AddSource() 함수로 등록한다.
-	//    4) 공용 class를 만든다.
-	//       - source를 작성해 놓을 임시 string builder를 생성해
-	//         'class CGDK.BufferSerializer.Generator'를 정의하고
-	//         Initialize()함수를 정의해
+	//    4) 그 이후 이 Serializable들을 등록할 class를 만든다.
+	//       이 작업 내역은
+	//       - 소스를 작성해 넣을 임시 string builder를 생성해
+	//         'CGDK.BufferSerializer.Generator' 클래스를 정의하고
+	//         멤버 할수로 Initialize()를 정의한다. 여기서...
 	//		 - class용 Serializer를 등록하는 처리를 작성하고
 	//		 - struct용 Serializer를 등록하는 처리를 작성한다.
-	//		 - 작성한 source를 AddSource()함수로 등록한다.
+	//		 - 마지막으로 작성한 source를 AddSource()함수로 등록한다.
 	//
 	//------------------------------------------------------------------
 	public void Execute(GeneratorExecutionContext context)
 	{
-
 		// 1) get class declaration
 		var list_class_declaration = GetClassDeclarationInfo(context.Compilation.SyntaxTrees);
 
@@ -129,7 +133,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		public string identifier;	// serializer class의 이름으로 사용될 이름(.없이 _로 연결)
 		public List<MEMBER_NODE_INFO> list_member_node_info;
 	}
-	// 2) struct 정보
+	// 3) struct 정보
 	private struct STRUCT_INFO
 	{
 		public string type_name;    // 구조체의 type 문자열 이름(namespace까지 포함)
