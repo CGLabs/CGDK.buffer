@@ -38,9 +38,8 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//    이때 컴파일 결과를 context 인자로 전달해 오는데
 	//    이 context 인자 중에 contex의 SyntaxTree를 뒤져서
 	//
-	//    1) class Declaration를 찾아 정보를 추출해 낸다.
-	//    2) struct Declartaion을 찾아 정보를 추출해 낸다.
-	//    3) 추출한 clss와 struct의 serializer 소스를 작성해 등록한다.
+	//    1) class Declaration과 struct Declartaion를 찾아 정보를 추출해 낸다.
+	//    2) 추출한 clss와 struct의 serializer 소스를 작성해 등록한다.
 	//       이 작업 내역은
 	//		 - 일단 source를 작성해 놓을 임시 string builder를 생성한다.
 	//       - class별 Serializer class를 정의한 source를 작성한다.
@@ -48,7 +47,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//       - Serializer class는 IBast<T>와 IBast<object>를 인터페이스로
 	//         가진 것 두가지를 생성해서 추가한다.
 	//       - AddSource() 함수로 등록한다.
-	//    4) 그 이후 이 Serializable들을 등록할 class를 만든다.
+	//    3) 그 이후 이 Serializable들을 등록할 class를 만든다.
 	//       이 작업 내역은
 	//       - 소스를 작성해 넣을 임시 string builder를 생성해
 	//         'CGDK.BufferSerializer.Generator' 클래스를 정의하고
@@ -62,7 +61,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	{
 		//------------------------------------------------------------------
 		//
-		// 3. class & struct 정보 추출해 내기
+		// 1) class & struct 정보 추출해 내기
 		//
 		//       일반적으로 compile의 몇단계의 과정을 거친다.
 		//       (lexical analysis -> syntax analysis -> semantic analysis -> optimization -> objective)
@@ -93,7 +92,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		}
 
 		//------------------------------------------------------------------
-		// .4 Source generation
+		// 2) Source generation
 		// 
 		//      얻어진 class와 struct 정보를 바탕으로 
 		//		Serializer class source를 작성한다.
@@ -126,7 +125,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		}
 
 		//------------------------------------------------------------------
-		// 5. 최종 등록을 위한 class 생성
+		// 3) 최종 등록을 위한 class 생성
 		//
 		//		생성한 Serializer 객체를 생성하고 등록할 init()함수를 정의한다.
 		//
@@ -169,7 +168,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 6. definitions (struct)
+	// 3. definitions (struct)
 	//------------------------------------------------------------------
 	// 1) MEMBER에 대한 정보입니다. (CLASS_INFO에서 사용됩니다.)
 	private struct MEMBER_INFO
@@ -189,7 +188,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 
 	//------------------------------------------------------------------
-	// 7. functions
+	// 4. functions
 	//------------------------------------------------------------------
 	// 1) primitive type인가?
 	private static readonly string[] primitive_types = { "char","byte","sbyte","Int8","UInt8","short","ushort","Int16","UInt16","int","uint","Int32","UInt32","long","ulong","Int64","UInt64","float","double"};
@@ -232,7 +231,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 
 	//------------------------------------------------------------------
-	// 8. class 추축해 내기
+	// 5. class 추축해 내기
 	//
 	//    Serialier로 생성할 class 정보를 추출해 낸다.
 	//
@@ -280,7 +279,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 			// 3) make full typ name string and identifier name
 			class_info.type_name = type_info.ToString();
-			class_info.identifier = iter.Identifier.ToString();
+			class_info.identifier = iter.Identifier.ToString() + iter.GetHashCode().ToString();
 
 			// 4) make 'member_node_info' list
 			class_info.list_member_node_info = [];
@@ -311,7 +310,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 9. struct 추축해 내기
+	// 6. struct 추축해 내기
 	//
 	//    Serialier로 생성할 struct 정보를 추출해 낸다.
 	//
@@ -358,7 +357,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 			// 3) make full typ name string and identifier name
 			struct_info.type_name = type_info.ToString();
-			struct_info.identifier = iter.Identifier.ToString();
+			struct_info.identifier = iter.Identifier.ToString() + iter.GetHashCode().ToString();
 
 			// 4) make 'member_node_info' list
 			struct_info.list_member_node_info = [];
@@ -390,7 +389,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 
 	//------------------------------------------------------------------
-	// 10.  Source Generation (Serializer Class)
+	// 7.  Source Generation (Serializer Class)
 	//
 	//------------------------------------------------------------------
 	// class용 'serializer class' source 작성하기
