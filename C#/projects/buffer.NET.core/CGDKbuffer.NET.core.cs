@@ -870,20 +870,20 @@ namespace CGDK
 
 			// 1) 문자열을 배열로 변경하고 길이를 구한다.
 			var temp_array = _object.ToCharArray();
-			var string_length = temp_array.Length;
+			var string_length_bytes = temp_array.Length * sizeof(char);
 
 			// check) 버퍼의 크기가 충분한가 확인한다.
-			Debug.Assert((this.m_offset + this.m_count + string_length * sizeof(char)) <= this.m_buffer.Length);
+			Debug.Assert((this.m_offset + this.m_count + string_length_bytes) <= this.m_buffer.Length);
 
 			// check)
-			if ((this.m_buffer.Length - this.m_offset - this.m_count) < string_length)
+			if ((this.m_buffer.Length - this.m_offset - this.m_count) < temp_array.Length)
 				throw new System.IndexOutOfRangeException("buffer overflow");
 
 			// 2) [문자열]을 복사해 넣는다.
-			System.Buffer.BlockCopy(temp_array, 0, this.m_buffer, this.m_offset + this.m_count, string_length * sizeof(char));
+			System.Buffer.BlockCopy(temp_array, 0, this.m_buffer, this.m_offset + this.m_count, string_length_bytes);
 
 			// 3) [버퍼_길이]를 더해준다.
-			this.m_count += (string_length * sizeof(char));
+			this.m_count += string_length_bytes;
 		}
 
 		/// <summary>
@@ -2140,11 +2140,11 @@ namespace CGDK
 					return;
 				}
 
-				// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.(NULL은 뺀 크기)
-				var string_length = _object.Length * sizeof(char);
+				// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.(NULL 포함 크기)
+				var string_length_bytes = _object.Length * sizeof(char) + sizeof(char);
 
 				// check)
-				Debug.Assert(_ptr + sizeof(Int32) + string_length + sizeof(char) <= _ptr_bound);
+				Debug.Assert(_ptr + sizeof(Int32) + string_length_bytes <= _ptr_bound);
 
 				// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
 				Unsafe.AsRef<Int32>(_ptr) = _object.Length + 1;
@@ -2154,10 +2154,10 @@ namespace CGDK
 
 				// 5) [문자열]을 복사해 넣는다.
 				fixed (char* str = (string?)_object)
-					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length + sizeof(char)); // NULL 포함 복사
+					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length_bytes); // NULL 포함 복사
 
 				// 6) 써넣은 bytes만큼 더해준다. (NULL문자열의 길이까지 포함)
-				_ptr += string_length + sizeof(char);
+				_ptr += string_length_bytes;
 			}
 			public static unsafe string? XProcessExtract(ref byte* _ptr, ref int _count)
 			{
@@ -2179,26 +2179,26 @@ namespace CGDK
 				if (length_string == -1)
 					return null;
 
-				// 3) 복사할 [문자열_길이]를 구한다. (NULL문자는 뺀다.)
-				int size_copy = length_string * sizeof(char);
+				// 3) 복사할 [문자열_길이]를 구한다. (NULL를 포함한 길이다.)
+				int size_copy_bytes = length_string * sizeof(char);
 
 				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
-				Debug.Assert(size_copy <= _count);
+				Debug.Assert(size_copy_bytes <= _count);
 
 				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
-				if (size_copy > _count)
+				if (size_copy_bytes > _count)
 					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
 
 				// check) [문자열]의 제일 끝이 NULL인지 확인한다.
-				if (*(char*)(_ptr + size_copy - sizeof(char)) != 0)
+				if (*(char*)(_ptr + size_copy_bytes - sizeof(char)) != 0)
 					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] string terminate No-'NULL' value");
 
 				// 4) get '_ptr' before update
 				var p = _ptr;
 
 				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
-				_ptr += size_copy;
-				_count -= size_copy;
+				_ptr += size_copy_bytes;
+				_count -= size_copy_bytes;
 
 				// 6) [string]로 변환해 최종 리턴한다.
 				return new string((char*)p, 0, length_string - 1);
@@ -2295,7 +2295,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+				var obj_array = new V[item_count];
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2387,7 +2387,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+				var obj_array = new V[item_count];
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2593,10 +2593,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
-
-				// check)
-				Debug.Assert(obj_array != null);
+				var obj_array = new V[item_count];
 
 				// 5) read all items
 				for (int i = 0; i < item_count; ++i)
@@ -2607,9 +2604,6 @@ namespace CGDK
 					// -set value
 					obj_array.SetValue(item, i);
 				}
-
-				// check)
-				Debug.Assert(obj_array != null);
 
 				// return) 
 				return obj_array;
@@ -2658,10 +2652,7 @@ namespace CGDK
 				// check) is null?
 				if (_object == null)
 				{
-					// - write -1
 					Builder.ProcessAppend_Empty(ref _ptr);
-
-					// return) 
 					return;
 				}
 
@@ -2697,7 +2688,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj_array = (V[]?)Activator.CreateInstance(typeof(V[]), item_count);
+				var obj_array = new V[item_count];
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2755,10 +2746,7 @@ namespace CGDK
 				// check) is null?
 				if (_object == null)
 				{
-					// - write -1
 					Builder.ProcessAppend_Empty(ref _ptr);
-
-					// return) 
 					return;
 				}
 
@@ -2913,10 +2901,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj_create = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
-
-				// check)
-				Debug.Assert(obj_create != null);
+				var obj_create = new Dictionary<K,V>();
 
 				// 4) write items
 				while (item_count > 0)
@@ -3023,7 +3008,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj_create = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+				var obj_create = new Dictionary<K, V>();
 
 				// check)
 				Debug.Assert(obj_create != null);
@@ -3278,7 +3263,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj = (Dictionary<K, V>?)Activator.CreateInstance(typeof(Dictionary<K, V>));
+				var obj = new Dictionary<K, V>();
 
 				// check)
 				Debug.Assert(obj != null);
@@ -3356,7 +3341,7 @@ namespace CGDK
 				return SerializerDictionary_primitive_primitive<K, V>.Xprocess_get_size_of((Dictionary<K, V>?)_object);
 			}
 		}
-		internal class SerializerDictionary_object_no_typed<K, V> : IBase<object>
+		internal class SerializerDictionary_object_no_typed<K, V> : IBase<object> where K:notnull
 		{
 			public SerializerDictionary_object_no_typed(Type? _type_create, IBase<K>? _serializer_key, IBase<V>? _serializer_value)
 			{
@@ -3436,29 +3421,23 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj = Activator.CreateInstance(type_create);
+				var obj = new Dictionary<K,V>();
 
 				// check)
 				Debug.Assert(obj != null);
 
-				// 4) get Dictionary
-				var obj_dictionary = Unsafe.As<IDictionary>(obj);
-
-				// check)
-				Debug.Assert(obj_dictionary != null);
-
-				// 5) write items
+				// 4) write items
 				while (item_count > 0)
 				{
 					// - get key & value
 					var item_key = serializer_key.ProcessExtract(ref _ptr, ref _count);
-					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// check)
 					Debug.Assert(item_key != null);
 
 					// - add item
-					obj_dictionary.Add(item_key, item_value);
+					obj.Add(item_key, item_value);
 
 					// - count down
 					--item_count;
@@ -3547,7 +3526,7 @@ namespace CGDK
 					_serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (Y?)iter_item.Value);
 				}
 			}
-			public static unsafe object? XProcessExtract<X, Y>(ref byte* _ptr, ref int _count, Type _Type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			public static unsafe object? XProcessExtract<X, Y>(ref byte* _ptr, ref int _count, Type _type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3564,7 +3543,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj = Activator.CreateInstance(_Type_create);
+				var obj = Activator.CreateInstance(_type_create);
 
 				// check)
 				Debug.Assert(obj != null);
@@ -3728,13 +3707,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj = Activator.CreateInstance(typeof(List<V>));
-
-				// 4) casting to IList
-				var obj_list = Unsafe.As<List<V>>(obj);
-
-				// check)
-				Debug.Assert(obj_list != null);
+				var obj = new List<V>();
 
 				// 5) write items
 				while (item_count > 0)
@@ -3743,17 +3716,14 @@ namespace CGDK
 					var item = serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// - add item
-					obj_list.Add(item);
+					obj.Add(item);
 
 					// - count down
 					--item_count;
 				}
 
-				// check)
-				Debug.Assert(obj_list != null);
-
 				// return) 
-				return obj_list;
+				return obj;
 			}
 			public unsafe int ProcessGetSizeOf(List<V>? _object)
 			{
@@ -3831,13 +3801,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj = Activator.CreateInstance(typeof(List<V>));
-
-				// 4) casting to IList
-				var obj_list = Unsafe.As<List<V>>(obj);
-
-				// check)
-				Debug.Assert(obj_list != null);
+				var obj = new List<V>();
 
 				// 5) sub count
 				_count -= sizeof(V) * item_count;
@@ -3846,7 +3810,7 @@ namespace CGDK
 				while (item_count > 0)
 				{
 					// - add item
-					obj_list.Add(*(V*)_ptr);
+					obj.Add(*(V*)_ptr);
 
 					// - update ptr
 					_ptr += sizeof(V);
@@ -3855,11 +3819,8 @@ namespace CGDK
 					--item_count;
 				}
 
-				// check)
-				Debug.Assert(obj_list != null);
-
 				// return) 
-				return obj_list;
+				return obj;
 			}
 			public unsafe int ProcessGetSizeOf(List<V>? _object)
 			{
@@ -3921,13 +3882,7 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj = Activator.CreateInstance(typeof(List<string>));
-
-				// 4) casting to IList
-				var obj_list = Unsafe.As<List<string>>(obj);
-
-				// check)
-				Debug.Assert(obj_list != null);
+				var obj = new List<string>();
 
 				// 5) write items
 				while (item_count > 0)
@@ -3936,17 +3891,14 @@ namespace CGDK
 					var item_string = SerializerString.XProcessExtract(ref _ptr, ref _count)!;
 
 					// - add item
-					obj_list.Add(item_string);
+					obj.Add(item_string);
 
 					// - count down
 					--item_count;
 				}
 
-				// check)
-				Debug.Assert(obj_list != null);
-
 				// return) 
-				return obj_list;
+				return obj;
 			}
 			public unsafe int ProcessGetSizeOf(List<string>? _object)
 			{
@@ -4141,13 +4093,7 @@ namespace CGDK
 					return null;
 
 				// 3) create list
-				var obj = Activator.CreateInstance(typeof(List<V>));
-
-				// 4) casting to IList
-				var obj_list = Unsafe.As<List<V>>(obj);
-
-				// check)
-				Debug.Assert(obj_list != null);
+				var obj = new List<V>();
 
 				// 5) sub count
 				_count -= sizeof(V) * item_count;
@@ -4156,7 +4102,7 @@ namespace CGDK
 				while (item_count > 0)
 				{
 					// - add item
-					obj_list.Add(*(V*)_ptr);
+					obj.Add(*(V*)_ptr);
 
 					// - update ptr
 					_ptr += sizeof(V);
@@ -4164,9 +4110,6 @@ namespace CGDK
 					// - count down
 					--item_count;
 				}
-
-				// check)
-				Debug.Assert(obj != null);
 
 				// return) 
 				return obj;
@@ -4234,32 +4177,23 @@ namespace CGDK
 					return default;
 
 				// 3) create list
-				var obj = Activator.CreateInstance(typeof(List<string>));
-
-				// 4) casting to IList
-				var obj_list = Unsafe.As<List<string?>>(obj);
-
-				// check)
-				Debug.Assert(obj_list != null);
+				var obj = new List<string>();
 
 				// 5) write items
 				while (item_count > 0)
 				{
 					// - get 
-					var item_string = SerializerString.XProcessExtract(ref _ptr, ref _count);
+					var item_string = SerializerString.XProcessExtract(ref _ptr, ref _count)!;
 
 					// - add item
-					obj_list.Add(item_string);
+					obj.Add(item_string);
 
 					// - count down
 					--item_count;
 				}
 
-				// check)
-				Debug.Assert(obj_list != null);
-
 				// return) 
-				return obj_list;
+				return obj;
 			}
 			public unsafe int ProcessGetSizeOf(object? _object)
 			{
@@ -4582,7 +4516,7 @@ namespace CGDK
 					iter_member.Current.serializer.ProcessAppend(ref _ptr, _ptr_bound, iter_member.Current.field_info.GetValue(_object));
 				}
 			}
-			public static unsafe object XProcessExtract(ref byte* _ptr, ref int _count, Type _Type_create, List<MemberSerializationInfo>? _list_member_serialization_info)
+			public static unsafe object XProcessExtract(ref byte* _ptr, ref int _count, Type _type_create, List<MemberSerializationInfo>? _list_member_serialization_info)
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -4591,7 +4525,7 @@ namespace CGDK
 				Debug.Assert(_list_member_serialization_info != null);
 
 				// 1) 객체를 생성한다.
-				var temp_object = Activator.CreateInstance(_Type_create);
+				var temp_object = Activator.CreateInstance(_type_create);
 
 				// check) 
 				Debug.Assert(temp_object != null);
