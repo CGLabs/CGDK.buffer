@@ -155,10 +155,25 @@ namespace CGDK
 		/// 생성자
 		/// </summary>
 		/// <param name="_buffer">메모리 버퍼</param>
-		/// <param name="_offset">오프셋</param>
-		/// <param name="_count">크기</param>
+		/// <param name="_offset">오프셋(bytes)</param>
+		/// <param name="_count">크기(bytes)</param>
 		public buffer(in byte[]? _buffer, in int _offset = 0, in int _count = 0)
 		{
+			// check)
+			Debug.Assert((_buffer == null) || (_buffer.Length >= (_offset + _count)));
+
+			// check)
+			if ((_buffer == null) || (_buffer.Length < (_offset + _count)))
+				throw new System.IndexOutOfRangeException("offset or count is out of range");
+
+			// check)
+			Debug.Assert((_buffer != null) || (_offset == 0 && _count == 0));
+
+			// check)
+			if ((_buffer == null) && (_offset != 0 || _count != 0))
+				throw new System.IndexOutOfRangeException("invaild parameter");
+
+			// 1) initialize value
 			this.m_buffer = _buffer;
 			this.m_offset = _offset;
 			this.m_count = _count;
@@ -169,6 +184,21 @@ namespace CGDK
 		/// <param name="_buffer">원본 버퍼</param>
 		public buffer(in buffer _buffer)
 		{
+			// check)
+			Debug.Assert((_buffer.m_buffer == null) || (_buffer.m_buffer.Length >= (_buffer.m_offset + _buffer.m_count)));
+
+			// check)
+			if ((_buffer.m_buffer == null) || (_buffer.m_buffer.Length < (_buffer.m_offset + _buffer.m_count)))
+				throw new System.IndexOutOfRangeException("offset or count is out of range");
+
+			// check)
+			Debug.Assert((_buffer.m_buffer != null) || (_buffer.m_offset == 0 && _buffer.m_count == 0));
+
+			// check)
+			if ((_buffer.m_buffer == null) && (_buffer.m_offset != 0 || _buffer.m_count != 0))
+				throw new System.IndexOutOfRangeException("invaild parameter");
+
+			// 1) initialize value
 			this.m_buffer = _buffer.m_buffer;
 			this.m_offset = _buffer.m_offset;
 			this.m_count = _buffer.m_count;
@@ -179,6 +209,7 @@ namespace CGDK
 		/// <param name="_Size">생성할 메모리 크기</param>
 		public buffer(in int _Size)
 		{
+			// 1) alloc memory & initialize value
 			this.m_buffer = new byte[_Size];
 			this.m_offset = 0;
 			this.m_count = 0;
@@ -200,9 +231,16 @@ namespace CGDK
 		/// </remarks>
 		public readonly buffer Clone()
 		{
-			// 1(
+			// check)
 			if (this.m_buffer == null)
 				return new buffer();
+
+			// check)
+			Debug.Assert(this.m_buffer.Length >= (this.m_offset + this.m_count));
+
+			// check)
+			if ((this.m_buffer.Length < (this.m_offset + this.m_count)))
+				throw new System.IndexOutOfRangeException("offset or count is out of range");
 
 			// 1) get capacity
 			var temp_capacity = this.m_buffer.Length;
