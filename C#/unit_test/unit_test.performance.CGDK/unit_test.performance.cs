@@ -510,5 +510,42 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			}
 		}
 
+		[CGDK.Attribute.Serializable]
+		public struct TEST3
+		{
+			public TEST x;
+		};
+
+		[TestMethod]
+		public void CGDKb_benchmark_11_struct_hierachy()
+		{
+			// - 버퍼 준비
+			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
+			TEST3 tempData = new TEST3();
+
+			tempData.x.v0 = (sbyte)3;
+			tempData.x.v1 = (byte)4;
+			tempData.x.v2 = (short)4100;
+			tempData.x.v3 = (ushort)32210;
+			tempData.x.v4 = 123310;
+			tempData.x.v5 = 121234;
+			tempData.x.v6 = -1000443L;
+			tempData.x.v7 = 12233094310UL;
+			tempData.x.v8 = 1.0f;
+			tempData.x.v9 = 2.0;
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// 1) Buffer 준비
+				CGDK.buffer bufferTemp = bufferCreate;
+
+				// - 직렬화
+				bufferTemp.Append<TEST3>(tempData);
+
+				// - 역직렬화
+				var value2 = bufferTemp.Extract<TEST3>();
+			}
+		}
+
 	}
 }

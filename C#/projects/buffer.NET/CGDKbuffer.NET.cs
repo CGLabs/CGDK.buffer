@@ -2304,7 +2304,7 @@ namespace CGDK
 				for (int i = 0; i < item_count; ++i)
 				{
 					// - get item
-					var item = (V?)serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item = serializer_value.ProcessExtract(ref _ptr, ref _count);
 
 					// - add item
 					obj_array.SetValue(item, i);
