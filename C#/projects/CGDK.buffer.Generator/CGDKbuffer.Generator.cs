@@ -232,27 +232,20 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 
 	//------------------------------------------------------------------
-	// 5. class 추축해 내기
+	// 8. class 추축해 내기
 	//
 	//    Serialier로 생성할 class 정보를 추출해 낸다.
 	//
-	//    1) class 정보들를 담은 List<CLASS_LINFO>를 생성한다.
-	//    2) class 정보들을 추축해 낸다.
-	//       - class Declaration이어야 하고!
-	//       - '[CGDK.Attribute.Serializable]'를 Attribute로 가지고 있는 class
-	//    3) 먼저 구조체의 이름을 얻어 놓는다.
-	//    4) class 정보를 담을 CLASS_INFO를 생성한다.
-	//    5) namespace와 부도 클래스가 있을 경우 이걸 얻어 full name을 생성한다.
+	//    1) class 정보를 담을 CLASS_INFO를 생성한다.
+	//	  2) type info를 semantic_model에서 얻어낸다.
+	//    3) class info를 설정한다.
 	//       - type_name => .로 연결된 full type_name (ex) CGDK.foo.bar.tee
-	//       - identifier => _로 연경될 full type_name (ex) CGDK_foo_bar_tee
-	//		   serializer class의 이름으로 사용할 것이다.
-	//
-	//	  6) member_info를 담을 MEMBER_INFO의 list를 생성한다.
-	//	  7) type name 문자열과 serializer class에 사용될 이름을 만든다.
-	//	  8) class의 MEMBER_INFO들을 얻어낸다. 
+	//       - identifier => serializer class의 이름으로 사용할 것이다.
+	//	  4) member_info를 담을 MEMBER_INFO의 list를 생성한다.
+	//	  5) type name 문자열과 serializer class에 사용될 이름을 만든다.
+	//	  6) class의 MEMBER_INFO들을 얻어낸다. 
 	//       class의 MEMBER 중에서 '[CGDK.Attribute.Field]' Attribute를 가진 멤버 변수나 멤버 Property 얻는다.
-	//       얻은 멤버들의 자료형 이름(type_name),변수명(identifier)을 얻어낸다.
-	//    9) 이렇게 만들어진 CLASS_INFO를 list에 등록한다.
+	//    7) 이렇게 만들어진 CLASS_INFO를 list에 등록한다.
 	//	  r) 최종적으로 만들어진 OBJECT_INFO list을 리턴한다.
 	//
 	//------------------------------------------------------------------
@@ -318,7 +311,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	//------------------------------------------------------------------
-	// 6. struct 추축해 내기
+	// 9. struct 추축해 내기
 	//
 	//    Serialier로 생성할 struct 정보를 추출해 낸다.
 	//
@@ -326,8 +319,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//    2) type info를 semantic_model에서 얻어낸다.
 	//	  3) struct info를 설정한다.
 	//       - type_name => .로 연결된 full type_name (ex) CGDK.foo.bar.tee
-	//       - identifier => _로 연경될 full type_name (ex) CGDK_foo_bar_tee
-	//		   serializer struct의 이름으로 사용할 것이다.
+	//       - identifier => serializer struct의 이름으로 사용할 것이다.
 	//	  4) member_info를 담을 MEMBER_INFO의 list를 생성한다.
 	//	  5) struct의 MEMBER_INFO들을 얻어낸다. 
 	//       struct의 MEMBER 중에서 '[CGDK.Attribute.Field]' Attribute를 가진 멤버 변수나 멤버 Property 얻는다.
@@ -398,7 +390,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 
 	//------------------------------------------------------------------
-	// 7.  Source Generation (Serializer Class)
+	// 10.  Source Generation (Serializer Class)
 	//
 	//------------------------------------------------------------------
 	// class용 'serializer class' source 작성하기
