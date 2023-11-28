@@ -2269,10 +2269,10 @@ namespace CGDK
 				_ptr += sizeof(Int32);
 
 				// 4) write
-				var iter_item = _object.GetEnumerator();
+				var iter_item = ((IEnumerable<V>)_object).GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Current);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
 			public unsafe V[]? ProcessExtract(ref byte* _ptr, ref int _count)
@@ -2329,10 +2329,10 @@ namespace CGDK
 				int size = sizeof(Int32);
 
 				// 2) 'items'
-				var iter_item = _object.GetEnumerator();
+				var iter_item = ((IEnumerable<V>)_object).GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Current);
+					size += serializer_value.ProcessGetSizeOf(iter_item.Current);
 				}
 
 				// return) 
@@ -2567,10 +2567,10 @@ namespace CGDK
 				Debug.Assert(obj_list != null);
 
 				// 4) write all items
-				var iter_item = obj_list.GetEnumerator();
+				var iter_item = ((IEnumerable<V>)obj_list).GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Current);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current);
 				}
 			}
 			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
@@ -2627,10 +2627,10 @@ namespace CGDK
 				Debug.Assert(obj_array != null);
 
 				// 2) add size of 'items'
-				var iter_item = obj_array.GetEnumerator();
+				var iter_item = ((IEnumerable<V>)obj_array).GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Current);
+					size += serializer_value.ProcessGetSizeOf(iter_item.Current);
 				}
 
 				// return) 
@@ -2907,14 +2907,14 @@ namespace CGDK
 				while (item_count > 0)
 				{
 					// - get key & value
-					var item_key = serializer_key.ProcessExtract(ref _ptr, ref _count);
+					var item_key = (K)serializer_key.ProcessExtract(ref _ptr, ref _count)!;
 					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// check) 
 					Debug.Assert(item_key != null);
 
 					// - add item(key & value)
-					obj_create.Add((K)item_key, item_value);
+					obj_create.Add(item_key, item_value);
 
 					// - count down!
 					--item_count;
@@ -3093,7 +3093,7 @@ namespace CGDK
 				}
 
 				// 1) casting
-				var dictionary_object = (IDictionary)_object;
+				var dictionary_object = (IDictionary<K,V>)_object;
 
 				// 2) write -1 
 				Unsafe.AsRef<Int32>(_ptr) = dictionary_object.Count;
@@ -3109,8 +3109,8 @@ namespace CGDK
 				while (iter_item.MoveNext())
 				{
 					// - write key & value
-					serializer_key.ProcessAppend(ref _ptr, _ptr_bound, (K)iter_item.Key);
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Value);
+					serializer_key.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Key);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Value);
 				}
 			}
 			public unsafe T? ProcessExtract(ref byte* _ptr, ref int _count)
@@ -3139,14 +3139,14 @@ namespace CGDK
 				Debug.Assert(obj_create != null);
 
 				// 4) casting
-				var dictionary_object = (IDictionary)obj_create;
+				var dictionary_object = (IDictionary<K,V>)obj_create;
 
 				// 5) write items
 				while (item_count > 0)
 				{
 					// - get key & value
 					var item_key = serializer_key.ProcessExtract(ref _ptr, ref _count);
-					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// check) 
 					Debug.Assert(item_key != null);
@@ -3177,7 +3177,7 @@ namespace CGDK
 					return size;
 
 				// 2) casting
-				var dictionary_object = (IDictionary)_object;
+				var dictionary_object = (IDictionary<K,V>)_object;
 
 				// 3) get Dictionary
 				var iter_item = dictionary_object.GetEnumerator();
@@ -3186,8 +3186,8 @@ namespace CGDK
 				while (iter_item.MoveNext())
 				{
 					// - add size of 'key' & 'value'
-					size += serializer_key.ProcessGetSizeOf((K)iter_item.Key);
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Value);
+					size += serializer_key.ProcessGetSizeOf(iter_item.Current.Key);
+					size += serializer_value.ProcessGetSizeOf(iter_item.Current.Value);
 				}
 
 				// return) 
@@ -3221,7 +3221,7 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_dictionary = Unsafe.As<Dictionary<K, V>>(_object);
+				var obj_dictionary = Unsafe.As<Dictionary<K,V>>(_object);
 
 				// 2) write -1 
 				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
@@ -3376,7 +3376,7 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_dictionary = Unsafe.As<IDictionary>(_object);
+				var obj_dictionary = Unsafe.As<IDictionary<K,V>>(_object);
 
 				// 2) write -1 
 				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
@@ -3391,8 +3391,8 @@ namespace CGDK
 				var iter_item = obj_dictionary.GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					serializer_key.ProcessAppend(ref _ptr, _ptr_bound, (K)iter_item.Key);
-					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (V?)iter_item.Value);
+					serializer_key.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Key);
+					serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Value);
 				}
 			}
 			public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)
@@ -3462,13 +3462,13 @@ namespace CGDK
 					return size;
 
 				// 3) get Dictionary
-				var iter_item = Unsafe.As<IDictionary>(_object).GetEnumerator();
+				var iter_item = Unsafe.As<IDictionary<K,V>>(_object).GetEnumerator();
 
 				// 4) add size of items
 				while (iter_item.MoveNext())
 				{
-					size += serializer_key.ProcessGetSizeOf((K)iter_item.Key);
-					size += serializer_value.ProcessGetSizeOf((V?)iter_item.Value);
+					size += serializer_key.ProcessGetSizeOf(iter_item.Current.Key);
+					size += serializer_value.ProcessGetSizeOf(iter_item.Current.Value);
 				}
 
 				// return) 
@@ -3507,7 +3507,7 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_dictionary = Unsafe.As<IDictionary>(_object);
+				var obj_dictionary = Unsafe.As<IDictionary<X,Y>>(_object);
 
 				// 2) write -1 
 				Unsafe.AsRef<Int32>(_ptr) = obj_dictionary.Count;
@@ -3522,8 +3522,8 @@ namespace CGDK
 				var iter_item = obj_dictionary.GetEnumerator();
 				while (iter_item.MoveNext())
 				{
-					_serializer_key.ProcessAppend(ref _ptr, _ptr_bound, (X)iter_item.Key);
-					_serializer_value.ProcessAppend(ref _ptr, _ptr_bound, (Y?)iter_item.Value);
+					_serializer_key.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Key);
+					_serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Value);
 				}
 			}
 			public static unsafe object? XProcessExtract<X, Y>(ref byte* _ptr, ref int _count, Type _type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value)
@@ -3549,7 +3549,7 @@ namespace CGDK
 				Debug.Assert(obj != null);
 
 				// 4) casting to IList
-				var obj_dictionary = Unsafe.As<IDictionary>(obj);
+				var obj_dictionary = Unsafe.As<IDictionary<X,Y>>(obj);
 
 				// check)
 				Debug.Assert(obj_dictionary != null);
@@ -3559,7 +3559,7 @@ namespace CGDK
 				{
 					// - get key & value
 					var item_key = _serializer_key.ProcessExtract(ref _ptr, ref _count);
-					var item_value = _serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item_value = _serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// check)
 					Debug.Assert(item_key != null);
@@ -3584,13 +3584,13 @@ namespace CGDK
 					return size;
 
 				// 3) get Dictionary
-				var iter_item = Unsafe.As<IDictionary>(_object).GetEnumerator();
+				var iter_item = Unsafe.As<IDictionary<X,Y>>(_object).GetEnumerator();
 
 				// 4) add size of items
 				while (iter_item.MoveNext())
 				{
-					size += _serializer_key.ProcessGetSizeOf((X)iter_item.Key);
-					size += _serializer_value.ProcessGetSizeOf((Y?)iter_item.Value);
+					size += _serializer_key.ProcessGetSizeOf(iter_item.Current.Key);
+					size += _serializer_value.ProcessGetSizeOf(iter_item.Current.Value);
 				}
 
 				// return) 
