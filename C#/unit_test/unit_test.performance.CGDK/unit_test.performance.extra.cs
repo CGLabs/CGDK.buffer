@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 {
 	[TestClass]
-	public class Performance_ex
+	public class Performance_extra
 	{
 		public const int _TEST_COUNT = 1000000;
 

@@ -9,6 +9,7 @@
     <Import_RootNamespace>CGDK.buffer.unit_test.performance_protobuf_net</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)unit_test.performance_protobuf-net,extra.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)unit_test.performance_protobuf-net.cs" />
   </ItemGroup>
 </Project>

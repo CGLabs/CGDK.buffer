@@ -10,6 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)unit_test.performance.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)unit_test.performance.ex.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)unit_test.performance.extra.cs" />
   </ItemGroup>
 </Project>
