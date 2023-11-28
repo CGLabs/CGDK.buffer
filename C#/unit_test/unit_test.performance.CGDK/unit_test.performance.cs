@@ -449,27 +449,29 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			public int v1;
 
 			[CGDK.Attribute.Field]
-#if NET
+		#if NET
 			public string? v2;
-#else
+		#else
 			public string v2;
-#endif
+		#endif
 
-#if NET
+		#pragma warning disable 0169
+		#if NET
 			private List<int>? v3;
-#else
+		#else
 			private List<int> v3;
-#endif
+		#endif
+		#pragma warning restore 0169
 
 			[CGDK.Attribute.Field]
 			public UInt64 v4;
 
 			[CGDK.Attribute.Field]
-#if NET
+		#if NET
 			public Dictionary<string, int>? v5;
-#else
+		#else
 			public Dictionary<string, int> v5;
-#endif
+		#endif
 
 			[CGDK.Attribute.Field]
 			public int value_6 

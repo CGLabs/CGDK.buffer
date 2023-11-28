@@ -68,12 +68,31 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		//        이중에서 Roslyn을 통해 받을 수 있는 필요 정보는 
 		//
 		//       1) Syntax Analysis		문법해석(구문허석) 단계로 Token들을 Syntax Tree로 구성하며 문법과 맞게 작성되었는지 검사를 하는 과정이다.
-		//								context.Compilation.SyntaxTrees 를 통해 얻을 수 있다.
-		//		 2) Semantic Analysis	구문분석(의미분석) 단계로 의미를 부여하고 목적 코드로 만들기 전 각종 정보들를 생성한다.
-		//								context.Compilation.GetSemanticModel(syntaxTree)를 통해 얻을 수 있다.
+		//								- context.Compilation.SyntaxTrees 를 통해 얻을 수 있다.
+		//								- 이 단계에서는 각 Syntax에 노드에 어떤 종류의 Keyward가 들어 있는 것까지는 알 수 있습니다.
+		//							      하지만 구문상 어떤 의미를 가지는 지는 확인할 수 없습니다.
+		//								- 예들들어 설명하자면 'cass X'라는 구문을 했을 때 'class'는 예약어며 'X'는 클래스명이란 것까지는 알수 있지만
+		//								  'X'가 어디에 존재하는 어떤namespace에 존재하는 지 진짜 존재는 하는지 등등 정보는 포함하고 있지 없다.
 		//
-		//       제대로 처리를 하기 위해서 Syntax Analysis 정보를 가진 Syntax Tree와 그것의 의미정보를 가진 Semantic_model 정보가 필요하다.
-		// 
+		//								- 구문해석 정보는 SyntaxNode를 상속받은 다양한Syntax 구조체로 작성되어 있다.
+		//								  따라서 SyntaxNode를 찾은 후 그 SyntaxNode의 종류가 무엇인지 확인해 그에 맞는 SyntaXNode로 unboxing(Casting)한 후 사용한다.
+		//								  SyntaxNode는 Kind로 알아낼 수 있으며 그냥 해당 SyntaxNode 구조체로 unboxing해봐도 된다.
+		//
+		//		 2) Semantic Analysis	의미분석(구문분석) 단계로 의미를 부여하고 목적 코드로 만들기 전 각종 정보들를 생성한다.
+		//								- 의미분석 정보를 이용하면 좀 더 구체적인 정보들을 얻을 수 있다.
+		//								- 예들들어 'class X'를 구문해석하면 'X' 클래스가 어느 namespace에 존재하는 클래스인지 어떤 클래스를 상속받았는지 등등 
+		//								  의미적 정보들을 얻을 수 있다.
+		//								- 여기서는 주로 이 정보한다.
+		//								- SynTaxTree로 Semantic Model를 구하면 이 정보들을 얻을 수 있다.
+		//
+		//								   var semantic_model = context.Compilation.GetSemanticModel(syntaxTree);
+		//
+		//								  를 수행하면 Semantic Model을 얻을 수 있는데 여기서 필요한 정보를 얻어 사용하면 된다.
+		//		
+		//		여기서는 먼저 SyntaxTree에서 class와 struct를 검색해서 해당 SyntaxNode를 찾아 낸다.
+		//		그 이후 찾아낸 SyntaxNode로 Semantic_model에서 Semantic 정보를 얻어내는 CLASS_INFO들을 생성해 낸다.
+		//		
+		//		
 		//------------------------------------------------------------------
 		// declare) 
 		List<OBJECT_INFO> list_class_declaration = [];
@@ -94,8 +113,12 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		//------------------------------------------------------------------
 		// 2) Source generation
 		// 
-		//      얻어진 class와 struct 정보를 바탕으로 
-		//		Serializer class source를 작성한다.
+		//      앞에서 얻어진 CLASS_INFO를 바탕으로 Serailizer class를 생성하는 단계다.
+		//      그리고...
+		//
+		//		context.AddSource(...);
+		//		
+		//		함수를 사용해 생성한 Source를 등록한다.
 		// 
 		//------------------------------------------------------------------
 		{
@@ -127,7 +150,15 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		//------------------------------------------------------------------
 		// 3) 최종 등록을 위한 class 생성
 		//
-		//		생성한 Serializer 객체를 생성하고 등록할 init()함수를 정의한다.
+		//		생성한 Serializer class를 객체화해서 등록하는 함수를 정의한다.
+		//
+		//		CGDK.BufferSerializer.Generator 클래스를 정의해
+		//		Init()함수를 정의하고
+		//		여기에 Seriazer 객체를 생성해 등록하는 소스를 넣는다.
+		//		이 Init()함수를 호출함으로써 생성된 Serializer를 사용할 수 있게 된다.
+		//	    만약 Init()함수를 호출하지 않는다면 그냥 기존의 방법으로 Serializer를 생성한다.
+		//		.NET framework 버전이나 Roslyn을 쓸 수 없는 곳에서 동작하기 위해서
+		//		두가지 방법 모두 지원한다.
 		//
 		//------------------------------------------------------------------
 		{
@@ -173,7 +204,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	// 1) MEMBER에 대한 정보입니다. (CLASS_INFO에서 사용됩니다.)
 	private struct MEMBER_INFO
 	{
-		public int type;			// MEBER의 type 정보.(1:primitive type, 2:others
+		public int type;			// MEBER의 type 정보.(1:primitive type, 2:others)
 		public string type_name;	// type의 문자열 이름(int, char, long, string, ...)
 		public string identifier;   // 멤버 변수명
 	}
