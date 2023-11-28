@@ -34,9 +34,9 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	// 2. Execute 함수 (여기가 시작!!!)
 	//
 	//	  이 Source Generator를 포함한 프로젝트가 컴파일된 후
-	//	  이 Execute()함수가 호출된다.
+	//	  아래 Execute()함수가 호출된다.
 	//    이때 컴파일 결과를 context 인자로 전달해 오는데
-	//    이 context 인자 중에 contex의 SyntaxTree를 뒤져서
+	//    contex의 SyntaxTree를 뒤져서
 	//
 	//    1) class Declaration과 struct Declartaion를 찾아 정보를 추출해 낸다.
 	//    2) 추출한 clss와 struct의 serializer 소스를 작성해 등록한다.
@@ -46,7 +46,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//       - struct별 Serializer class를 정의한 source를 작성한다.
 	//       - Serializer class는 IBast<T>와 IBast<object>를 인터페이스로
 	//         가진 것 두가지를 생성해서 추가한다.
-	//       - AddSource() 함수로 등록한다.
+	//       - AddSource() 함수로 생성한 source를 등록한다.
 	//    3) 그 이후 이 Serializable들을 등록할 class를 만든다.
 	//       이 작업 내역은
 	//       - 소스를 작성해 넣을 임시 string builder를 생성해
@@ -64,34 +64,32 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		// 1) class & struct 정보 추출해 내기
 		//
 		//       일반적으로 compile의 몇단계의 과정을 거친다.
-		//       (lexical analysis -> syntax analysis -> semantic analysis -> optimization -> objective)
+		//       (lexical analysis -> syntax analysis -> semantic analysis -> optimization -> objective code)
 		//        이중에서 Roslyn을 통해 받을 수 있는 필요 정보는 
 		//
-		//       1) Syntax Analysis		문법해석(구문허석) 단계로 Token들을 Syntax Tree로 구성하며 문법과 맞게 작성되었는지 검사를 하는 과정이다.
+		//       1) Syntax Analysis		문법해석(구문허석) 단계로 lexical Analysis로 도출된 Token들로 Syntax Tree로 구성하며 문법과 맞게 작성되었는지 검사를 하는 과정이다.
 		//								- context.Compilation.SyntaxTrees 를 통해 얻을 수 있다.
-		//								- 이 단계에서는 각 Syntax에 노드에 어떤 종류의 Keyward가 들어 있는 것까지는 알 수 있습니다.
-		//							      하지만 구문상 어떤 의미를 가지는 지는 확인할 수 없습니다.
-		//								- 예들들어 설명하자면 'cass X'라는 구문을 했을 때 'class'는 예약어며 'X'는 클래스명이란 것까지는 알수 있지만
-		//								  'X'가 어디에 존재하는 어떤namespace에 존재하는 지 진짜 존재는 하는지 등등 정보는 포함하고 있지 없다.
-		//
-		//								- 구문해석 정보는 SyntaxNode를 상속받은 다양한Syntax 구조체로 작성되어 있다.
-		//								  따라서 SyntaxNode를 찾은 후 그 SyntaxNode의 종류가 무엇인지 확인해 그에 맞는 SyntaXNode로 unboxing(Casting)한 후 사용한다.
-		//								  SyntaxNode는 Kind로 알아낼 수 있으며 그냥 해당 SyntaxNode 구조체로 unboxing해봐도 된다.
+		//								- 이 단계에서는 각 Syntax에 노드에 어떤 종류의 Keyward가 있는 지가지는 알 수 있습니다.
+		//							      하지만 구문상 어떤 의미를 가지는 지는 확인할 수 없다.
+		//								- 예들들어 설명하자면 'class X'라는 구문이 있다면 'class'는 클래스 선언 예약어며 'X'는 클래스명이란 것까지는 알수 있지만
+		//								  'X'가 어떤 존재인지에 대한 정보는 알수 없다. 진짜 존재는 하긴 하는지 어디에 어떤 namespace에 존재하는 지 등등의 정보는 포함하고 있지 없다.
+		//								- 구문해석 정보는 SyntaxNode를 상속받은 다양한 구조체를 트리 모양으로 구성한 SyntaxTree로 제공된다.
+		//								  따라서 원하는 SyntaxNode를 찾은 후 그 SyntaxNode의 종류가 무엇인지 Kind()함수로 확인하여 그에 맞는 SyntaXNode 구조체로 unboxing(Casting)한 후 사용한다.
 		//
 		//		 2) Semantic Analysis	의미분석(구문분석) 단계로 의미를 부여하고 목적 코드로 만들기 전 각종 정보들를 생성한다.
 		//								- 의미분석 정보를 이용하면 좀 더 구체적인 정보들을 얻을 수 있다.
-		//								- 예들들어 'class X'를 구문해석하면 'X' 클래스가 어느 namespace에 존재하는 클래스인지 어떤 클래스를 상속받았는지 등등 
+		//								- 예들들어 'class X'를 구문해석하면 'X' 클래스가 진짜 존재하긴 하는지 어느 namespace에 존재하고 어떤 클래스를 상속받았는 지 등등 
 		//								  의미적 정보들을 얻을 수 있다.
-		//								- 여기서는 주로 이 정보한다.
-		//								- SynTaxTree로 Semantic Model를 구하면 이 정보들을 얻을 수 있다.
+		//								- 여기서는 주로 이 Semantic 정보를 사용해 구현했다.
+		//								- semantic 정보를 얻기 위해서는 먼저 SyntaxTree로 SemanticModel을 먼저 생성해야 하는데...
 		//
 		//								   var semantic_model = context.Compilation.GetSemanticModel(syntaxTree);
 		//
-		//								  를 수행하면 Semantic Model을 얻을 수 있는데 여기서 필요한 정보를 얻어 사용하면 된다.
+		//								  를 수행하면 Semantic Model을 얻을 수 있는데
+		//								  SynTaxTree에서 원하는 Node를 먼저 찾은 후 그걸 semantic_model에서 GetDeclaredSymbol() 함수로 Semantic 정보를 얻을 수 있다.
+		//							      (물론 바로 찾을 수도 있긴 하지만... )
 		//		
-		//		여기서는 먼저 SyntaxTree에서 class와 struct를 검색해서 해당 SyntaxNode를 찾아 낸다.
-		//		그 이후 찾아낸 SyntaxNode로 Semantic_model에서 Semantic 정보를 얻어내는 CLASS_INFO들을 생성해 낸다.
-		//		
+		//		이렇게 찾아낸 Semantic 정보를 활용해 CLASS_INFO들을 생성한다.
 		//		
 		//------------------------------------------------------------------
 		// declare) 
@@ -100,13 +98,13 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 		foreach (var syntaxTree in context.Compilation.SyntaxTrees)
 		{
-			// - symantic model을 얻음
+			// - get symantic model
 			var symantic_model = context.Compilation.GetSemanticModel(syntaxTree);
 
-			// - get class declaration
+			// - extract class declaration info
 			GetClassDeclarationInfo(ref list_class_declaration, syntaxTree, symantic_model);
 
-			// - get struct declaration
+			// - extract struct declaration info
 			GetStructDeclarationInfo(ref list_struct_declaration, syntaxTree, symantic_model);
 		}
 
@@ -114,6 +112,8 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		// 2) Source generation
 		// 
 		//      앞에서 얻어진 CLASS_INFO를 바탕으로 Serailizer class를 생성하는 단계다.
+		//      클래스 명과 멤버 변수와 property 정보로 문자열을 짜집기해서
+		//      Serializser class를 정의하는 Source를 작성한다.
 		//      그리고...
 		//
 		//		context.AddSource(...);
@@ -125,6 +125,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			// - struct Info
 			var sb_source_code = new StringBuilder();
 
+			// - source header 
 			sb_source_code.AppendLine("using System;");
 			sb_source_code.AppendLine("using System.Diagnostics;");
 			sb_source_code.AppendLine("using CGDK.BufferSerializer;");
@@ -143,22 +144,29 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				MakeSerializaerSource_object(ref sb_source_code, iter); // IBaset<object>
 			}
 
-			// - add source
+			// - add source!
 			context.AddSource("CGDKbuffer.BufferBuilder.generated.cs", sb_source_code.ToString());
 		}
 
 		//------------------------------------------------------------------
-		// 3) 최종 등록을 위한 class 생성
+		// 3) 초기화를 위한 class와 함수 정의
 		//
-		//		생성한 Serializer class를 객체화해서 등록하는 함수를 정의한다.
+		//		이렇게 정의한 Serializer class를 객체화해서 등록하는 처리를 할
+		//		class와 함수를 정의한다.
 		//
-		//		CGDK.BufferSerializer.Generator 클래스를 정의해
-		//		Init()함수를 정의하고
-		//		여기에 Seriazer 객체를 생성해 등록하는 소스를 넣는다.
-		//		이 Init()함수를 호출함으로써 생성된 Serializer를 사용할 수 있게 된다.
-		//	    만약 Init()함수를 호출하지 않는다면 그냥 기존의 방법으로 Serializer를 생성한다.
-		//		.NET framework 버전이나 Roslyn을 쓸 수 없는 곳에서 동작하기 위해서
-		//		두가지 방법 모두 지원한다.
+		//		public static class CGDK.BufferSerializer.Generator
+		//
+		//		가 그런 역할을 할 클래스이다.
+		//		이 클래스의 멤버 함수로 Initialize()함수를 정의한다.
+		//
+		//		Initialize() 함수에서는 
+		//		Seriazer 객체를 생성해 등록하는 소스를 넣는다.
+		//
+		//		이 Initialize()함수를 호출함으로써 생성된 Serializer들을 사용할 수 있게 된다.
+		//	    만약 Initialize()함수를 호출하지 힘들게 생겅한 Serializer가 아니라
+		//	    그냥 느린 기존의 방법으로 Serializer를 생성한다.
+		//		하지만 .NET framework 버전이나 Roslyn을 쓸 수 없는 곳에서도 동작하기 위해
+		//		두가지 방법 모두 지원하는 것이다.
 		//
 		//------------------------------------------------------------------
 		{
@@ -201,7 +209,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//------------------------------------------------------------------
 	// 3. definitions (struct)
 	//------------------------------------------------------------------
-	// 1) MEMBER에 대한 정보입니다. (CLASS_INFO에서 사용됩니다.)
+	// 1) MEMBER에 대한 정보 (CLASS_INFO에서 사용)
 	private struct MEMBER_INFO
 	{
 		public int type;			// MEBER의 type 정보.(1:primitive type, 2:others)
@@ -213,7 +221,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	private struct OBJECT_INFO
 	{
 		public string type_name;	// 클래스의 type 문자열 이름(namespace까지 포함)
-		public string identifier;	// serializer class의 이름으로 사용될 이름(.없이 _로 연결)
+		public string identifier;	// serializer class의 이름으로 사용될 별명(클래스명인 만큼 고유할 필요가 있다.)
 		public List<MEMBER_INFO> list_member_node_info;
 	}
 
@@ -221,7 +229,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//------------------------------------------------------------------
 	// 4. functions
 	//------------------------------------------------------------------
-	// 1) primitive type인가?
+	// 1) primitive type인가? (문자열로 primitive type여부를 확인한다.)
 	private static readonly string[] primitive_types = { "char","byte","sbyte","Int8","UInt8","short","ushort","Int16","UInt16","int","uint","Int32","UInt32","long","ulong","Int64","UInt64","float","double"};
 	private static int IsPrimitive(string _type_name)
 	{
@@ -237,18 +245,21 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	}
 
 	// 2) Member info
+	//    - ISymbol 정보로 MEMER_INFO를 생성해 리턴한다.
+	//    - Member는 Field형(일반 변수)와 progerty형 두가지 종료다.
 	private static MEMBER_INFO GetMembeInfo(ISymbol _member)
 	{
 		// 1) create member_node_info
 		var member_node_info = new MEMBER_INFO();
 
-		// 2) 
+		// 2-1) 일반 변수형일 경우
 		if (_member is IFieldSymbol x)
 		{
 			member_node_info.type_name = x.Type.ToString();
 			member_node_info.type = IsPrimitive(member_node_info.type_name);
 			member_node_info.identifier = x.Name.ToString();
 		}
+		// 2-2) property형일 경우
 		else if (_member is IPropertySymbol y)
 		{
 			member_node_info.type_name = y.Type.ToString();
@@ -265,22 +276,26 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	// 5. class 추축해 내기
 	//
 	//    Serialier로 생성할 class 정보를 추출해 낸다.
+	//    SyntaxTree에서 [CGDK.Attributes,Serializable]를 가진 class 정의들을
+	//    찾아낸 후 그것으로 Semantic 정보를 얻어
+	//	  최종적으로는 OBJECT_INFO정보를 만들어 추가해 준다.
 	//
-	//    1) class 정보를 담을 CLASS_INFO를 생성한다.
-	//	  2) type info를 semantic_model에서 얻어낸다.
-	//    3) class info를 설정한다.
-	//       - type_name => .로 연결된 full type_name (ex) CGDK.foo.bar.tee
-	//       - identifier => serializer class의 이름으로 사용할 것이다.
-	//	  4) member_info를 담을 MEMBER_INFO의 list를 생성한다.
-	//	  5) type name 문자열과 serializer class에 사용될 이름을 만든다.
-	//	  6) class의 MEMBER_INFO들을 얻어낸다. 
+	//    1) 먼저 SyntaxTree로 부터 class declation 정보를 추출해 낸다.
+	//       당연히 [CGDK.Attribute.Serializable] 속성(attribute)를 가진 class만골라낸다.
+	//    2) class 정보를 담을 OBJECT_INFO정보를 생성한다.
+	//	  3) 얻어낸 class의 syntax node로 semantic_model에서 semantic 정보를 얻어낸다.
+	//    4) 얻어낸 semantic 정보로 class info를 생성한다.
+	//       - type_name => namespace를 포함한 full name
+	//       - identifier => serializer class 명으로 사용
+	//	  6) member_info를 담을 MEMBER_INFO의 list를 생성한다.
+	//	  7) class의 MEMBER_INFO들을 얻어내 등록한다.
 	//       class의 MEMBER 중에서 '[CGDK.Attribute.Field]' Attribute를 가진 멤버 변수나 멤버 Property 얻는다.
-	//    7) 이렇게 만들어진 CLASS_INFO를 list에 등록한다.
-	//	  r) 최종적으로 만들어진 OBJECT_INFO list을 리턴한다.
+	//    8) 만들어진 OBJECT_INFO를 list에 등록한다.
 	//
 	//------------------------------------------------------------------
 	private static  void GetClassDeclarationInfo(ref List<OBJECT_INFO> _output, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
 	{
+		// 1) find class declation
 		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // (1) 모든 자손들 노드 중에
 							.Where(node => node.IsKind(SyntaxKind.ClassDeclaration)) // (2) Node Kind가 'class 선언'인 것만 골라서
 							.Cast<ClassDeclarationSyntax>() // (4) ClassDeclarationSyntax 캐스팅해서
@@ -288,10 +303,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 								.Where(x => x.ToString() == "[CGDK.Attribute.Serializable]").Any()))
 							.ToList()) // (5) 리스트로~
 		{
-			// 1) alloc OBJECT_INFO
+			// 2) alloc OBJECT_INFO
 			var class_info = new OBJECT_INFO();
 
-			// 2) temp) get type info
+			// 3) temp) get type info
 			var type_info = _semantic_model.GetDeclaredSymbol(iter);
 
 			// check) must having type_info
@@ -308,14 +323,14 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			if (type_info.DeclaredAccessibility != Accessibility.Public)
 				throw new Exception($"class '{iter.Identifier.ToString()}' is Not public");
 
-			// 3) make full typ name string and identifier name
+			// 5) make full typ name string and identifier name
 			class_info.type_name = type_info.ToString();
 			class_info.identifier = iter.Identifier.ToString() + iter.GetHashCode().ToString();
 
-			// 4) make 'member_node_info' list
+			// 6) make 'member_node_info' list
 			class_info.list_member_node_info = [];
 
-			// 5) gatter members info
+			// 7) gatter members info
 			foreach (var member in type_info.GetMembers()
 								.Where(x => x.Kind == SymbolKind.Field || x.Kind == SymbolKind.Property) // 1) Field(변수) 혹은 Property 만 얻어서
 								.Where(x => (x.GetAttributes() // (2) Attribute 중에 "CGDK.Field"을 가진 것만 골라낸다!
@@ -335,7 +350,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				class_info.list_member_node_info.Add(member_node_info);
 			}
 
-			// 7) add struct info
+			// 8) add struct info
 			_output.Add(class_info);
 		}
 	}
@@ -345,20 +360,22 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//
 	//    Serialier로 생성할 struct 정보를 추출해 낸다.
 	//
-	//    1) struct 정보를 담을 CLASS_INFO를 생성한다.
-	//    2) type info를 semantic_model에서 얻어낸다.
-	//	  3) struct info를 설정한다.
+	//    1) 먼저 SyntaxTree로 부터 struct declation 정보를 추출해 낸다.
+	//    2) struct 정보를 담을 OBJECT_INFO를 생성한다.
+	//    3) type info를 semantic_model에서 얻어낸다.
+	//	  4) struct info를 설정한다.
 	//       - type_name => .로 연결된 full type_name (ex) CGDK.foo.bar.tee
 	//       - identifier => serializer struct의 이름으로 사용할 것이다.
-	//	  4) member_info를 담을 MEMBER_INFO의 list를 생성한다.
-	//	  5) struct의 MEMBER_INFO들을 얻어낸다. 
+	//	  5) member_info를 담을 MEMBER_INFO의 list를 생성한다.
+	//	  6) struct의 MEMBER_INFO들을 얻어내 등록한다.
 	//       struct의 MEMBER 중에서 '[CGDK.Attribute.Field]' Attribute를 가진 멤버 변수나 멤버 Property 얻는다.
 	//       얻은 멤버들의 자료형 이름(type_name),변수명(identifier)을 얻어낸다.
-	//	  6) 최종적으로 만들어진 OBJECT_INFO list를 리턴한다.
+	//	  7) 만들어진 OBJECT_INFO를 list에 등록한다.
 	//
 	//------------------------------------------------------------------
 	private static void GetStructDeclarationInfo(ref List<OBJECT_INFO> _output, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
 	{
+		// 1) find struct class declation
 		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // (1) 모든 자손들 노드 중에
 							.Where(node => node.IsKind(SyntaxKind.StructDeclaration)) // (2) Node Kind가 'class 선언'인 것만 골라서
 							.Cast<StructDeclarationSyntax>() // (4) StructDeclarationSyntax로 캐스팅해서
@@ -366,10 +383,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 								.Where(x => x.ToString() == "[CGDK.Attribute.Serializable]").Any() ?? false)
 							.ToList()) // (5) List로...
 		{
-			// 1) alloc OBJECT_INFO
+			// 2) alloc OBJECT_INFO
 			var struct_info = new OBJECT_INFO();
 
-			// 2) temp) get type info
+			// 3) temp) get type info
 			var type_info = _semantic_model.GetDeclaredSymbol(iter);
 
 			// check) must having type_info
@@ -386,14 +403,14 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			if (type_info.DeclaredAccessibility != Accessibility.Public)
 				throw new Exception($"class '{iter.Identifier.ToString()}' is Not public");
 
-			// 3) make full typ name string and identifier name
+			// 4) make full typ name string and identifier name
 			struct_info.type_name = type_info.ToString();
 			struct_info.identifier = iter.Identifier.ToString() + iter.GetHashCode().ToString();
 
-			// 4) make 'member_node_info' list
+			// 5) make 'member_node_info' list
 			struct_info.list_member_node_info = [];
 
-			// 5) gatter members info
+			// 6) gatter members info
 			foreach (var member in type_info.GetMembers()
 								.Where(x => x.Kind == SymbolKind.Field || x.Kind == SymbolKind.Property) // 1) Field(변수) 혹은 Property 만 얻어서
 								.Where(x => !(x.GetAttributes() // (2) Attribute 중에 "CGDK.Field"을 가진 것만 골라낸다!
@@ -413,7 +430,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				struct_info.list_member_node_info.Add(member_node_info);
 			}
 
-			// 6) add struct info
+			// 7) add struct info
 			_output.Add(struct_info);
 		}
 	}
