@@ -19,7 +19,7 @@ namespace CGDK.BufferGenerator.Generator;
 //  1. CGDKbufferGenerator!
 //
 //  - ISourceGenerator를 상속 받아 CGDKbufferGenerator를 정의한다.
-//  - 이 class로 컴파일된 정보를 받아 source를 생성한다.
+//  - 컴파일된 정보를 받아 source를 생성한다.
 //  - 시작은'CGDKbufferGenerator.Execute(...)'함수가 가 호출되면서다.
 //    
 //------------------------------------------------------------------
