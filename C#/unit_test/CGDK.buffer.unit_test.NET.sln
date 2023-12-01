@@ -23,8 +23,6 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CGDK.buffer.unit_test.perfo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.unit_test.performance.msgpack.NET", "unit_test.performance.msgpack\NET\CGDK.buffer.unit_test.performance.msgpack.NET.csproj", "{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CGDK.buffer.Generator", "..\projects\CGDK.buffer.Generator\CGDK.buffer.Generator.csproj", "{6B425863-2DA1-4FBB-A719-55932A623039}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,10 +49,6 @@ Global
 		{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A4D8461-DD32-4443-B8F8-D6B4FD1069F3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6B425863-2DA1-4FBB-A719-55932A623039}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6B425863-2DA1-4FBB-A719-55932A623039}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6B425863-2DA1-4FBB-A719-55932A623039}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6B425863-2DA1-4FBB-A719-55932A623039}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

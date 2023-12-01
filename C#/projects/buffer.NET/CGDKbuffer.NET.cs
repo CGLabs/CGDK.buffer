@@ -3541,7 +3541,7 @@ namespace CGDK
 				Debug.Assert(this.serializer_key != null);
 				Debug.Assert(this.serializer_value != null);
 			}
-			public static unsafe void XProcessAppend<X, Y>(ref byte* _ptr, byte* _ptr_bound, object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			public static unsafe void XProcessAppend<X, Y>(ref byte* _ptr, byte* _ptr_bound, object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value) where X:notnull
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3576,7 +3576,7 @@ namespace CGDK
 					_serializer_value.ProcessAppend(ref _ptr, _ptr_bound, iter_item.Current.Value);
 				}
 			}
-			public static unsafe object? XProcessExtract<X, Y>(ref byte* _ptr, ref int _count, Type _type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			public static unsafe object? XProcessExtract<X, Y>(ref byte* _ptr, ref int _count, Type _type_create, IBase<X> _serializer_key, IBase<Y> _serializer_value) where X : notnull
 			{
 				// check)
 				Debug.Assert(_ptr != null);
@@ -3624,7 +3624,7 @@ namespace CGDK
 				// return) 
 				return obj;
 			}
-			public static unsafe int XProcessGetSizeOf<X, Y>(object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value)
+			public static unsafe int XProcessGetSizeOf<X, Y>(object? _object, IBase<X> _serializer_key, IBase<Y> _serializer_value) where X : notnull
 			{
 				// 1) get header size
 				int size = sizeof(Int32);
