@@ -102,10 +102,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			var symantic_model = context.Compilation.GetSemanticModel(syntaxTree);
 
 			// - extract class declaration info
-			GetClassDeclarationInfo(ref list_class_declaration, syntaxTree, symantic_model);
+			GetClassDeclarationInfo(ref list_class_declaration, context, syntaxTree, symantic_model);
 
 			// - extract struct declaration info
-			GetStructDeclarationInfo(ref list_struct_declaration, syntaxTree, symantic_model);
+			GetStructDeclarationInfo(ref list_struct_declaration, context, syntaxTree, symantic_model);
 		}
 
 		//------------------------------------------------------------------
@@ -212,7 +212,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	// 1) MEMBER에 대한 정보 (CLASS_INFO에서 사용)
 	private struct MEMBER_INFO
 	{
-		public int type;			// MEBER의 type 정보.(1:primitive type, 2:others)
+		public int type;			// MEBER의 type 정보.(0:not_assigned, 1:value_type, 2:value_type_but_assign, 3:reference type)
 		public string type_name;	// type의 문자열 이름(int, char, long, string, ...)
 		public string identifier;   // 멤버 변수명
 	}
@@ -231,23 +231,40 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//------------------------------------------------------------------
 	// 1) primitive type인가? (문자열로 primitive type여부를 확인한다.)
 	private static readonly string[] primitive_types = { "char","byte","sbyte","Int8","UInt8","short","ushort","Int16","UInt16","int","uint","Int32","UInt32","long","ulong","Int64","UInt64","float","double"};
-	private static int IsPrimitive(string _type_name)
+	private static int get_field_type(ITypeSymbol _type_symbol)
 	{
+		// 0:reference type
+		// 1:value_type
+		// 2:primitive_type
+
 		// check)
-		Debug.Assert(_type_name != null);
+		Debug.Assert(_type_symbol != null);
+
+		// check)
+		if (_type_symbol == null)
+			throw new ArgumentNullException("type synbml is null");
 
 		// 1) is primitive type?
-		if(primitive_types.Where(x => x == _type_name).Any())
+		if (primitive_types.Where(x => x == _type_symbol.ToString()).Any())
+			return 2;
+
+		// 2) is value type?
+		if (_type_symbol.IsValueType)
 			return 1;
 
 		// return) others;
 		return 0;
 	}
 
-	// 2) Member info
+	private static bool IsSerialzable(ITypeSymbol _type_synbol)
+	{
+		return true;
+	}
+
+	// 3) Member info
 	//    - ISymbol 정보로 MEMER_INFO를 생성해 리턴한다.
 	//    - Member는 Field형(일반 변수)와 progerty형 두가지 종료다.
-	private static MEMBER_INFO GetMembeInfo(ISymbol _member)
+	private static MEMBER_INFO GetMembeInfo(GeneratorExecutionContext _context, ISymbol _member)
 	{
 		// 1) create member_node_info
 		var member_node_info = new MEMBER_INFO();
@@ -255,22 +272,101 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		// 2-1) 일반 변수형일 경우
 		if (_member is IFieldSymbol x)
 		{
+			// check) readonly면 안된다.
+			if (x.IsReadOnly == true)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0002",
+					"error",
+					$"class '{x.ToString()}' is read-only.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				x.Locations.FirstOrDefault(),
+				null));
+			}
+
+			// check) const type이면 안된다.
+			if (x.IsConst == true)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0003",
+					"error",
+					$"class '{x.ToString()}' is const.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				x.Locations.FirstOrDefault(),
+				null));
+			}
+
+			// check) temp) get type info
+			if(IsSerialzable(x.Type) == false)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0005",
+					"error",
+					$"class '{x.ToString()}' have no [CGDK.serializable]", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				"",
+				null));
+			}
+
+			// - write member info
 			member_node_info.type_name = x.Type.ToString();
-			member_node_info.type = IsPrimitive(member_node_info.type_name);
-			member_node_info.identifier = x.Name.ToString();
+			member_node_info.type = get_field_type(x.Type);
+			member_node_info.identifier = x.Name;
 		}
 		// 2-2) property형일 경우
 		else if (_member is IPropertySymbol y)
 		{
+			// check) read_only or write_only면 안된다.
+			if (y.IsReadOnly == true)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0002",
+					"error",
+					$"class '{y.ToString()}' is read-olny.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				y.Locations.FirstOrDefault(),
+				null));
+			}
+
+			// check) read_only or write_only면 안된다.
+			if (y.IsWriteOnly == true)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0004",
+					"error",
+					$"class '{y.ToString()}' is write-olny.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				y.Locations.FirstOrDefault(),
+				null));
+			}
+
+			// check) temp) get type info
+			if (IsSerialzable(y.Type) == false)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0005",
+					"error",
+					$"class '{y.ToString()}' have no [CGDK.serializable]", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				y.Locations.FirstOrDefault(),
+				null));
+			}
+
+			// - write member info
 			member_node_info.type_name = y.Type.ToString();
-			member_node_info.type = IsPrimitive(member_node_info.type_name);
-			member_node_info.identifier = y.Name.ToString();
+			member_node_info.type = get_field_type(y.Type);
+			member_node_info.identifier = y.Name;
 		}
 
 		// return) 
 		return member_node_info;
 	}
-
 
 	//------------------------------------------------------------------
 	// 5. class 추축해 내기
@@ -293,7 +389,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//    8) 만들어진 OBJECT_INFO를 list에 등록한다.
 	//
 	//------------------------------------------------------------------
-	private static  void GetClassDeclarationInfo(ref List<OBJECT_INFO> _output, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
+	private static  void GetClassDeclarationInfo(ref List<OBJECT_INFO> _output, GeneratorExecutionContext _context, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
 	{
 		// 1) find class declation
 		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // (1) 모든 자손들 노드 중에
@@ -321,7 +417,16 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 			// check) must be 'public' accessbility
 			if (type_info.DeclaredAccessibility != Accessibility.Public)
-				throw new Exception($"class '{iter.Identifier.ToString()}' is Not public");
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0001",
+					"error",
+					$"class '{type_info.ToString()}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				type_info.Locations.FirstOrDefault(),
+				null));
+			}
 
 			// 5) make full typ name string and identifier name
 			class_info.type_name = type_info.ToString();
@@ -337,14 +442,21 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 									.Where(y => y.ToString() == "CGDK.Attribute.Field(true)").Any()))
 								.ToList()) // (3) 리스트로~
 			{
-				// - create member_node_info
-				var member_node_info = new MEMBER_INFO();
-
 				// check)
 				if (member.DeclaredAccessibility != Accessibility.Public)
-					throw new Exception($"class 'struct_info.type_name' is Not public");
+				{
+					_context.ReportDiagnostic(Diagnostic.Create(
+					new DiagnosticDescriptor(
+						"CBE0001",
+						"error",
+						$"member '{type_info.ToString()}.{member.Name}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					null,
+					type_info.Locations.FirstOrDefault(),
+					null));
+				}
 
-				member_node_info = GetMembeInfo(member);
+				// - get member mode info
+				var member_node_info = GetMembeInfo(_context, member);
 
 				// - add member_node_info
 				class_info.list_member_node_info.Add(member_node_info);
@@ -373,7 +485,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//	  7) 만들어진 OBJECT_INFO를 list에 등록한다.
 	//
 	//------------------------------------------------------------------
-	private static void GetStructDeclarationInfo(ref List<OBJECT_INFO> _output, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
+	private static void GetStructDeclarationInfo(ref List<OBJECT_INFO> _output, GeneratorExecutionContext _context, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
 	{
 		// 1) find struct class declation
 		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // (1) 모든 자손들 노드 중에
@@ -401,7 +513,16 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 			// check) must be 'public' accessbility
 			if (type_info.DeclaredAccessibility != Accessibility.Public)
-				throw new Exception($"class '{iter.Identifier.ToString()}' is Not public");
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0001",
+					"error",
+					$"class '{type_info.ToString()}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				type_info.Locations.FirstOrDefault(),
+				null));
+			}
 
 			// 4) make full typ name string and identifier name
 			struct_info.type_name = type_info.ToString();
@@ -417,14 +538,21 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 									.Where(y => y.ToString() == "CGDK.Attribute.Field(false)").Any()))
 								.ToList()) // (3) 리스트로~
 			{
-				// - create member_node_info
-				var member_node_info = new MEMBER_INFO();
-
 				// check)
 				if (member.DeclaredAccessibility != Accessibility.Public)
-					throw new Exception($"class 'struct_info.type_name' is Not public");
+				{
+					_context.ReportDiagnostic(Diagnostic.Create(
+					new DiagnosticDescriptor(
+						"CBE0001",
+						"error",
+						$"member '{type_info.ToString()}.{member.Name}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					null,
+					type_info.Locations.FirstOrDefault(),
+					null));
+				}
 
-				member_node_info = GetMembeInfo(member);
+				// - get member mode info
+				var member_node_info = GetMembeInfo(_context, member);
 
 				// - add member_node_info
 				struct_info.list_member_node_info.Add(member_node_info);
@@ -465,9 +593,14 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		foreach (var iter_member in _class_info.list_member_node_info)
 		{
 			// - primitive type
-			if (iter_member.type == 1)
+			if (iter_member.type == 2)
 			{
 				_out.AppendLine($"		*({iter_member.type_name}*)_ptr = _object.{iter_member.identifier}; _ptr += sizeof({iter_member.type_name});");
+			}
+			// -  value type
+			else if (iter_member.type == 1)
+			{
+				_out.AppendLine($"		serializer_{iter_member.identifier}.ProcessAppend(ref _ptr, _ptr_bound, _object.{iter_member.identifier});");
 			}
 			// - non primitive type
 			else
@@ -488,10 +621,15 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		foreach (var iter_member in _class_info.list_member_node_info)
 		{
 			// - primitive type
-			if (iter_member.type == 1)
+			if (iter_member.type == 2)
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
 				++count_primitive;
+			}
+			// -  value type
+			else if (iter_member.type == 1)
+			{
+				_out.AppendLine($"		temp.{iter_member.identifier} = serializer_{iter_member.identifier}.ProcessExtract(ref _ptr, ref _count);");
 			}
 			// - non primitive type
 			else
@@ -506,7 +644,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			_out.Append("		_count += ");
 			foreach (var iter_member in _class_info.list_member_node_info)
 			{
-				if (iter_member.type == 1)
+				if (iter_member.type == 2)
 					_out.Append($"sizeof({iter_member.type_name})+");
 			}
 			_out.Remove(_out.Length - 1, 1);
@@ -527,8 +665,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			_out.Append("		return ");
 			foreach (var iter_member in _class_info.list_member_node_info)
 			{
-				if (iter_member.type == 1)
+				if (iter_member.type == 2)
 					_out.Append($"sizeof({iter_member.type_name})+");
+				else if (iter_member.type == 1)
+					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier})+");
 				else
 					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier})+");
 			}
@@ -545,7 +685,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		foreach (var iter_member in _class_info.list_member_node_info)
 		{
 			// - primitive type
-			if (iter_member.type != 1)
+			if (iter_member.type != 2)
 			{
 				_out.AppendLine($"	 private readonly IBase<{iter_member.type_name}> serializer_{iter_member.identifier} = Get<{iter_member.type_name}>.instance;");
 			}
@@ -568,10 +708,15 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 		foreach (var iter_member in _struct_info.list_member_node_info)
 		{
-			// - primitive type
-			if (iter_member.type == 1)
+			// - value type
+			if (iter_member.type == 2)
 			{
 				_out.AppendLine($"		*({iter_member.type_name}*)_ptr = _object.{iter_member.identifier}; _ptr += sizeof({iter_member.type_name});");
+			}
+			// -  value type
+			else if (iter_member.type == 1)
+			{
+				_out.AppendLine($"		serializer_{iter_member.identifier}.ProcessAppend(ref _ptr, _ptr_bound, _object.{iter_member.identifier});");
 			}
 			// - non primitive type
 			else
@@ -589,17 +734,21 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		int count_primitive = 0;
 		foreach (var iter_member in _struct_info.list_member_node_info)
 		{
-			// - primitive type
-			if (iter_member.type == 1)
+			// -  value type
+			if (iter_member.type == 2)
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
 				++count_primitive;
+			}
+			// -  value type but assign
+			else if (iter_member.type == 1)
+			{
+				_out.AppendLine($"		temp.{iter_member.identifier} = serializer_{iter_member.identifier}.ProcessExtract(ref _ptr, ref _count);");
 			}
 			// - non primitive type
 			else
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = serializer_{iter_member.identifier}.ProcessExtract(ref _ptr, ref _count);");
-
 			}
 		}
 		if (count_primitive != 0)
@@ -608,7 +757,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			_out.Append("		_count += ");
 			foreach (var iter_member in _struct_info.list_member_node_info)
 			{
-				if (iter_member.type == 1)
+				if (iter_member.type == 2)
 					_out.Append($"sizeof({iter_member.type_name})+");
 			}
 			_out.Remove(_out.Length - 1, 1);
@@ -627,8 +776,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			_out.Append("		return ");
 			foreach (var iter_member in _struct_info.list_member_node_info)
 			{
-				if (iter_member.type == 1)
+				if (iter_member.type == 2)
 					_out.Append($"sizeof({iter_member.type_name})+");
+				else if (iter_member.type == 1)
+					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier})+");
 				else
 					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(_object.{iter_member.identifier})+");
 			}
@@ -646,7 +797,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		foreach (var iter_member in _struct_info.list_member_node_info)
 		{
 			// - primitive type
-			if (iter_member.type != 1)
+			if (iter_member.type != 2)
 			{
 				_out.AppendLine($"	 private readonly IBase<{iter_member.type_name}> serializer_{iter_member.identifier} = Get<{iter_member.type_name}>.instance;");
 			}
@@ -681,9 +832,15 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 		foreach (var iter_member in _object_info.list_member_node_info)
 		{
-			if (iter_member.type == 1)
+			// -  value type
+			if (iter_member.type == 2)
 			{
 				_out.AppendLine($"		*({iter_member.type_name}*)_ptr = temp.{iter_member.identifier}; _ptr += sizeof({iter_member.type_name});");
+			}
+			// -  value type but assign
+			else if (iter_member.type == 1)
+			{
+				_out.AppendLine($"		serializer_{iter_member.identifier}.ProcessAppend(ref _ptr, _ptr_bound, temp.{iter_member.identifier});");
 			}
 			// - non primitive type
 			else
@@ -704,20 +861,23 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		int count_object= 0;
 		foreach (var iter_member in _object_info.list_member_node_info)
 		{
-			// - primitive type
-			if (iter_member.type == 1)
+			// -  value type
+			if (iter_member.type == 2)
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
 				++count_primitive;
 			}
+			// -  value type but assign
+			else if (iter_member.type == 1)
+			{
+				_out.AppendLine($"		temp.{iter_member.identifier} = serializer_{iter_member.identifier}.ProcessExtract(ref _ptr, ref _count);");
+				++count_object;
+			}
 			// - non primitive type
 			else
 			{
-
 				_out.AppendLine($"		temp.{iter_member.identifier} = serializer_{iter_member.identifier}.ProcessExtract(ref _ptr, ref _count);");
-				
 				++count_object;
-
 			}
 		}
 		_out.AppendLine("	#pragma warning restore 8601");
@@ -728,7 +888,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			_out.Append("		_count += ");
 			foreach (var iter_member in _object_info.list_member_node_info)
 			{
-				if (iter_member.type == 1)
+				if (iter_member.type == 2)
 					_out.Append($"sizeof({iter_member.type_name})+");
 			}
 			_out.Remove(_out.Length - 1, 1);
@@ -756,8 +916,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			_out.Append("		return ");
 			foreach (var iter_member in _object_info.list_member_node_info)
 			{
-				if (iter_member.type == 1)
+				if (iter_member.type == 2)
 					_out.Append($"sizeof({iter_member.type_name})+");
+				else if (iter_member.type == 1)
+					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(temp.{iter_member.identifier})+");
 				else
 					_out.Append($"serializer_{iter_member.identifier}.ProcessGetSizeOf(temp.{iter_member.identifier})+");
 			}
@@ -774,7 +936,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		foreach (var iter_member in _object_info.list_member_node_info)
 		{
 			// - primitive type
-			if (iter_member.type != 1)
+			if (iter_member.type != 2)
 			{
 				_out.AppendLine($"	 private readonly IBase<{iter_member.type_name}> serializer_{iter_member.identifier} = Get<{iter_member.type_name}>.instance;");
 			}

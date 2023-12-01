@@ -3747,6 +3747,9 @@ namespace CGDK
 				// 3) create list
 				var obj = new List<V>();
 
+				// 4) set capacity
+				obj.Capacity = item_count;
+
 				// 5) write items
 				while (item_count > 0)
 				{
@@ -3844,7 +3847,10 @@ namespace CGDK
 				// 5) sub count
 				_count -= sizeof(V) * item_count;
 
-				// 6) write items
+				// 6) set capacity
+				obj.Capacity = item_count;
+
+				// 7) write items
 				while (item_count > 0)
 				{
 					// - add item
@@ -3921,6 +3927,9 @@ namespace CGDK
 
 				// 3) create list
 				var obj = new List<string>();
+
+				// 4) set capacity
+				obj.Capacity = item_count;
 
 				// 5) write items
 				while (item_count > 0)
@@ -4136,7 +4145,10 @@ namespace CGDK
 				// 5) sub count
 				_count -= sizeof(V) * item_count;
 
-				// 6) read all items
+				// 6) set capacity
+				obj.Capacity = item_count;
+
+				// 7) read all items
 				while (item_count > 0)
 				{
 					// - add item
@@ -4216,6 +4228,9 @@ namespace CGDK
 
 				// 3) create list
 				var obj = new List<string>();
+
+				// 4) set capacity
+				obj.Capacity = item_count;
 
 				// 5) write items
 				while (item_count > 0)
