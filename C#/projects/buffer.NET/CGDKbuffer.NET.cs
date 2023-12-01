@@ -2941,7 +2941,10 @@ namespace CGDK
 				// 3) create list
 				var obj_create = new Dictionary<K,V>();
 
-				// 4) write items
+				// 4) Ensure Capacity
+				obj_create.EnsureCapacity(item_count);
+
+				// 5) write items
 				while (item_count > 0)
 				{
 					// - get key & value
@@ -3061,7 +3064,10 @@ namespace CGDK
 				// 4) count
 				_count -= (sizeof(K) + sizeof(V)) * item_count;
 
-				// 5) write items
+				// 5) Ensure Capacity
+				obj_create.EnsureCapacity(item_count);
+
+				// 6) write items
 				while (item_count > 0)
 				{
 					// - get key & value
@@ -3312,7 +3318,10 @@ namespace CGDK
 				// check)
 				Debug.Assert(obj_dictionary != null);
 
-				// 5) write items
+				// 5) Ensure Capacity
+				obj_dictionary.EnsureCapacity(item_count);
+
+				// 6) write items
 				while (item_count > 0)
 				{
 					// - get key & value
@@ -3463,6 +3472,9 @@ namespace CGDK
 
 				// check)
 				Debug.Assert(obj != null);
+
+				// 5) Ensure Capacity
+				obj.EnsureCapacity(item_count);
 
 				// 4) write items
 				while (item_count > 0)
