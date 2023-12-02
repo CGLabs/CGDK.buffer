@@ -1,9 +1,9 @@
-﻿
-using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 
 namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
@@ -13,7 +13,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 	{
 		public const int _TEST_COUNT = 1000000;
 
-		int[] array_int = 
+		private static readonly int[] array_int = 
 		{
 			3,
 			2,
@@ -25,7 +25,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			22
 		};
 
-		public string[] array_string = {
+		private static readonly string[] array_string = {
 			"Please Let test this",
 			"이것 좀 테스트하게 해주세요.",
 			"这件事 试验",
@@ -35,7 +35,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			"Test What ever",
 			"1234"};
 
-		public List<int> list_int = new List<int>
+		private static readonly List<int> list_int = new List<int>
 		{
 			3,
 			2,
@@ -47,7 +47,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			22
 		};
 
-		public List<List<int>> list_list_int = new List<List<int>>
+		private static readonly List<List<int>> list_list_int = new List<List<int>>
 		{
 			new List<int> {0, 0, 3},
 			new List<int> {3, 2, 64},
@@ -57,7 +57,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			new List<int> {10, 11, 12,900}
 		};
 
-		public List<string> list_string = new List<string> {
+		private static readonly List<string> list_string = new List<string> {
 			"Please Let test this",
 			"이것 좀 테스트하게 해주세요.",
 			"这件事 试验",
@@ -67,7 +67,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			"Test What ever",
 			"1234"};
 
-		public Dictionary<int, int> dictionary_int_int = new Dictionary<int, int>
+		private static readonly Dictionary<int, int> dictionary_int_int = new Dictionary<int, int>
 		{
 			{0,		0},
 			{3,		2},
@@ -77,7 +77,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			{10,	11}
 		};
 
-		public Dictionary<string, int> dictionary_string_int = new Dictionary<string, int>
+		private static readonly Dictionary<string, int> dictionary_string_int = new Dictionary<string, int>
 		{
 			{"zero",	0},
 			{"two",		2},
@@ -87,7 +87,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			{"eleven",	11}
 		};
 
-		public Dictionary<string, string> dictionary_string_string = new Dictionary<string, string>
+		private static readonly Dictionary<string, string> dictionary_string_string = new Dictionary<string, string>
 		{
 			{"zero",	"0"},
 			{"two",		"2"},
@@ -97,7 +97,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			{"eleven",	"11"}
 		};
 
-		public Dictionary<string, List<int>> dictionary_string_List_int = new Dictionary<string, List<int>>
+		private static readonly Dictionary<string, List<int>> dictionary_string_List_int = new Dictionary<string, List<int>>
 		{
 			{"zero",	new List<int> {0,1,2,4}},
 			{"two",		new List<int> {3,1,22,4}},
@@ -107,7 +107,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			{"eleven",	new List<int> {10,21,12,34}}
 		};
 
-		public Dictionary<string, List<string>> dictionary_string_List_string = new Dictionary<string, List<string>>
+		private static readonly Dictionary<string, List<string>> dictionary_string_List_string = new Dictionary<string, List<string>>
 		{
 			{"zero",	new List<string> {"zero", "zero", "zero", "zero"}},
 			{"two",		new List<string> {"zero", "zero", "zero", "zero"}},
@@ -117,7 +117,8 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			{"eleven",	new List<string> {"zero", "zero", "zero", "zero"}}
 		};
 
-		struct TEST
+		[CGDK.Attribute.Serializable]
+		public struct TEST
 		{
 			public	sbyte	v0;
 			public	byte	v1;
@@ -131,7 +132,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			public	double	v9;
 		};
 
-		void function_append_GENERAL(ref CGDK.buffer _Buffer)
+		static void function_append_GENERAL(ref CGDK.buffer _Buffer)
 		{
 			_Buffer.Append<char>((char)12);
 			_Buffer.Append<sbyte>((sbyte)3);
@@ -146,7 +147,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			_Buffer.Append<double>((double)2.0);
 		}
 
-		void function_extract_GENERAL(ref CGDK.buffer _Buffer)
+		static void function_extract_GENERAL(ref CGDK.buffer _Buffer)
 		{
 			var value1 = _Buffer.Extract<char>();
 			var value2 = _Buffer.Extract<sbyte>();
@@ -161,7 +162,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			var value11 = _Buffer.Extract<double>();
 		}
 
-		void function_append_STRING(ref CGDK.buffer _Buffer)
+		static void function_append_STRING(ref CGDK.buffer _Buffer)
 		{
 			_Buffer.Append<string>(array_string[0]);
 			_Buffer.Append<string>(array_string[1]);
@@ -173,10 +174,18 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			_Buffer.Append<string>(array_string[7]);
 		}
 
+		[TestInitialize]
+		public void TestInitialize()
+		{
+		#if NET
+			CGDK.BufferSerializer.Generator.Initialize();
+		#endif
+
+		}
 	#if NET
-		string?[] function_extract_STRING(ref CGDK.buffer _Buffer)
+		static string?[] function_extract_STRING(ref CGDK.buffer _Buffer)
 	#else
-		string[] function_extract_STRING(ref CGDK.buffer _Buffer)
+		static string[] function_extract_STRING(ref CGDK.buffer _Buffer)
 	#endif
 		{
 		#if NET
@@ -364,19 +373,20 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 		{
 			// - 버퍼 준비
 			CGDK.buffer	bufferCreate = new CGDK.buffer(2048);
-			TEST tempData = new TEST();
-			
-			tempData.v0 = (sbyte)3;
-			tempData.v1 = (byte)4;
-			tempData.v2 = (short)4100;
-			tempData.v3 = (ushort)32210;
-			tempData.v4 = 123310;
-			tempData.v5 = 121234;
-			tempData.v6 = -1000443L;
-			tempData.v7 = 12233094310UL;
-			tempData.v8 = 1.0f;
-			tempData.v9 = 2.0;
-			
+			TEST tempData = new TEST
+			{
+				v0 = (sbyte)3,
+				v1 = (byte)4,
+				v2 = (short)4100,
+				v3 = (ushort)32210,
+				v4 = 123310,
+				v5 = 121234,
+				v6 = -1000443L,
+				v7 = 12233094310UL,
+				v8 = 1.0f,
+				v9 = 2.0
+			};
+
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
 				// 1) Buffer 준비
@@ -390,12 +400,17 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			}
 		}
 
-		struct TEST_EX
+		[CGDK.Attribute.Serializable]
+		public struct TEST_EX
 		{
 			public int v1;
+
 			public string v2;
+
 			public List<int> v3;
+
 			public UInt64 v4;
+
 			public Dictionary<string, int> v5;
 		}
 		[TestMethod]
@@ -404,12 +419,14 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 			// - 버퍼 준비
 			CGDK.buffer bufferCreate = new CGDK.buffer(2048);
 
-			var foo = new TEST_EX();
-			foo.v1 = 100;
-			foo.v2 = "test_string";
-			foo.v3 = new List<int> { 1, 2, 3, 4, 5 };
-			foo.v4 = 10000;
-			foo.v5 = new Dictionary<string, int> { { "a", 1 }, { "b", 2 }, { "c", 3 } };
+			var foo = new TEST_EX
+			{
+				v1 = 100,
+				v2 = "test_string",
+				v3 = new List<int> { 1, 2, 3, 4, 5 },
+				v4 = 10000,
+				v5 = new Dictionary<string, int> { { "a", 1 }, { "b", 2 }, { "c", 3 } }
+			};
 
 			for (int i = 0; i < _TEST_COUNT; ++i)
 			{
@@ -420,7 +437,7 @@ namespace CGDBuffer_CSharp_UnitTest_CGDKbuffer
 				bufferTemp.Append<TEST_EX>(foo);
 
 				// - 역직렬화
-				var value2 = bufferTemp.Extract<TEST>();
+				var value2 = bufferTemp.Extract<TEST_EX>();
 			}
 		}
 	}

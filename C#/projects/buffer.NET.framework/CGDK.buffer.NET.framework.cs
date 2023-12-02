@@ -17,12 +17,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.Numerics;
 using System.Reflection;
-
+using System.Runtime.CompilerServices;
+using System.Linq;
 
 //----------------------------------------------------------------------------
-//  CGDK.CGMemoryClasses
 //
 //  class CGDK.buffer
 //
@@ -34,23 +34,35 @@ namespace CGDK
 {
 	namespace Attribute
 	{
-		[System.AttributeUsage(System.AttributeTargets.Class, Inherited = true)]
+		/// <summary>
+		/// </summary>
+		[System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct, Inherited = true)]
 		public class Serializable : System.Attribute
 		{
+			/// <summary>
+			/// </summary>
 			public Serializable()
 			{
 			}
 		}
-		[System.AttributeUsage(System.AttributeTargets.Field)]
+		/// <summary>
+		/// 
+		/// </summary>
+		[System.AttributeUsage(System.AttributeTargets.Field | System.AttributeTargets.Property)]
 		public class Field : System.Attribute
 		{
-			private bool _is_serializable;
-
+			private readonly bool _is_serializable;
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="is_serializable"></param>
 			public Field(bool is_serializable= true)
 			{
 				this._is_serializable = is_serializable;
 			}
-
+			/// <summary>
+			/// 
+			/// </summary>
 			public bool IsSerializable
 			{
 				get => _is_serializable;
@@ -60,45 +72,133 @@ namespace CGDK
 
 	namespace Exception
 	{
+		/// <summary>
+		/// 
+		/// </summary>
 		public class Serialize : System.Exception
 		{
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="_offset"></param>
 			public Serialize(long _offset)
 			{
 				this.m_Offset=_offset;
 			}
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="_offset"></param>
+			/// <param name="_message"></param>
 			public Serialize(long _offset, string _message) : base(_message)
 			{
 				this.m_Offset=_offset;
 			}
 
+			/// <summary>
+			/// 
+			/// </summary>
 			public long Offset	{ get {return this.m_Offset;}}
 
-			private long m_Offset;
+			private readonly long m_Offset;
 		}
 	}
 
+	/// <summary>
+	/// 
+	/// </summary>
+	public struct Offset
+	{
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="_amount"></param>
+		public Offset(in int _amount = 0) { this.amount = _amount; }
+		/// <summary>
+		/// 
+		/// </summary>
+		public int amount;
+	}
+
+	/// <summary>
+	/// 
+	/// </summary>
+	public struct Size
+	{
+		/// <summary>
+		/// 
+		/// </summary>
+		public Size() { this.amount = 0; }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="_amount"></param>
+		public Size(in int _amount) { this.amount = _amount; }
+		/// <summary>
+		/// 
+		/// </summary>
+		public int amount;
+	}
+
+	/// <summary>
+	/// 
+	/// </summary>
 	public struct buffer
 	{
-		public buffer(byte[] _buffer, int _offset = 0, int _count = 0)
+		// ----------------------------------------------------------------
+		//
+		// Constructor/Destruction
+		//
+		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 생성자
+		/// </summary>
+		/// <param name="_buffer">메모리 버퍼</param>
+		/// <param name="_offset">오프셋</param>
+		/// <param name="_count">크기</param>
+		public buffer(in byte[] _buffer, in int _offset = 0, in int _count = 0)
 		{
 			this.m_buffer = _buffer;
 			this.m_offset = _offset;
 			this.m_count = _count;
 		}
-		public buffer(buffer _buffer)
+		/// <summary>
+		/// 얕은 복사 생성자
+		/// </summary>
+		/// <param name="_buffer">원본 버퍼</param>
+		public buffer(in buffer _buffer)
 		{
 			this.m_buffer = _buffer.m_buffer;
 			this.m_offset = _buffer.m_offset;
 			this.m_count = _buffer.m_count;
 		}
-		public buffer(int _Size)
+		/// <summary>
+		/// 생성과 동시에 메모리를 할당 받는다.
+		/// </summary>
+		/// <param name="_Size">생성할 메모리 크기</param>
+		public buffer(in int _Size)
 		{
 			this.m_buffer = new byte[_Size];
 			this.m_offset = 0;
 			this.m_count = 0;
 		}
 
-		public buffer Clone()
+
+		// ----------------------------------------------------------------
+		//
+		// Alloc/SetBuffer/Clear/...s
+		//
+		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 깊은 복사로 복제 생성
+		/// </summary>
+		/// <returns>복제 생성된 버퍼</returns>
+		/// <remarks>
+		/// 깊은 복사로 버퍼를 생성한다.
+		/// </remarks>
+		public readonly buffer Clone()
 		{
 			// 1(
 			if (this.m_buffer == null)
@@ -118,48 +218,71 @@ namespace CGDK
 			return new buffer(temp, m_offset, m_count);
 		}
 
-		// definitions) 
-		public const uint	SIZE_OF_CRC	 = sizeof(uint);
-
 		// 1) 생성/버퍼설정
-		public void			Alloc(int _Size)
+		/// <summary>
+		/// 메모리를 할당합니다.
+		/// </summary>
+		/// <param name="_Size">할당할 메모리의 크기</param> 
+		public void			Alloc(in int _Size)
 		{
 			this.m_buffer = new byte[_Size];
 			this.m_offset = 0;
 			this.m_count = 0;
 		}
-		public void			SetBuffer(byte[] _buffer, int _offset, int _length)
+
+		/// <summary>
+		/// 배열을 버퍼에 설정
+		/// </summary>
+		/// <param name="_buffer">메모리</param>
+		/// <param name="_offset">오프셋</param>
+		/// <param name="_length">크기</param>
+		/// <exception cref="CGDK.Exception.Serialize"></exception>
+		/// <remarks>
+		/// 외부에서 할당받은 메모리 배열을 설정한다.
+		/// </remarks>
+		public void			SetBuffer(byte[] _buffer, in int _offset, in int _length)
 		{
 			// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
 			Debug.Assert((_offset+_length) <= _buffer.Length);
 
 			// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
 			if ((_offset+_length) > _buffer.Length)
-			{
 				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-			}
 
 			// 1) 값을 적용
 			this.m_buffer = _buffer;
 			this.m_offset = _offset;
 			this.m_count = _length;
 		}
-		public void			SetBuffer(byte[] _buffer, int _offset)
+
+		/// <summary>
+		/// 배열을 대상 메모리로 설정
+		/// </summary>
+		/// <param name="_buffer"></param>
+		/// <param name="_offset"></param>
+		/// <exception cref="CGDK.Exception.Serialize"></exception>
+		public void			SetBuffer(byte[] _buffer, in int _offset)
 		{
 			// check) _offset+_length가 _buffer의 크기보다 크면 안됀다.
 			Debug.Assert(_offset <= _buffer.Length);
 
 			// check) _offset이나 _length의 길이가 _buffer의 크기를 초과할 경우 Exception을 던진다.
 			if (_offset>_buffer.Length)
-			{
 				throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-			}
 
 			// 1) 값을 적용한다.
 			this.m_buffer = _buffer;
 			this.m_offset = _offset;
-			this.m_count = _buffer.Length-_offset;
+			this.m_count = _buffer.Length - _offset;
 		}
+
+		/// <summary>
+		/// 버퍼를 클리어한다.
+		/// </summary>
+		/// <returns>설정되어 있던 버퍼를 돌려준다.</returns>
+		/// <remarks>
+		/// 버퍼를 null로 리셋한다. 오프셋과 크기 모두 0으로 리셋한다.
+		/// </remarks>
 		public byte[]		Clear()
 		{
 			// 1) 임시로 보관
@@ -174,158 +297,488 @@ namespace CGDK
 			return temp;
 		}
 
-		// 2) Basic operations
-		public bool			IsEmpty() { return this.m_buffer==null;}
-		public int			GetRemained() { return (this.m_buffer!=null) ? (this.m_buffer.Length - this.m_offset - this.m_count) : 0; }
-		public int			Capacity { get { return (this.m_buffer!=null) ? this.m_buffer.Length : 0; }}
 
-		public byte[]		Data { get { return this.m_buffer;} set { this.m_buffer = value;}}
-		public int			Offset { get { return this.m_offset;} set { this.m_offset = value;}}
-		public int			Size { get { return this.m_count;} set { this.m_count = value;}}
-		public int			Count { get { return this.m_count;} set { this.m_count = value;}}
-																				  
-		// - for C# User															  
-		public byte[]		Buffer { get { return this.m_buffer; } set { this.m_buffer = value; } } 
-		public byte[]		Array { get { return this.m_buffer; } set { this.m_buffer = value; } }
+		// ----------------------------------------------------------------
+		//
+		// Properties
+		//
+		// ----------------------------------------------------------------
 
-		public static		buffer operator +(buffer _lhs, int _rhs)
+		/// <summary>
+		/// 메모리 배열 존재 여부
+		/// </summary>
+		/// <returns>메모리 배열이 존재하면  true</returns>
+		/// <remarks>
+		/// 써넣은 데이터 여부가 아니라 메모리 배열의 할당 여부를 확인한다.<br/>
+		/// Alloc로 메모리를 할당받거나 메모리 배열을 설정했다면 true를 리턴한다.<br/>
+		/// Clear()를 호출하면 할당을 해제할 수 있다.<br/>
+		/// </remarks>
+		/// 
+		public readonly bool IsEmpty() 
 		{
-			// check) 
-			Debug.Assert(_lhs.m_buffer != null && _rhs<=_lhs.Count); 
+			return this.m_buffer == null;
+		}
 
+		/// <summary>
+		/// 할당 받은 메모리 크기
+		/// </summary>
+		/// <remarks>
+		/// 설벙된 메모리 배열의 크기를 돌려준다.
+		/// </remarks>
+		public readonly int Capacity 
+		{
+			get { return (this.m_buffer != null) ? this.m_buffer.Length : 0; }
+		}
+
+		/// <summary>
+		/// 설정된 메모리에서 버퍼의 끝부터 남은 량을 돌려준다.
+		/// 즉, Capacity - m_offset - m_count 값이 된다.
+		/// </summary>
+		/// <returns>byte 크기</returns>
+		public readonly int RemainedSize() 
+		{
+			return (this.m_buffer!=null) ? (this.m_buffer.Length - this.m_offset - this.m_count) : 0; 
+		}
+
+		/// <summary>
+		/// 설정된 메모리 배열(Array와 같은값)
+		/// </summary>
+		public readonly byte[] Data 
+		{
+			get { return this.m_buffer;}
+		}
+
+		/// <summary>
+		/// 설정된 메모리 배열(Data와 같은 값)
+		/// </summary>
+		public byte[]		Array 
+		{
+			readonly get { return this.m_buffer; }
+			set { this.m_buffer = value; } 
+		}
+
+		/// <summary>
+		/// 오프셋 값
+		/// </summary>
+		public int			Offset 
+		{
+			readonly get { return this.m_offset;}
+			set { this.m_offset = value;}
+		}
+
+		/// <summary>
+		/// 데이터 크기(Count와 같은 값)
+		/// </summary>
+		public int			Count
+		{
+			readonly get { return this.m_count;}
+			set { this.m_count = value;}
+		}
+
+
+		// ----------------------------------------------------------------
+		//
+		// Operator overload
+		//
+		//   1) static buffer operator + (buffer,Offset)
+		//   2) static buffer operator + (buffer,int)
+		//   3) static buffer operator - (buffer,Offset)
+		//   4) static buffer operator - (buffer,int)
+		//   5) static buffer operator + (buffer,Size)
+		//   6) static buffer operator - (buffer,Size)
+		//   7) static buffer operator ^ (buffer,Offset)
+		//   8) static buffer operator ^ (buffer,Size)
+		//   9) static buffer operator ^ (buffer,(Offset,Size))
+		//
+		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 오프셋(_offset)만큼 앞을 줄인 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">오프셋</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)(</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// <remarks>
+		/// 원본 버퍼(_lhs)의 앞쪽을 offset(bytes)만큼 포인터를 옮긴 줄인 버퍼를 얻는다.(Extract한 것과 같은 효과)<br/>
+		/// offset을 옮긴 만큼 크기(count)도 줄인다.(offset이 음수일 경우 반대)<br/>
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사(swallow copy))<br/>
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _lhs.m_offset + _offset.amount, _lhs.m_count - _offset.amount)를  생성한 돌려 받는다.<br/>
+		/// _offset값이 음수도 가능하다.<br/>
+		/// 원본 버퍼의 범위를 벗어난 설정을 할 수는 없다.<br/>
+		/// </remarks>
+		/// <example>
+		/// <code>
+		///		var buf_source = new CGDK.buffer(1000);
+		///		buf_source.append&lt;int &gt;(100);
+		///		buf_source.append&lt;int &gt;(10);
+		/// 
+		///		var buf_new = buf_source + CGDK.Offset(4); // 4byte만큼 offset을 준 버퍼를 얻는다.
+		///		var value = buf_new.extract&lt;int &gt;(); // value값은 10
+		/// </code>
+		/// </example>
+		public static		buffer operator + (in buffer _lhs, in Offset _offset)
+		{
 			// check)
-			if(_lhs.Array == null)
+			if(_lhs.IsEmpty())
 				throw new System.NullReferenceException("buffer is not allocated");
 
+			// check) 
+			Debug.Assert((_offset.amount >= 0) ? (_offset.amount <= _lhs.Count) : (-_offset.amount <= _lhs.Offset));
+
 			// check)
-			if(_rhs > _lhs.Count)
+			if((_offset.amount >= 0) ? (_offset.amount > _lhs.Count) : (-_offset.amount > _lhs.Offset))
 				throw new System.OverflowException("buffer overflow");
 
 			// 1) create
-			return new buffer(_lhs.Array, _lhs.Offset + _rhs, _lhs.Count - _rhs);
+			return new buffer(_lhs.Array, _lhs.Offset + _offset.amount, _lhs.Count - _offset.amount);
 		}
-		public static		buffer operator -(buffer _lhs, int _rhs)
-		{
-			// check) 
-			Debug.Assert(_lhs.m_buffer != null && _lhs.Offset >= _rhs && _rhs <= (_lhs.Capacity - _lhs.Count)); 
 
+		/// <summary>
+		/// 오프셋(_offset)만큼 앞을 줄인 버퍼를 얻는다(_lhs + CGDK.Offset(_offset)과 동일)
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">옮길 오프셋값</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// operator + (in buffer _lhs, in Offset _offset)과 동일하다.
+		public static		buffer operator +(in buffer _lhs, in int _offset)
+		{
+			return _lhs + new CGDK.Offset(_offset);
+		}
+
+		/// <summary>
+		/// 오프셋(_offset)만큼 앞을 늘린 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">오프셋</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// <remarks>
+		/// 원본 버퍼(_lhs)에서 offset(bytes)만큼 앞쪽으로 포인터를 옮긴 늘린 버퍼를 얻는다.(Extract를 Rollback한 것과 같은 효과)<br/>
+		/// offset을 옮긴 크기(count)는 늘인다.(offset이 음수일 경우 반대)<br/>
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사(swallow copy))<br/>
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _lhs.m_offset - _offset.amount, _lhs.m_count + _offset.amount)를  생성한 돌려 받는다.<br/>
+		/// _offset값이 음수도 가능하다.<br/>
+		/// 원본 버퍼의 범위를 벗어난 설정을 할 수는 없다.<br/>
+		/// </remarks>
+		/// <example>
+		///		var buf_source = new CGDK.buffer(1000);
+		///		buf_source.append&lt;int &gt;(100);
+		///		buf_source.append&lt;int &gt;(10);
+		/// 
+		///		var value1 = buf_source.extract&lt;int &gt;(); // value값은 100
+		/// 
+		///		var buf_new = buf_source - CGDK.Offset(4); // 4byte만큼 offset을 앞으로 다시 늘린 버퍼를 얻는다.
+		///		var value = buf_new.extract&lt;int &gt;(); // value값은 100
+		/// </example>
+		public static		buffer operator - (in buffer _lhs, in Offset _offset)
+		{
 			// check)
-			if(_lhs.Array == null)
+			if(_lhs.IsEmpty())
 				throw new System.NullReferenceException("buffer is not allocated");
 
+			// check) 
+			Debug.Assert((_offset.amount >= 0) ? (-_offset.amount <= _lhs.Offset) : (-_offset.amount <= _lhs.Count) );
+
 			// check)
-			if(_lhs.Offset < _rhs || _rhs > (_lhs.Capacity - _lhs.Count))
+			if((_offset.amount >= 0) ? (-_offset.amount > _lhs.Offset) : (-_offset.amount > _lhs.Count))
 				throw new System.OverflowException("buffer overflow");
 
 			// 1) create
-			return new buffer(_lhs.Array, _lhs.Offset - _rhs, _lhs.Count + _rhs);
+			return new buffer(_lhs.Array, _lhs.Offset - _offset.amount, _lhs.Count + _offset.amount);
 		}
-		public static		buffer operator ^(buffer _lhs, int _rhs)
-		{
-			// check) 
-			Debug.Assert(_lhs.m_buffer != null && _rhs <= _lhs.Capacity); 
 
+		/// <summary>
+		/// 앞을 늘린 버퍼를 얻는다(_lhs - CGDK.Offset(_offset)과 동일)
+		/// </summary>
+		/// <param name="_lhs">완본 버퍼</param>
+		/// <param name="_offset">오프셋</param> 
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// <remarks>
+		/// operator - (in buffer _lhs, in Offset _offset)과 동일하다.
+		/// </remarks>
+		public static		buffer operator -(in buffer _lhs, in int _offset)
+		{
+			return _lhs - new CGDK.Offset(_offset);
+		}
+
+		/// <summary>
+		/// 끝을 늘린 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">원본 버퍼</param>
+		/// <param name="_size">크기</param>
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		public static		buffer operator + (in buffer _lhs, in Size _size)
+		{
 			// check)
-			if(_lhs.Array == null)
+			if(_lhs.IsEmpty())
 				throw new System.NullReferenceException("buffer is not allocated");
 
+			// check) 
+			Debug.Assert((_size.amount >= 0) ? (_lhs.Offset + _lhs.Count + _size.amount <= _lhs.Capacity) : (-_size.amount <= _lhs.Count));
+
 			// check)
-			if(_rhs > _lhs.Capacity)
+			if ((_size.amount > 0) ? (_lhs.Offset + _lhs.Count + _size.amount > _lhs.Capacity) : (-_size.amount > _lhs.Count))
 				throw new System.OverflowException("buffer overflow");
+
+			// 1) create
+			return new buffer(_lhs.Array, _lhs.Offset, _lhs.Count + _size.amount);
+		}
+
+		/// <summary>
+		/// 크기(offset)만큼 끝을 줄여 버퍼를 얻는다
+		/// </summary>
+		/// <param name="_lhs">원본 버퍼</param>
+		/// <param name="_size">크기</param>
+		/// <returns>생성된 버퍼</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// <remarks>
+		/// '크기'값만큼 버퍼의 크기(count)를 줄인 새로운 버퍼를 돌려준다.<br/>
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사(swallow copy))<br/>
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _lhs.m_offset, _lhs.m_count + _size.amount)를  생성한 돌려 받는다.<br/>
+		/// '크기'값은 음수도 가능하며 음수일 경우 버퍼의 크기를 늘린 버퍼를 돌려준다.<br/>
+		/// 원본 버퍼의 범위를 벗어난 설정을 할 수는 없다.<br/>
+		/// </remarks>
+		public static		buffer operator - (in buffer _lhs, in Size _size)
+		{
+			// check)
+			if (_lhs.IsEmpty())
+				throw new System.NullReferenceException("buffer is not allocated");
+
+			// check) 
+			Debug.Assert((_size.amount >= 0) ? (_size.amount <= _lhs.Count) : (_lhs.Offset + _lhs.Count - _size.amount <= _lhs.Capacity));
+
+			// check)
+			if ((_size.amount >= 0) ? (_size.amount > _lhs.Count) : (_lhs.Offset + _lhs.Count - _size.amount > _lhs.Capacity))
+				throw new System.OverflowException("buffer overflow");
+
+			// 1) create
+			return new buffer(_lhs.Array, _lhs.Offset, _lhs.Count - _size.amount);
+		}
+
+		/// <summary>
+		/// offset을 변경한 버퍼를 얻는다.
+		/// </summary>
+		/// <param name="_lhs">원본 버퍼</param>
+		/// <param name="_offset">오프셋</param>
+		/// <returns></returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// <remarks>
+		/// 원본 buffer에서 offset만 _offset으로 교체한 버퍼를 돌려준다.<br/>
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사,swallow copy)<br/>
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _offset.amount, _lhs.m_count)를 돌려준다.<br/>
+		/// _offset값은 음수를 허용하지 않는다. 음수일 경우 예뢰를 던집니다.<br/>
+		/// 원본 버퍼의 범위를 벗어난 설정을 할 수는 없다.<br/>
+		/// </remarks>
+		public static		buffer operator ^(in buffer _lhs, in Offset _offset)
+		{
+			// check)
+			if (_lhs.IsEmpty())
+				throw new System.NullReferenceException("buffer not allocated");
+
+			// check) 
+			Debug.Assert(_offset.amount >= 0 && (_offset.amount + _lhs.Count) <= _lhs.Capacity);
+
+			// check)
+			if (_offset.amount < 0 || (_offset.amount + _lhs.Count) > _lhs.Capacity)
+				throw new System.OverflowException("'offset' out of range");
 
 			// 1) create 
-			return new buffer(_lhs.Array, _lhs.Offset, _rhs);
+			return new buffer(_lhs.Array, _offset.amount, _offset.amount);
 		}
-		public static implicit operator ArraySegment<byte>(buffer _rhs)
+
+		/// <summary>
+		/// 크기를 변경한 버퍼를 얻는다.
+		/// </summary>
+		/// <param name="_lhs">원본 버퍼</param>
+		/// <param name="_count">크기</param>
+		/// <returns></returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// <remarks>
+		/// 원본 buffer에서 크기(size)만 _cize로 교체한 버퍼를 돌려준다.<br/>
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사,swallow copy)<br/>
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _offset.amount, _lhs.m_count)를  돌려준다.<br/>
+		/// _count값은 음수를 허용하지 않습니다. 음수일 경우 예뢰를 던진다.<br/>
+		/// 원본 버퍼의 범위를 벗어난 설정을 할 수는 없다.<br/>
+		/// </remarks>
+		public static		buffer operator ^(in buffer _lhs, in Size _count)
+		{
+			// check)
+			if (_lhs.IsEmpty())
+				throw new System.NullReferenceException("buffer not allocated");
+
+			// check) 
+			Debug.Assert(_count.amount >= 0 && (_lhs.Offset + _count.amount) <= _lhs.Capacity);
+
+			// check)
+			if (_count.amount < 0 || (_lhs.Offset + _count.amount) > _lhs.Capacity)
+				throw new System.OverflowException("'offset' out of range");
+
+			// 1) create 
+			return new buffer(_lhs.Array, _lhs.Offset, _count.amount);
+		}
+
+		/// <summary>
+		/// offset과 count를 동시에 변경한 버퍼를 얻는다.
+		/// </summary>
+		/// <param name="_lhs"></param>
+		/// <param name="_rhs"></param>
+		/// <returns>복제된 buffer</returns>
+		/// <exception cref="System.NullReferenceException">원본 버퍼(_lhs)가 비어 있을 경우(m_buffer가 null)</exception>
+		/// <exception cref="System.OverflowException">원본 버퍼(_lhs)의 할당된 버퍼 범위를 초과한 경우</exception>
+		/// <remarks>
+		/// 원본 buffer의 offset과 크기(size)를 교체한 버퍼를 돌려준다.<br/>
+		/// 원본 버퍼는 변경되지 않으며 메모리를 새로 할당해 복사하지는 않는다.(얕은 복사(swallow copy))<br/>
+		/// 즉,CGDK.buffer(_lhs.m_buffer, _rhs.offset.amount, _rhs.size.amount)를 돌려준다.<br/>
+		/// _rhs.offset과 _rsh.size 값은 음수를 허용하지 않습니다. 음수일 경우 예뢰를 던진다.<br/>
+		/// 원본 버퍼의 할당받은 메모리 범위를 벗어난 설정을 할 수는 없다.<br/>
+		/// </remarks>
+		public static		buffer operator ^(in buffer _lhs, in (Offset offset,Size size) _rhs)
+		{
+			// check)
+			if (_lhs.IsEmpty())
+				throw new System.NullReferenceException("buffer not allocated");
+
+			// check) 
+			Debug.Assert(_rhs.offset.amount >= 0 && _rhs.size.amount >= 0 && ((_rhs.offset.amount + _rhs.size.amount) <= _lhs.Capacity));
+
+			// check)
+			if (_rhs.offset.amount < 0 || _rhs.size.amount < 0 || (_rhs.offset.amount + _rhs.size.amount) > _lhs.Capacity)
+				throw new System.OverflowException("'offset' out of range");
+
+			// 1) create 
+			return new buffer(_lhs.Array, _rhs.offset.amount, _rhs.size.amount);
+		}
+
+		/// <summary>
+		/// [변환 연산자] 버퍼를 ArraySegment로 변환한다.
+		/// </summary>
+		/// <param name="_rhs">원본 버퍼</param>
+		/// <remarks>
+		/// 네트워크 송수신시 ArraySegment&lt;byte&gt;형을 요구할 경우가 있다.
+		/// 이때 CGDK.buffer를 사용하면 자동적으로 변환된다.
+		/// </remarks>
+		public static implicit operator ArraySegment<byte>(in buffer _rhs)
 		{
 			// check) 
-			Debug.Assert(_rhs.Array != null); 
-		
+			Debug.Assert(_rhs.Array != null);
+
+			// check)
+			if (_rhs.IsEmpty())
+				throw new System.NullReferenceException("buffer not allocated");
+
 			// 1) create 
 			return new ArraySegment<byte>(_rhs.Array, _rhs.Offset, _rhs.Count);
 		}
-		public static explicit operator buffer(ArraySegment<byte> _rhs)
+
+		/// <summary>
+		/// [변환 연산자] ArraySegment를 buffer로 변환한다.
+		/// </summary>
+		/// <param name="_rhs">원본 배열어레이</param>
+		/// <remarks>
+		/// ArraySegment&lt;byte&gt;형으로 buffer를 바로 생성해 사용할 있도록 해준다.
+		/// </remarks>
+		public static explicit operator buffer(in ArraySegment<byte> _rhs)
 		{
 			// 1) create 
 			return new buffer(_rhs.Array, _rhs.Offset, _rhs.Count);
 		}
 
-		// 3) append(붙이기)
-		public void			AppendSkip (int _amount)
-		{ 
+		/// <summary>
+		/// 써넣지 않고 공간만 추가한다.
+		/// </summary>
+		/// <param name="_amount">Bytes수</param>
+		/// <remarks>
+		/// Bytes수만큼 공간을 띄어야할 경우 사용한다.
+		/// 해당 공간은 아무런 데이트를 써넣지 않고 단지 공간의 뛰운다.
+		/// 즉, m_count수만 늘린다.
+		/// </remarks>
+		public void AppendSkip(in int _amount)
+		{
 			// check) 
-			Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _amount);
+			Debug.Assert(this.m_buffer != null);
+
+			// check)
+			if (this.IsEmpty())
+				throw new System.NullReferenceException("buffer not allocated");
+
+			// check) 
+			Debug.Assert((this.m_buffer.Length - this.m_offset - this.m_count) >= _amount);
+
+			// check)
+			if ((this.m_buffer.Length - this.m_offset - this.m_count) < _amount)
+				throw new System.OverflowException("offset' out of range");
 
 			// 1) add size			
-			this.m_count += _amount; 
+			this.m_count += _amount;
 		}
-		public void			Append (byte[] _buffer, int _offset, int _count)
+
+
+		// ----------------------------------------------------------------
+		//
+		// Append (serialize)
+		//
+		//	1) void Append<T>(T)
+		//  2) void Append(byte[], int, int)
+		//	3) void AppendText(string)
+		//	4) void AppendText(ICollection<string>)
+		//  5) void Append<K,V>(Dictionary<K,V>)
+		//  6) void Append<T>(List<T>)
+		//
+		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 데이터를 직렬화해 버퍼에 써넣는다.
+		/// </summary>
+		/// <typeparam name="T">직렬화할 대상 클래스</typeparam> 
+		/// <param name="_value">대상 객체</param> 
+		/// <remarks>
+		/// 다양한 데이터를 직렬화 하여 버퍼에 써 넣는다.<br/>
+		/// 직렬화가 가능한 자료형는 다음과 같다.<br/>
+		/// <br/>
+		/// - 기본적인 자료형(byte, shor, int, long, float 등)<br/>
+		/// - 제네릭형 자료형(List&lt;T&gt;, Dictionary&lt;,V&gt;, ...) <br/>
+		/// - 구조체<br/>
+		/// - 클래스 (attribute의 설정을 필요하다.)<br/>
+		/// - 사용자 정의 클래스 (IBufferSerializer::IBase&lt;T&gt;를 상속받은 객체)<br/>
+		/// <br/>
+		/// 정적함수인 GetSizeOf&lt;T&gt;()함수를 하면 직렬화 크기를 미리 얻을 수 있다.<br/>
+		/// </remarks>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="Append{T}(in List{T})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public unsafe void	Append<T>(in T _value)
 		{
-			// check) 
-			Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _count);
+			//  [동작설명]
+			//
+			//  1. 먼저해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
+			//     (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
+			//  2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
+			//  3. Serializer가 Extract나 GetSizeOf 과정에서 만들어 질 수도 있다.
+			//  4. 직렬화에 필요한 파라미터들을 얻는다.
+			//
+			//     ptr_pre   -> ProcessAppend 함수가 수행된 후 쓰여진 길이를 구하기 위해 저장해 놓는다.
+			//     ptr_now   -> 쓰여질 위치 포인터. 버퍼에서 쓰여진 멘 끝을 가르킨다.(m_buffer + m_offset + m_count)
+			//    ptr_bound -> 할당된 버퍼의 제일 끝을 가르킨다. bound 검사에 사용된다.
+			//
+			//  5. Serializer에 이 파라미터들을 넘겨 ProcessAppend를 호출하면 직렬화를 시작한다.
+			//  6. 직렬화가 모두 끝난후 ptr_now - ptr_pre를 해서 쓰여진 길이를 구해 m_count에 더해 준다.
+			//  7. 직렬화 끝!
 
-		#if _USE_BOUND_CHECK
-			// check)
-			if(this.m_buffer == null)
-				throw new System.NullReferenceException("buffer is not allocated");
-
-			// check)
-			if((this.m_buffer.Length - this.m_offset - this.m_count) < _count)
-				throw new System.OverflowException("buffer overflow");
-		#endif
-
-			// 1) block copy
-			System.Buffer.BlockCopy(_buffer, _offset, this.m_buffer, this.m_offset + this.m_count, _count);
-
-			this.m_count += _count; 
-		}
-		public void			AppendText (string _object)
-		{
-			// 1) 문자열을 배열로 변경하고 길이를 구한다.
-			var temp_array = _object.ToCharArray();
-			var iStringLength = temp_array.Length;
-
-			// check) 버퍼의 크기가 충분한가 확인한다.
-			Debug.Assert(this.m_buffer != null && (this.m_offset + this.m_count + iStringLength * sizeof(char)) <= this.m_buffer.Length);
-
-		#if _USE_BOUND_CHECK
-			// check)
-			if(this.m_buffer == null)
-				throw new System.NullReferenceException("buffer is not allocated");
-
-			// check)
-			if((this.m_buffer.Length - this.m_offset - this.m_count) < iStringLength)
-				throw new System.OverflowException("buffer overflow");
-		#endif
-
-			// 2) [문자열]을 복사해 넣는다.
-			System.Buffer.BlockCopy(temp_array, 0, this.m_buffer, this.m_offset + this.m_count, iStringLength * sizeof(char));
-
-			// 3) [버퍼_길이]를 더해준다.
-			this.m_count += (iStringLength * sizeof(char));
-		}
-		public void			AppendText (ICollection<string> _Collection)
-		{
-			// 2) 데이터들을 저장한다.
-			foreach (var iter in _Collection)
-			{
-				this.AppendText(iter);
-			}
-		}
-		public void			AppendText (params string[] _Array)
-		{
-			foreach (var iter in _Array)
-			{
-				this.AppendText(iter);
-			}
-		}
-		public void			AppendCRC ()
-		{
-			//_append<uint>(0);
-			this.m_count += sizeof(uint);
-		}
-		public unsafe void	Append<T>(T _value)
-		{
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
@@ -334,7 +787,6 @@ namespace CGDK
 			if(this.m_buffer == null)
 				throw new System.NullReferenceException("buffer is not allocated");
 		#endif
-
 			fixed (byte* ptr = this.m_buffer)
 			{
 				// 1) calculare ptr_now & ptr_bound
@@ -349,16 +801,161 @@ namespace CGDK
 				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
-		public unsafe void	Append<K,V>(Dictionary<K,V> _value)
+
+		/// <summary>
+		/// 데이터를 직렬화해 버퍼에 써는 함수이다. 
+		/// </summary>
+		/// <param name="_buffer">메모리 배열 m_buffer에 설정된다.</param>
+		/// <param name="_offset">오프셋</param>
+		/// <param name="_count">복사할 크기</param>
+		/// <remarks>
+		/// </remarks>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="Append{T}(in List{T})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public void			Append (in byte[] _buffer, in int _offset, in int _count)
+		{
+			// check)
+			if (this.m_buffer == null)
+				throw new System.NullReferenceException("buffer not allocated");
+
+			// check) 
+			Debug.Assert(this.m_buffer != null && (this.m_buffer.Length - this.m_offset - this.m_count) >= _count);
+
+			// check)
+			if((this.m_buffer.Length - this.m_offset - this.m_count) < _count)
+				throw new System.OverflowException("offset' out of range");
+
+			// 1) block copy
+			System.Buffer.BlockCopy(_buffer, _offset, this.m_buffer, this.m_offset + this.m_count, _count);
+
+			this.m_count += _count; 
+		}
+
+		/// <summary>
+		/// 헤더 정보 없이 문자열을 직렬화 써넣는다.
+		/// </summary>
+		/// <param name="_object"></param>
+		/// <remarks>
+		/// Append&lt;string&gt;()을 사용해 문자열을 직렬화할 경우 문자열 크기를 써 넣은 후 문자열을 복사해 넣는다.<br/>
+		/// 하지만 이 함수는 문자열 크기 정보를 쓰지 않고 바로 문자열을 복사해 넣는다.<br/>
+		/// 웹과 같은 문자열 기반 프로토콜 통신을 할 때에도 유용하다.<br/>
+		/// 또 화면 출력이나 저장을 위한 문서나 문자열을 만들어야 할 때 유용하다.<br/>
+		/// 문자열 끝에 개행이나 NULL을 자동 삽입하지 않으므로 필요하면 직접 써넣어 주어야 한다.<br/>
+		/// </remarks>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="Append{T}(in List{T})"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public void			AppendText (in string _object)
+		{
+			//  [동작설명]
+			//
+			//  1. string을 append할 경우 먼저 Int32크기의 문자열 길이를 저장한 후 문자열을 저장한다.
+			//     하지만 AppendText는 문자열의 길이 정보(Int32)를 쓰지 않고 그냥 바로 문자열 정보만 저장해 놓는다.
+			//  2. 여러 문자열을 합쳐야 할 경우 혹은 문자열 데이터만 만들어야 할 경우(대표적으로 Web)에서 유용한다.			        
+
+			// check)
+			if (this.m_buffer == null)
+				throw new System.NullReferenceException("buffer not allocated");
+
+			// 1) 문자열을 배열로 변경하고 길이를 구한다.
+			var temp_array = _object.ToCharArray();
+			var string_length = temp_array.Length;
+
+			// check) 버퍼의 크기가 충분한가 확인한다.
+			Debug.Assert((this.m_offset + this.m_count + string_length * sizeof(char)) <= this.m_buffer.Length);
+
+			// check)
+			if ((this.m_buffer.Length - this.m_offset - this.m_count) < string_length)
+				throw new System.OverflowException("buffer overflow");
+
+			// 2) [문자열]을 복사해 넣는다.
+			System.Buffer.BlockCopy(temp_array, 0, this.m_buffer, this.m_offset + this.m_count, string_length * sizeof(char));
+
+			// 3) [버퍼_길이]를 더해준다.
+			this.m_count += (string_length * sizeof(char));
+		}
+
+		/// <summary>
+		/// 다수의 문자열을 헤더 정보 없이 버퍼에 써넣는다.
+		/// </summary>
+		/// <param name="_Collection">문자열을 담은 Collection</param>
+		/// <remarks>
+		/// Collection을 사용해 다수의 문자열을 한번에 복사해 넣을 때 사용한다.<br/>
+		/// </remarks>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="Append{T}(in List{T})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public void			AppendText (in ICollection<string> _Collection)
+		{
+			foreach (var iter in _Collection)
+			{
+				this.AppendText(iter);
+			}
+		}
+
+		/// <summary>
+		/// 여러 개의 파라미터로 나열된 문자열을 헤더 정보 없이 버퍼에 써넣는다.
+		/// </summary>
+		/// <param name="_Array">문자열드</param>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="Append{T}(in List{T})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public void			AppendText (params string[] _Array)
+		{
+			foreach (var iter in _Array)
+			{
+				this.AppendText(iter);
+			}
+		}
+
+		/// <summary>
+		/// Dictionary&lt;K,V&gt;를 직렬화해 버퍼에 써넣는다.
+		/// </summary>
+		/// <typeparam name="K">Dictionary의 '키' 타입</typeparam>
+		/// <typeparam name="V">Dictionary의 '값' 타입</typeparam>
+		/// <param name="_value">Dictionary 데이터</param>
+		/// <remarks>
+		/// 제너릭 타입의 명시 없이 Apppend()를 호출 했을 때 데이터가 Dictionary라면 이 함수가 호출된다.<br/>
+		/// K,V 타입을 알 수 있어 조금 더 나은 성능을 제공해 줄 수 있다.<br/>
+		/// </remarks>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{T}(in List{T})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public unsafe void	Append<K,V>(in Dictionary<K,V> _value) where K : notnull
 		{
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
-		#if _USE_BOUND_CHECK
 			// check)
-			if(this.m_buffer == null)
-				throw new System.NullReferenceException("buffer is not allocated");
-		#endif
+			if (this.m_buffer == null)
+				throw new System.NullReferenceException("buffer not allocated");
 
 			fixed (byte* ptr = this.m_buffer)
 			{
@@ -374,16 +971,45 @@ namespace CGDK
 				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
-		public unsafe void	Append<T>(List<T> _value)
+
+		/// <summary>
+		/// List&lt;K,V&gt;를 직렬화해 버퍼에 써넣는다.
+		/// </summary>
+		/// <typeparam name="T">List의 값 타입</typeparam>
+		/// <param name="_value">List 데이터</param>
+		/// <remarks>
+		/// 제너릭 타입의 명시 없이 Apppend()를 호출 했을 때 데이터가 List라면 이 함수가 호출된다.<br/>
+		/// T 타입을 알 수 있어 조금 더 나은 성능을 제공해 줄 수 있다.<br/>
+		/// </remarks>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public unsafe void	Append<T>(in List<T> _value)
 		{
+			// 설명) 직렬화 함수 (역직렬화는 Extract<T> 함수)
+			//       1. 먼저해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
+			//          (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
+			//       2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
+			//       3. Serializer가 Extract나 GetSizeOf 과정에서 만들어 질 수도 있다.
+			//       4. 직렬화에 필요한 파라미터들을 얻는다.
+			//          ptr_pre   -> ProcessAppend 함수가 수행된 후 쓰여진 길이를 구하기 위해 저장해 놓는다.
+			//          ptr_now   -> 쓰여질 위치 포인터. 버퍼에서 쓰여진 멘 끝을 가르킨다.(m_buffer + m_offset + m_count)
+			//	   	    ptr_bound -> 할당된 버퍼의 제일 끝을 가르킨다. bound 검사에 사용된다.
+			//       5. Serializer에 이 파라미터들을 넘겨 ProcessAppend를 호출하면 이 함수에서 실직적으로 직렬화를 수행한다.
+			//       6. 직렬화가 모두 끝난후 ptr_now - ptr_pre를 해서 쓰여진 길이를 구해 m_count에 더해 준다.
+			//       7. 직렬화 끝!
+
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
-		#if _USE_BOUND_CHECK
 			// check)
 			if(this.m_buffer == null)
 				throw new System.NullReferenceException("buffer is not allocated");
-		#endif
 
 			fixed (byte* ptr = this.m_buffer)
 			{
@@ -400,25 +1026,67 @@ namespace CGDK
 			}
 		}
 
+
+		// ----------------------------------------------------------------
+		//
+		// Extract (de-serialize)
+		//
+		//  1) T Extract<T>()
+		//
+		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 데이터를 역직렬화한다.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns>생성된 객체</returns>
+		/// <remarks>
+		/// T형 데이터를 역직렬화 한다.
+		/// Append&lt;T&gt;로 직렬화한 데이터는 Extract&lt;T&gt;로 역직렬화가 가능하다.
+		/// </remarks>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
 		public unsafe T	Extract<T>()
 		{
+			// ----------------------------------------------------------------
+			// 역직렬화
+			// 
+			//  1. 먼저 해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
+			//     (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
+			//  2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
+			//  3. Serializer가 Append나 GetSizeOf 과정에서 만들어 질 수도 있다.
+			//  4. 역직렬화에 필요한 파라미터들을 얻는다.
+			//
+			//     ptr_now -> 현재 읽어낼 위치 버퍼 데이터의 제일 처음을 가르킨다.(m_buffer + m_offset)
+			//	   count -> 현재 남은 데이터의 길이. Bound 체크 정보로 사용한다.
+			//
+			//  5. Serializer에 이 파라미터들을 넘겨 ProcessExtract를 호출하면 직렬화를 시작한다.
+			//  6. 역직렬화가 모두 끝아면 return값으로 역직렬화한 데이터가 넘어 온다.
+			//  7. 역직렬화가 읽어낸 만큼 m_offert 값을 옮겨주모 _count는 그대로 m_cout에 저장한다.
+			//  8. 역직렬화 끝!
+			// ----------------------------------------------------------------
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
-		#if _USE_BOUND_CHECK
 			// check)
-			if(this.m_buffer == null)
+			if(this.IsEmpty())
 				throw new System.NullReferenceException("buffer is not allocated");
-		#endif
 
+			// 1) get count
 			var count = this.m_count;
 
 			fixed (byte* ptr = this.m_buffer)
 			{
-				// 1) prepare extract
+				// 2) prepare extract
 				var ptr_now = ptr + this.m_offset;
 
-				// 2) extract
+				// 3) extract
 				var temp = BufferSerializer.Get<T>.instance.ProcessExtract(ref ptr_now, ref count);
 
 				// 3) update offset & count
@@ -433,17 +1101,45 @@ namespace CGDK
 			}
 		}
 
-		// 3) set_front (값 써넣기/읽기)
-		public unsafe void	SetFront<T>(T _object, int _offset = 0)
+
+		// ----------------------------------------------------------------
+		//
+		// SetFront/GetFront
+		//
+		//   1) void SetFront<T>(T,int)
+		//   2) T GetFront<T>(int)
+		//
+		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 데이터를 써넣는다.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="_object">써넣을 데이터</param>
+		/// <param name="_offset">써넣은 위치 오프셋</param>
+		/// <remarks>
+		/// 버퍼의 offset이나 count값을 변경하지 않고 특정 위치에서 값을 써넣는다.<br/>
+		/// Append로 직렬화 후 값을 수정해야할 경우 많이 사용한다.<br/>
+		/// 데이터 경계 내만 변경 가능하다.
+		/// </remarks>
+		/// <see cref="GetFront{T}(in int)"/>
+		public unsafe void	SetFront<T>(in T _object, in int _offset = 0)
 		{
+			// 설명) Poke함수
+			//       1. 버퍼 데이터의 크기에는 아무런 영향없이 특정 위치의 데이터를 써넣을 때 사용횐다.
+			//       2. _offset 만큼 떠어진 위치에 데이터를 써넣는다.
+			//       3. 이 함수는 Append기능이 아니므로 써넣은 이후 버퍼의 Offset이나 Count값에 영향을 주지 않는다.ㄴ
+			//       4. 버퍼의 데이터가 존재하는 영역 내에서만 쓰기가 가능하다.
+			//           즉 m_buffer + m_offset 에서 m_bufer + m_offset + m_count 안에만 변경할 수 있다.
+			//       5. 써넣는 데이터는 임의의 자료형도 모두 가능하지만 자료형 안정성(Type Safe)는 제공하지 않는다.
+
 			// check) 
 			Debug.Assert(this.m_buffer != null);
 
-		#if _USE_BOUND_CHECK
 			// check)
-			if(this.m_buffer == null)
-				throw new System.NullReferenceException("buffer is not allocated");
-		#endif
+			if (this.IsEmpty())
+				throw new System.NullReferenceException("buffer not allocated");
+
 			fixed (byte* ptr = this.m_buffer)
 			{
 				// 1) calculare ptr_now & ptr_bound
@@ -454,16 +1150,33 @@ namespace CGDK
 				BufferSerializer.Get<T>.instance.ProcessAppend(ref ptr_now, ptr_bound, _object);
 			}
 		}
-		public unsafe T	GetFront<T>(int _offset = 0)
-		{
-			// check) 
-			Debug.Assert(this.m_buffer != null);
 
-		#if _USE_BOUND_CHECK
+		/// <summary>
+		/// 데이터를 읽어낸다.
+		/// </summary>
+		/// <typeparam name="T">일어낼 데이터형</typeparam>
+		/// <param name="_offset">읽은 위치 오프셋</param>
+		/// <returns>읽어낸 데이터</returns>
+		/// <remarks>
+		/// 버퍼의 offset이나 count값을 변경하지 않고 특정 위치에서 데이터를 읽어온다.<br/>
+		/// </remarks>
+		/// <see cref="SetFront{T}(in T, in int)"/>
+		public unsafe T	GetFront<T>(in int _offset = 0)
+		{
+			// 설명) Peek함수
+			//       1. 버퍼 데이터의 크기에는 아무런 영향없이 특정 위치의 데이터를 읽어 올 때  사용횐다.
+			//       2. _offset 만큼 떠어진 위치에 데이터를 읽어 온다.
+			//       3. 이 함수는 Extract가 아니므로 Offset이나 Count값에 영향을 주지 않는다.
+			//       4. 버퍼의 데이터가 존재하는 영역 내에서만 쓰기가 가능하다.
+			//           즉 m_buffer + m_offset 에서 m_bufer + m_offset + m_count 안에만 변경할 수 있다.
+			//       5. 읽어내는 데이터는 임의의 자료형도 모두 가능하지만 자료형 안정성(Type Safe)는 제공하지 않는다.
+
+			// check) 
+			Debug.Assert(this.IsEmpty() == false);
+
 			// check)
-			if(this.m_buffer == null)
-				throw new System.NullReferenceException("buffer is not allocated");
-		#endif
+			if (this.IsEmpty())
+				throw new System.NullReferenceException("buffer not allocated");
 
 			// 1) get count
 			var count = this.m_count;
@@ -478,10 +1191,44 @@ namespace CGDK
 			}
 		}
 
-		public static int	GetSizeOf<T>(T _object)
+
+		// ----------------------------------------------------------------
+		//
+		// GetSizeOf
+		//
+		// ----------------------------------------------------------------
+
+		/// <summary>
+		/// 데이터의 직렬화 크기를 구한다.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="_object"></param>
+		/// <returns></returns>
+		/// <remarks>
+		/// 데이터 객체가 직렬화/역직렬화 되었을 때 필요한 크기를 byte단위로 구한다.
+		/// </remarks>
+		/// <see cref="Append{T}(in T)"/>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		public static int	GetSizeOf<T>(in T _object)
 		{
+			// [동작설명] 직렬화 크기 구하는 정적(static)함수
+			//
+			//  1. _object를 직렬화했을 때 메모리 크기를 구한다.
+			//  2. 정적함수이므로 객체 없이 클래스명으로 바로 실행이 가능하다.
+			//  3. 데이터의 크기가 실시간으로 계산되므로 성능에는 영향을 미친다.
+
 			return BufferSerializer.Get<T>.instance.ProcessGetSizeOf(_object);
 		}
+
+
+		// ----------------------------------------------------------------
+		// member variable
+		// ----------------------------------------------------------------
 
 		// 1) Buffer
 		private byte[]		m_buffer;
@@ -495,14 +1242,35 @@ namespace CGDK
 
 	namespace BufferSerializer
 	{
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
 		public interface IBase<T>
 		{
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="_ptr"></param>
+			/// <param name="_ptr_bound"></param>
+			/// <param name="_object"></param>
 			unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object);
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="_ptr"></param>
+			/// <param name="_count"></param>
+			/// <returns></returns>
 			unsafe T ProcessExtract(ref byte* _ptr, ref int _count);
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="_object"></param>
+			/// <returns></returns>
 			unsafe int ProcessGetSizeOf(T _object);
 		}
 
-		public class SerializerPrimitive<T> : IBase<T> where T : unmanaged
+		internal class SerializerPrimitive<T> : IBase<T> where T : unmanaged
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
@@ -526,7 +1294,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(T _object) { return sizeof(T); }
 		}
-		public class SerializerPrimitive_object<T> : IBase<object> where T : unmanaged
+		internal class SerializerPrimitive_object<T> : IBase<object> where T : unmanaged
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -556,20 +1324,20 @@ namespace CGDK
 				return sizeof(T);
 			}
 		}
-		public class SerializerDateTime : IBase<DateTime>
+		internal class SerializerDateTime : IBase<DateTime>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, DateTime _object) {*(long*)_ptr = _object.Ticks; _ptr += sizeof(long); }
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, DateTime _object) { *(long*)_ptr = _object.Ticks; _ptr += sizeof(long); }
 			public unsafe DateTime ProcessExtract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(*(long*)p); }
 			public unsafe int ProcessGetSizeOf(DateTime _object) { return sizeof(long); }
 		}
-		public class Serialize_DateTime_object : IBase<object>
+		internal class Serialize_DateTime_object : IBase<object>
 		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object) { Debug.Assert(_object != null); *(long*)_ptr = ((DateTime)_object).Ticks; _ptr += sizeof(long); }
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object) { Debug.Assert(_object != null); *(long*)_ptr= ((DateTime)_object).Ticks; _ptr += sizeof(long); }
 			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count) { var p = _ptr; _ptr += sizeof(long); _count -= sizeof(long); return new DateTime(*(long*)p); }
 			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(long); }
 		}
 	#if NET
-		public class SerializerVector2 : IBase<Vector2>
+		internal class SerializerVector2 : IBase<Vector2>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Vector2 _object)
 			{
@@ -594,7 +1362,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(Vector2 _object) { return sizeof(float) * 2; }
 		}
-		public class SerializerVector2_object : IBase<object>
+		internal class SerializerVector2_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -625,7 +1393,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 2; }
 		}
-		public class SerializerVector3 : IBase<Vector3>
+		internal class SerializerVector3 : IBase<Vector3>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Vector3 _object)
 			{
@@ -652,7 +1420,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(Vector3 _object) { return sizeof(float) * 3; }
 		}
-		public class SerializerVector3_object : IBase<object>
+		internal class SerializerVector3_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -685,7 +1453,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 3; }
 		}
-		public class SerializerVector4 : IBase<Vector4>
+		internal class SerializerVector4 : IBase<Vector4>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Vector4 _object)
 			{
@@ -714,7 +1482,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(Vector4 _object) { return sizeof(float) * 4; }
 		}
-		public class SerializerVector4_object : IBase<object>
+		internal class SerializerVector4_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -749,7 +1517,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 4; }
 		}
-		public class SerializerPlane : IBase<Plane>
+		internal class SerializerPlane : IBase<Plane>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Plane _object)
 			{
@@ -777,7 +1545,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(Plane _object) { return sizeof(float) * 4; }
 		}
-		public class SerializerPlane_object : IBase<object>
+		internal class SerializerPlane_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -811,7 +1579,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 4; }
 		}
-		public class SerializerQuaternion : IBase<Quaternion>
+		internal class SerializerQuaternion : IBase<Quaternion>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Quaternion _object)
 			{
@@ -840,7 +1608,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(Quaternion _object) { return sizeof(float) * 4; }
 		}
-		public class SerializerQuaternion_object : IBase<object>
+		internal class SerializerQuaternion_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -875,7 +1643,7 @@ namespace CGDK
 			}
 			public unsafe int ProcessGetSizeOf(object _object) { return sizeof(float) * 4; }
 		}
-		public class SerializerMatrix3x2 : IBase<Matrix3x2>
+		internal class SerializerMatrix3x2 : IBase<Matrix3x2>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Matrix3x2 _object)
 			{
@@ -915,7 +1683,7 @@ namespace CGDK
 				return sizeof(float) * 6;
 			}
 		}
-		public class SerializerMatrix3x2_object : IBase<object>
+		internal class SerializerMatrix3x2_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -961,7 +1729,7 @@ namespace CGDK
 				return sizeof(float) * 6;
 			}
 		}
-		public class SerializerMatrix4x4 : IBase<Matrix4x4>
+		internal class SerializerMatrix4x4 : IBase<Matrix4x4>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Matrix4x4 _object)
 			{
@@ -1023,7 +1791,7 @@ namespace CGDK
 				return sizeof(float) * 16;
 			}
 		}
-		public class SerializerMatrix4x4_object : IBase<object>
+		internal class SerializerMatrix4x4_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -1092,8 +1860,7 @@ namespace CGDK
 			}
 		}
 	#endif
-
-		public class SerializerEnum<T> : IBase<T>
+		internal class SerializerEnum<T> : IBase<T>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
@@ -1128,7 +1895,7 @@ namespace CGDK
 				return sizeof(int);
 			}
 		}
-		public class SerializerEnum_object : IBase<object>
+		internal class SerializerEnum_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -1159,14 +1926,14 @@ namespace CGDK
 			}
 		}
 
-		public class SerializerBuffer : IBase<buffer>
+		internal class SerializerBuffer : IBase<buffer>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, buffer _object)
 			{
 				// Attention) buffer의 size는 int64이다.
 
 				// 1) get buffer
-				var buf = _object.Array;
+				var buf = _object.Data;
 
 				// check)
 				if (buf == null)
@@ -1180,128 +1947,24 @@ namespace CGDK
 				fixed (byte* buf_source = buf)
 				{
 					// check)
-					Debug.Assert(_ptr + sizeof(Int64) + _object.Size <= _ptr_bound);
+					Debug.Assert(_ptr + sizeof(Int64) + _object.Count<= _ptr_bound);
 
 					// 1) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-					*(Int64*)_ptr = _object.Size;
+					*(Int64*)_ptr = _object.Count;
 					_ptr += sizeof(Int64);
 
 					// check)
-					if (_object.Size == 0)
+					if (_object.Count == 0)
 						return;
 
 					// 3) 복사해 붙인다.
-					System.Buffer.MemoryCopy(buf_source, _ptr, _ptr_bound - _ptr, _object.Size); // NULL 포함 복사
+					System.Buffer.MemoryCopy(buf_source, _ptr, _ptr_bound - _ptr, _object.Count); // NULL 포함 복사
 
 					// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-					_ptr += _object.Size;
+					_ptr += _object.Count;
 				}
 			}
 			public unsafe buffer ProcessExtract(ref byte* _ptr, ref int _count)
-			{
-				// Attention) buffer의 size는 int64이다.
-
-				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
-				Debug.Assert(sizeof(Int64) <= _count);
-
-#if _USE_BOUND_CHECK
-				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
-				if(sizeof(int)>this.m_count) 
-					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-#endif
-
-				// 1) extract  string length
-				var size_temp = *(Int64*)_ptr;
-				var buf_size = (int)size_temp;
-
-				// 2) update ptr & count
-				_ptr += sizeof(Int64);
-				_count -= sizeof(Int64);
-
-				// check) length가 -1이면 null을 리턴한다.
-				if (buf_size <= 0)
-					return new buffer();
-
-				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
-				Debug.Assert(buf_size <= _count);
-
-				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
-				if (buf_size > _count)
-					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
-
-				// 3) alloc buffer
-				var new_buf = new byte[buf_size];
-
-				// 4) block copy
-				fixed (byte* buf_dest = new_buf)
-				{
-					System.Buffer.MemoryCopy(_ptr, buf_dest, buf_size, buf_size);
-				}
-
-				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
-				_ptr += buf_size;
-				_count -= buf_size;
-
-				// 6) [string]로 변환해 최종 리턴한다.
-				return new buffer(new_buf, 0, buf_size);
-			}
-			public unsafe int ProcessGetSizeOf(buffer _object)
-			{
-				return sizeof(Int64) + _object.Size;
-			}
-		}
-		public class SerializerBuffer_object : IBase<object>
-		{
-			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
-			{
-				// Attention) buffer의 size는 int64이다.
-
-				// check)
-				Debug.Assert(_object == null);
-
-				// 1) casting to 
-				var temp = (buffer)_object;
-
-				// 2) get buf
-				var temp_buf = temp;
-
-				// check)
-				Debug.Assert(temp_buf.Size >= 0);
-
-				// 3) get buffer
-				var buf = temp_buf.Array;
-
-				// check)
-				if (buf == null || temp_buf.Size <= 0)
-				{
-					// - 0을 쓰고 끝낸다.
-					*(Int64*)_ptr = 0;
-					_ptr += sizeof(Int64);
-					return;
-				}
-
-				// 4) write to buffer
-				fixed (byte* buf_source = buf)
-				{
-					// check)
-					Debug.Assert(_ptr + sizeof(Int64) + temp_buf.Size <= _ptr_bound);
-
-					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-					*(Int64*)_ptr = temp_buf.Size;
-					_ptr += sizeof(Int64);
-
-					// check)
-					if (temp_buf.Size == 0)
-						return;
-
-					// 4) 복사해 붙인다.
-					System.Buffer.MemoryCopy(buf_source, _ptr, _ptr_bound - _ptr, temp_buf.Size); // NULL 포함 복사
-
-					// 5) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-					_ptr += temp_buf.Size;
-				}
-			}
-			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
 				// Attention) buffer의 size는 int64이다.
 
@@ -1349,29 +2012,129 @@ namespace CGDK
 				// 6) [string]로 변환해 최종 리턴한다.
 				return new buffer(new_buf, 0, buf_size);
 			}
+			public unsafe int ProcessGetSizeOf(buffer _object)
+			{
+				return sizeof(Int64) + _object.Count;
+			}
+		}
+		internal class SerializerBuffer_object : IBase<object>
+		{
+			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
+			{
+				// Attention) buffer의 size는 int64이다.
+
+				// check)
+				Debug.Assert(_object == null);
+
+				// 1) casting to 
+				var temp_buf = (buffer)_object;
+
+				// check)
+				Debug.Assert(temp_buf.Count >= 0);
+
+				// 2) get buffer
+				var buf = temp_buf.Array;
+
+				// check)
+				if (buf == null || temp_buf.Count <= 0)
+				{
+					// - 0을 쓰고 끝낸다.
+					*(Int64*)_ptr = 0;
+					_ptr += sizeof(Int64);
+					return;
+				}
+
+				// 3) write to buffer
+				fixed (byte* buf_source = buf)
+				{
+					// check)
+					Debug.Assert(_ptr + sizeof(Int64) + temp_buf.Count <= _ptr_bound);
+
+					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
+					*(Int64*)_ptr = temp_buf.Count;
+					_ptr += sizeof(Int64);
+
+					// check)
+					if (temp_buf.Count == 0)
+						return;
+
+					// 4) 복사해 붙인다.
+					System.Buffer.MemoryCopy(buf_source, _ptr, _ptr_bound - _ptr, temp_buf.Count); // NULL 포함 복사
+
+					// 5) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+					_ptr += temp_buf.Count;
+				}
+			}
+			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
+			{
+				// Attention) buffer의 size는 int64이다.
+
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
+				Debug.Assert(sizeof(Int64) <= _count);
+
+#if _USE_BOUND_CHECK
+				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+				if(sizeof(int)>this.m_count) 
+					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
+#endif
+
+				// 1) extract  string length
+				var size_temp = *(Int64*)_ptr;
+				var buf_size = (int)size_temp;
+
+				// 2) update ptr & count
+				_ptr += sizeof(Int64);
+				_count -= sizeof(Int64);
+
+				// check) length가 -1이면 null을 리턴한다.
+				if (buf_size <= 0)
+					return new buffer();
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
+				Debug.Assert(buf_size <= _count);
+
+				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
+				if (buf_size > _count)
+					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
+
+				// 3) alloc buffer
+				var new_buf = new byte[buf_size];
+
+				// 4) block copy
+				fixed (byte* buf_dest = new_buf)
+				{
+					System.Buffer.MemoryCopy(_ptr, buf_dest, buf_size, buf_size);
+				}
+
+				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
+				_ptr += buf_size;
+				_count -= buf_size;
+
+				// 6) [string]로 변환해 최종 리턴한다.
+				return new buffer(new_buf, 0, buf_size);
+			}
 			public unsafe int ProcessGetSizeOf(object _object)
 			{
 				// 1) casting to 
 				var temp_buf = (buffer)_object;
 
 				// return) 
-				return sizeof(Int64) + temp_buf.Size;
+				return sizeof(Int64) + temp_buf.Count;
 			}
 		}
 
-		public class SerializerString : IBase<string>
+		internal class SerializerString : IBase<string>
 		{
 			public static unsafe void XProcessAppend(ref byte* _ptr, byte* _ptr_bound, string _object)
 			{
-				// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
+				// check) 데이터가 null이면 -1만 쓰고 끝냄.
 				if (_object == null)
 				{
-					// - -1을 쓰고 끝낸다.
 					Builder.ProcessAppend_Empty(ref _ptr);
 					return;
 				}
 
-				// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
+				// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.(NULL은 뺀 크기)
 				var string_length = _object.Length * sizeof(char);
 
 				// check)
@@ -1389,7 +2152,8 @@ namespace CGDK
 
 					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length + sizeof(char)); // NULL 포함 복사
 				}
-				// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
+
+				// 6) 써넣은 bytes만큼 더해준다. (NULL문자열의 길이까지 포함)
 				_ptr += string_length + sizeof(char);
 			}
 			public static unsafe string XProcessExtract(ref byte* _ptr, ref int _count)
@@ -1460,108 +2224,23 @@ namespace CGDK
 				return XProcessGetSizeOf(_object);
 			}
 		}
-		public class SerializerString_object : IBase<object>
+		internal class SerializerString_object : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
-				// check) 쓰려고 하는 데이터가 null일 경우 -1만 쓰고 끝냄.
-				if (_object == null)
-				{
-					Builder.ProcessAppend_Empty(ref _ptr);
-					return;
-				}
-
-				// 1) casting string
-				var object_string = (string)_object;
-
-				// check)
-				Debug.Assert(object_string != null);
-
-				fixed (char* str = object_string)
-				{
-					// 2) [문자열]을 [문자배열]로 변경하고 길이를 구한다.
-					var string_length = object_string.Length * sizeof(char);
-
-					// check)
-					Debug.Assert(_ptr + sizeof(Int32) + string_length + sizeof(char) <= _ptr_bound);
-
-					// 3) [문자열 길이]를 써넣는다. (NULL을 포함한 문자열의 길이)
-					*(Int32*)_ptr = object_string.Length + 1;
-
-					// 4) add size
-					_ptr += sizeof(Int32);
-
-					// 5) [문자열]을 복사해 넣는다.
-					System.Buffer.MemoryCopy(str, _ptr, _ptr_bound - _ptr, string_length + sizeof(char)); // NULL 포함 복사
-
-					// 6) [버퍼_길이]를 더해준다. (NULL문자열의 길이까지 포함한다.)
-					_ptr += string_length + sizeof(char);
-				}
+				SerializerString.XProcessAppend(ref _ptr, _ptr_bound, (string)_object);
 			}
 			public unsafe object ProcessExtract(ref byte* _ptr, ref int _count)
 			{
-				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Assert!
-				Debug.Assert(sizeof(Int32) <= _count);
-
-#if _USE_BOUND_CHECK
-				// check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
-				if(sizeof(int)>this.m_count) 
-					throw new CGDK.Exception.Serialize(_offset, "[CGDK.buffer] buffer size is short");
-#endif
-
-				// 1) extract  string length
-				var length_string = *(Int32*)_ptr;
-
-				// 2) update ptr & count
-				_ptr += sizeof(Int32);
-				_count -= sizeof(Int32);
-
-				// check) length가 -1이면 null을 리턴한다.
-				if (length_string == -1)
-					return null;
-
-				// 3) 복사할 [문자열_길이]를 구한다. (NULL문자는 뺀다.)
-				int size_copy = length_string * sizeof(char);
-
-				// check) String 길이에 비해 Buffer의 길이가 짧으면 Assert!
-				Debug.Assert(size_copy <= _count);
-
-				// check) String 길이에 비해 Buffer의 길이가 짧으면 Exception!
-				if (size_copy > _count)
-					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] Not Supported TYPE.");
-
-				// check) [문자열]의 제일 끝이 NULL인지 확인한다.
-				if (*(char*)(_ptr + size_copy - sizeof(char)) != 0)
-					throw new CGDK.Exception.Serialize(_count, "[CGDK.buffer] string terminate No-'NULL' value");
-
-				// 4) get '_ptr' before update
-				var p = _ptr;
-
-				// 5) [버퍼_길이]와 [버퍼_어프셋]을 갱신한다.
-				_ptr += size_copy;
-				_count -= size_copy;
-
-				// 6) [string]로 변환해 최종 리턴한다.
-				return new string((char*)p, 0, length_string - 1);
+				return SerializerString.XProcessExtract(ref _ptr, ref _count);
 			}
 			public unsafe int ProcessGetSizeOf(object _object)
 			{
-				// check)
-				if (_object == null)
-					return sizeof(Int32);
-
-				// 1) casting string
-				var object_string = (string)_object;
-
-				// check)
-				Debug.Assert(object_string != null);
-
-				// 1) process get size of
-				return sizeof(Int32) + (object_string.Length + 1) * sizeof(char);
+				return SerializerString.XProcessGetSizeOf((string)_object);
 			}
 		}
 
-		public class SerializerArray_typed<V> : IBase<V[]>
+		internal class SerializerArray_typed<V> : IBase<V[]>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, V[] _object)
 			{
@@ -1658,9 +2337,9 @@ namespace CGDK
 				return size;
 			}
 
-			private static IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
+			private static readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
-		public class SerializerArray_typed_primitive<V> : IBase<V[]> where V:unmanaged
+		internal class SerializerArray_typed_primitive<V> : IBase<V[]> where V:unmanaged
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, V[] _object)
 			{
@@ -1736,7 +2415,7 @@ namespace CGDK
 				return sizeof(Int32) + _object.Length * sizeof(V);
 			}
 		}
-		public class SerializerArray_no_typed<T> : IBase<T>
+		internal class SerializerArray_no_typed<T> : IBase<T>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
@@ -1854,9 +2533,9 @@ namespace CGDK
 				return size;
 			}
 
-			private static IBase<object> serializer_value = (IBase<object>)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
+			private static readonly IBase<object> serializer_value = (IBase<object>)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
 		}
-		public class SerializerArray_object_typed<V> : IBase<object>
+		internal class SerializerArray_object_typed<V> : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -1962,9 +2641,9 @@ namespace CGDK
 				return size;
 			}
 
-			private IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
+			private readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
-		public class SerializerArray_object_typed_primitive<V> : IBase<object> where V : unmanaged
+		internal class SerializerArray_object_typed_primitive<V> : IBase<object> where V : unmanaged
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -1985,7 +2664,7 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_array= (V[])_object;
+				var obj_array = (V[])_object;
 
 				// 2) write count 
 				*(Int32*)_ptr = obj_array.Length;
@@ -2049,7 +2728,7 @@ namespace CGDK
 				return sizeof(Int32) + obj_array.Length * sizeof(V);
 			}
 		}
-		public class SerializerArray_object_no_typed : IBase<object>
+		internal class SerializerArray_object_no_typed : IBase<object>
 		{
 			public SerializerArray_object_no_typed(Type _type_create, IBase<object> _serializer_value)
 			{
@@ -2173,11 +2852,11 @@ namespace CGDK
 				return size;
 			}
 
-			private Type type_create;
-			private IBase<object> serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<object> serializer_value;
 		}
 
-		public class SerializerDictionary<K,V> : IBase<Dictionary<K,V>>
+		internal class SerializerDictionary<K,V> : IBase<Dictionary<K,V>> where K : notnull
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, Dictionary<K,V> _object)
 			{
@@ -2245,7 +2924,7 @@ namespace CGDK
 				{
 					// - get key & value
 					var item_key = serializer_key.ProcessExtract(ref _ptr, ref _count);
-					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// check) 
 					Debug.Assert(item_key != null);
@@ -2291,10 +2970,10 @@ namespace CGDK
 
 			}
 
-			private static IBase<K> serializer_key = Builder.ProcessGetSerializer<K>();
-			private static IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
+			private static readonly IBase<K> serializer_key = Builder.ProcessGetSerializer<K>();
+			private static readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
-		public class SerializerDictionary_primitive_primitive<K,V> : IBase<Dictionary<K,V>> where K : unmanaged where V : unmanaged
+		internal class SerializerDictionary_primitive_primitive<K,V> : IBase<Dictionary<K,V>> where K : unmanaged where V : unmanaged
 		{
 			public static unsafe void Xprocess_append(ref byte* _ptr, byte* _ptr_bound, Dictionary<K,V> _object)
 			{
@@ -2409,7 +3088,7 @@ namespace CGDK
 				return Xprocess_get_size_of(_object);
 			}
 		}
-		public class SerializerDictionary<T, K, V> : IBase<T>
+		internal class SerializerDictionary<T, K, V> : IBase<T> where K : notnull
 		{
 			public SerializerDictionary(IBase<K> _serializer_key, IBase<V> _serializer_value) 
 			{
@@ -2540,10 +3219,10 @@ namespace CGDK
 				return size;
 			}
 
-			private IBase<K> serializer_key;
-			private IBase<V> serializer_value;
+			private readonly IBase<K> serializer_key;
+			private readonly IBase<V> serializer_value;
 		}
-		public class SerializerDictionary_object_typed<K,V> : IBase<object>
+		internal class SerializerDictionary_object_typed<K,V> : IBase<object> where K : notnull
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -2570,7 +3249,7 @@ namespace CGDK
 				}
 
 				// 1) casting to list
-				var obj_dictionary = (Dictionary<K, V>)_object;
+				var obj_dictionary = (Dictionary<K,V>)_object;
 
 				// 2) write -1 
 				*(Int32*)_ptr = obj_dictionary.Count;
@@ -2618,7 +3297,7 @@ namespace CGDK
 				Debug.Assert(obj != null);
 
 				// 4) get Dictionary
-				var obj_dictionary = (Dictionary<K,V>)obj;
+				var obj_dictionary = (Dictionary<K, V>)obj;
 
 				// check)
 				Debug.Assert(obj_dictionary != null);
@@ -2628,7 +3307,7 @@ namespace CGDK
 				{
 					// - get key & value
 					var item_key = serializer_key.ProcessExtract(ref _ptr, ref _count);
-					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item_value = serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// check)
 					Debug.Assert(item_key != null);
@@ -2672,10 +3351,10 @@ namespace CGDK
 				return size;
 			}
 
-			private IBase<K> serializer_key = Builder.ProcessGetSerializer<K>();
-			private IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
+			private readonly IBase<K> serializer_key = Builder.ProcessGetSerializer<K>();
+			private readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
-		public class SerializerDictionary_object_primitive_primitive<K,V> : IBase<object> where K : unmanaged where V : unmanaged
+		internal class SerializerDictionary_object_primitive_primitive<K,V> : IBase<object> where K : unmanaged where V : unmanaged
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -2690,7 +3369,7 @@ namespace CGDK
 				return SerializerDictionary_primitive_primitive<K,V>.Xprocess_get_size_of((Dictionary<K,V>)_object);
 			}
 		}
-		public class SerializerDictionary_object_no_typed<K,V> : IBase<object>
+		internal class SerializerDictionary_object_no_typed<K,V> : IBase<object>
 		{
 			public SerializerDictionary_object_no_typed(Type _type_create, IBase<K> _serializer_key, IBase<V> _serializer_value)
 			{
@@ -2775,9 +3454,6 @@ namespace CGDK
 				// 3) create list
 				var obj = Activator.CreateInstance(type_create);
 
-				// check)
-				Debug.Assert(obj != null);
-
 				// 4) get Dictionary
 				var obj_dictionary = (IDictionary)obj;
 
@@ -2833,11 +3509,11 @@ namespace CGDK
 				return size;
 			}
 
-			private Type type_create;
-			private IBase<K> serializer_key;
-			private IBase<V> serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<K> serializer_key;
+			private readonly IBase<V> serializer_value;
 		}
-		public class SerializerDictionary_object : IBase<object>
+		internal class SerializerDictionary_object : IBase<object>
 		{
 			public SerializerDictionary_object(Type _type_create, IBase<object> _serializer_key, IBase<object> _serializer_value)
 			{
@@ -2995,12 +3671,12 @@ namespace CGDK
 				return XProcessGetSizeOf(_object, serializer_key, serializer_value);
 			}
 
-			private Type type_create;
-			private IBase<object> serializer_key;
-			private IBase<object> serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<object> serializer_key;
+			private readonly IBase<object> serializer_value;
 		}
 
-		public class SerializerList_typed<V> : IBase<List<V>>
+		internal class SerializerList_typed<V> : IBase<List<V>>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<V> _object)
 			{
@@ -3074,7 +3750,7 @@ namespace CGDK
 				while (item_count > 0)
 				{
 					// - get item
-					var item = serializer_value.ProcessExtract(ref _ptr, ref _count);
+					var item = serializer_value.ProcessExtract(ref _ptr, ref _count)!;
 
 					// - add item
 					obj_list.Add(item);
@@ -3112,9 +3788,9 @@ namespace CGDK
 				return size;
 			}
 
-			private static IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
+			private static readonly IBase<V> serializer_value = Builder.ProcessGetSerializer<V>();
 		}
-		public class SerializerList_typed_primitive<V> : IBase<List<V>> where V: unmanaged
+		internal class SerializerList_typed_primitive<V> : IBase<List<V>> where V: unmanaged
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<V> _object)
 			{
@@ -3208,7 +3884,7 @@ namespace CGDK
 				return sizeof(Int32) + _object.Count * sizeof(V);
 			}
 		}
-		public class SerializerList_string : IBase<List<string>>
+		internal class SerializerList_string : IBase<List<string>>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, List<string> _object)
 			{
@@ -3270,7 +3946,7 @@ namespace CGDK
 				while (item_count > 0)
 				{
 					// - get 
-					var item_string = SerializerString.XProcessExtract(ref _ptr, ref _count);
+					var item_string = SerializerString.XProcessExtract(ref _ptr, ref _count)!;
 
 					// - add item
 					obj_list.Add(item_string);
@@ -3304,7 +3980,7 @@ namespace CGDK
 				return size;
 			}
 		}
-		public class SerializerList_no_typed<T> : IBase<T>
+		internal class SerializerList_no_typed<T> : IBase<T>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, T _object)
 			{
@@ -3425,9 +4101,9 @@ namespace CGDK
 				return size;
 			}
 
-			private static IBase<object> serializer_value = (IBase<object>)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
+			private static readonly IBase<object> serializer_value = (IBase<object>)Builder.ProcessGetSerializer_object(typeof(T).GetGenericArguments()[0]);
 		}
-		public class SerializerList_object_typed_primitive<V> : IBase<object> where V : unmanaged
+		internal class SerializerList_object_typed_primitive<V> : IBase<object> where V : unmanaged
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -3527,7 +4203,7 @@ namespace CGDK
 				return sizeof(Int32) + obj_list.Count * sizeof(V);
 			}
 		}
-		public class SerializerList_obejct_string : IBase<object>
+		internal class SerializerList_obejct_string : IBase<object>
 		{
 			public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object _object)
 			{
@@ -3630,7 +4306,7 @@ namespace CGDK
 			}
 		}
 
-		public class SerializerList_object_no_typed : IBase<object>
+		internal class SerializerList_object_no_typed : IBase<object>
 		{
 			public SerializerList_object_no_typed(Type _type_create, IBase<object> _serializer_value)
 			{
@@ -3751,15 +4427,15 @@ namespace CGDK
 				return size;
 			}
 
-			private Type type_create;
-			private IBase<object> serializer_value;
+			private readonly Type type_create;
+			private readonly IBase<object> serializer_value;
 		}
 
-		public struct MemberSerializationInfo
+		internal readonly struct MemberSerializationInfo
 		{
-			public FieldInfo field_info;
-			public IBase<object> serializer;
-			public int offset;
+			public readonly FieldInfo field_info;
+			public readonly IBase<object> serializer;
+			public readonly int offset;
 
 			public MemberSerializationInfo(FieldInfo _field_info, IBase<object> _serializer, int _offset)
 			{
@@ -3768,7 +4444,7 @@ namespace CGDK
 				this.offset = _offset;
 			}
 		}
-		public class SerializerClass<T> : IBase<T>
+		internal class SerializerClass<T> : IBase<T>
 		{
 			public SerializerClass(List<MemberSerializationInfo> _list_member_serialization_info)
 			{
@@ -3800,9 +4476,9 @@ namespace CGDK
 				return SerializerClass_object.XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			public List<MemberSerializationInfo> list_member_serialization_info;
+			public readonly List<MemberSerializationInfo> list_member_serialization_info;
 		}
-		public class SerializerClass_object : IBase<object>
+		internal class SerializerClass_object : IBase<object>
 		{
 			public SerializerClass_object(Type _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
@@ -3883,11 +4559,11 @@ namespace CGDK
 				return XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private Type type_create;
-			private List<MemberSerializationInfo> list_member_serialization_info;
+			private readonly Type type_create;
+			private readonly List<MemberSerializationInfo> list_member_serialization_info;
 		}
 
-		public class SerializerStruct<T> : IBase<T>
+		internal class SerializerStruct<T> : IBase<T>
 		{
 			public SerializerStruct(List<MemberSerializationInfo> _list_member_serialization_info)
 			{
@@ -3919,9 +4595,9 @@ namespace CGDK
 				return SerializerStruct_object.XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private List<MemberSerializationInfo> list_member_serialization_info;
+			private readonly List<MemberSerializationInfo> list_member_serialization_info;
 		}
-		public class SerializerStruct_object : IBase<object>
+		internal class SerializerStruct_object : IBase<object>
 		{
 			public SerializerStruct_object(Type _type_create, List<MemberSerializationInfo> _list_member_serialization_info)
 			{
@@ -4025,11 +4701,11 @@ namespace CGDK
 				return XProcessGetSizeOf(_object, list_member_serialization_info);
 			}
 
-			private Type type_create;
-			private List<MemberSerializationInfo> list_member_serialization_info = new List<MemberSerializationInfo>();
+			private readonly Type type_create;
+			private readonly List<MemberSerializationInfo> list_member_serialization_info = new();
 		}
 
-		public class Builder
+		internal class Builder
 		{
 			public static unsafe void ProcessAppend_Empty(ref byte* ptr)
 			{
@@ -4056,8 +4732,8 @@ namespace CGDK
 				return list_att.Length != 0;
 			}
 
-			private static Dictionary<Type, object> dictionary_serializer = new Dictionary<Type, object>();
-			private static Dictionary<Type, object> dictionary_serializer_object = new Dictionary<Type, object>();
+			private static readonly Dictionary<Type, object> dictionary_serializer = new();
+			private static readonly Dictionary<Type, object> dictionary_serializer_object = new();
 
 			private static object BuildSerialize<T>()
 			{
@@ -4199,7 +4875,6 @@ namespace CGDK
 				else if (typeof(CGDK.buffer).Equals(_type))
 					return new SerializerBuffer();
 			#if NET
-
 				else if (typeof(Vector2).Equals(_type))
 					return new SerializerVector2();
 				else if (typeof(Vector3).Equals(_type))
@@ -4405,7 +5080,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_typed_key_o<T, string>();
 			}
-			private static object BuildSerializer_Dictionary_typed_key_List<T, K>(Type _type_second)
+			private static object BuildSerializer_Dictionary_typed_key_List<T, K>(Type _type_second) where K : notnull
 			{
 				// 1) get type of param
 				var type_param = _type_second.GetGenericArguments()[0];
@@ -4438,7 +5113,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_typed_key_o<T, K>();
 			}
-			private static object BuildSerializer_Dictionary_typed_key_Directory<T, K>()
+			private static object BuildSerializer_Dictionary_typed_key_Directory<T, K>() where K : notnull
 			{
 				return BuildSerializer_Dictionary_typed_key_o<T, K>();
 			}
@@ -4585,7 +5260,7 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_object_key_o<string>(type_value); ;
 			}
-			private static object BuildSerializer_Dictionary_object_typed_key_List<K>(Type _type_object)
+			private static object BuildSerializer_Dictionary_object_typed_key_List<K>(Type _type_object) where K : notnull
 			{
 				// 1) get argument type
 				var types = _type_object.GetGenericArguments();
@@ -4620,11 +5295,11 @@ namespace CGDK
 				else
 					return BuildSerializer_Dictionary_object_key_o<K>(_type_object);
 			}
-			private static object BuildSerializer_Dictionary_object_typed_key_Directory<K>()
+			private static object BuildSerializer_Dictionary_object_typed_key_Directory<K>() where K : notnull
 			{
 				return null;
 			}
-			private static SerializerDictionary<K,V> BuildSerializer_Dictionary_typed_key_value<K,V>()
+			private static SerializerDictionary<K,V> BuildSerializer_Dictionary_typed_key_value<K,V>() where K : notnull
 			{
 				return new SerializerDictionary<K,V>();
 			}
@@ -4632,11 +5307,11 @@ namespace CGDK
 			{
 				return new SerializerDictionary_primitive_primitive<K,V>();
 			}
-			private static SerializerDictionary<T, K, object> BuildSerializer_Dictionary_typed_key_o<T, K>()
+			private static SerializerDictionary<T, K, object> BuildSerializer_Dictionary_typed_key_o<T, K>() where K : notnull
 			{
 				return new SerializerDictionary<T, K, object> (
 					ProcessGetSerializer<K>(),
-					(IBase<object>)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[1])
+					(IBase<object>)ProcessGetSerializer_object(typeof(T).GetGenericArguments()[1])!
 				);
 			}
 
@@ -4651,10 +5326,10 @@ namespace CGDK
 				var types_argument = typeof(T).GetGenericArguments();
 				return new SerializerDictionary<T, object, object> (
 						(IBase<object>)ProcessGetSerializer_object(types_argument[0]),
-						(IBase<object>)ProcessGetSerializer_object(types_argument[1])
+						(IBase<object>)ProcessGetSerializer_object(types_argument[1])!
 					);
 			}
-			private static SerializerDictionary_object_typed<K,V> BuildSerializer_Dictionary_object_typed_key_value<K,V>()
+			private static SerializerDictionary_object_typed<K,V> BuildSerializer_Dictionary_object_typed_key_value<K,V>() where K : notnull
 			{
 				return new SerializerDictionary_object_typed<K,V>();
 			}
@@ -4662,7 +5337,7 @@ namespace CGDK
 			{
 				return new SerializerDictionary_object_primitive_primitive<K,V>();
 			}
-			private static SerializerDictionary_object_no_typed<K, object> BuildSerializer_Dictionary_object_key_o<K>(Type _type)
+			private static SerializerDictionary_object_no_typed<K, object> BuildSerializer_Dictionary_object_key_o<K>(Type _type) where K : notnull
 			{
 				return new SerializerDictionary_object_no_typed<K, object>(
 					_type,
@@ -5023,7 +5698,7 @@ namespace CGDK
 					// - set serializer
 					var temp_membeer_serialization_info = new MemberSerializationInfo (
 							iter,
-							(IBase<object>)ProcessGetSerializer_object(iter.FieldType),
+							(IBase<object>)ProcessGetSerializer_object(iter.FieldType)!,
 							0
 						);
 
@@ -5069,7 +5744,7 @@ namespace CGDK
 				return new SerializerClass_object (	_type, temp_list_member_serialization_info);
 			}
 
-			public static IBase<T> ProcessGetSerializer<T>()
+			internal static IBase<T> ProcessGetSerializer<T>()
 			{
 				// declare) 
 				object result = null;
@@ -5105,7 +5780,7 @@ namespace CGDK
 				// return) 
 				return result_casted;
 			}
-			public static IBase<Dictionary<K,V>> ProcessGetSerializer_Dictionary<K,V>()
+			internal static IBase<Dictionary<K,V>> ProcessGetSerializer_Dictionary<K,V>() where K : notnull
 			{
 				// declare) 
 				object result = null;
@@ -5152,7 +5827,7 @@ namespace CGDK
 				// return) 
 				return result_casted;
 			}
-			public static IBase<List<V>> ProcessSerializer_List<V>()
+			internal static IBase<List<V>> ProcessSerializer_List<V>()
 			{
 				// declare) 
 				object result = null;
@@ -5199,7 +5874,7 @@ namespace CGDK
 				// return) 
 				return result_casted;
 			}
-			public static object ProcessGetSerializer_object(Type _type)
+			internal static object ProcessGetSerializer_object(Type _type)
 			{
 				// declare) 
 				object result = null;
@@ -5226,19 +5901,66 @@ namespace CGDK
 				// return) 
 				return result;
 			}
+			internal static void ProcessRegisterCustomSerializer<T>(IBase<T> _serializer)
+			{
+				// check)
+				if (_serializer == null)
+					return;
+
+				// declare) 
+				object result = null;
+
+				// 2) get type
+				var type = typeof(T);
+
+				lock (dictionary_serializer)
+				{
+					// 3) 이미 존재하는 가?
+					var is_exist = dictionary_serializer.TryGetValue(type, out result);
+
+					// 4) 존재하지 않으면 추가 존재하면 교체
+					if (is_exist == false)
+						dictionary_serializer.Add(type, _serializer);
+					else
+						dictionary_serializer[type] = _serializer;
+				}
+			}
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
 		public static class Get<T>
 		{
-			static public IBase<T> instance = Builder.ProcessGetSerializer<T>();
+			/// <summary>
+			/// 
+			/// </summary>
+			public static readonly IBase<T> instance = Builder.ProcessGetSerializer<T>();
 		}
-		public static class Get_Dictionary<K,V>
+		internal static class Get_Dictionary<K,V> where K : notnull
 		{
-			static public IBase<Dictionary<K,V>> instance = Builder.ProcessGetSerializer_Dictionary<K,V>();
+			static public readonly IBase<Dictionary<K,V>> instance = Builder.ProcessGetSerializer_Dictionary<K,V>();
 		}
-		public static class Get_List<V>
+		internal static class Get_List<V>
 		{
-			static public IBase<List<V>> instance = Builder.ProcessSerializer_List<V>();
+			static public readonly IBase<List<V>> instance = Builder.ProcessSerializer_List<V>();
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		public static class Custom
+		{
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <typeparam name="T"></typeparam>
+			/// <param name="_custom_builder"></param>
+			public static void RegisterSerializer<T>(IBase<T> _custom_builder)
+			{
+				Builder.ProcessRegisterCustomSerializer<T>(_custom_builder);
+			}
 		}
 	}
 }
