@@ -1,4 +1,19 @@
-﻿using Microsoft.CodeAnalysis;
+﻿//*****************************************************************************
+//*                                                                           *
+//*                                CGDK.buffer                                *
+//*                        Ver 3.2 / Release 2023.12.1                        *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*                                                                           *
+//*  This Program is programmed by Cho SangHyun. sangducks@cgcii.co.kr        *
+//*  Best for Game Developement and Optimized for Game Developement.          *
+//*                                                                           *
+//*                    (C) 2008 CGLabs All right reserved.                    *
+//*                          http://www.CGCII.co.kr                           *
+//*                                                                           *
+//*****************************************************************************
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;

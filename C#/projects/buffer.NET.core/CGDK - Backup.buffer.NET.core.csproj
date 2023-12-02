@@ -5,28 +5,12 @@
 	<LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <Platforms>AnyCPU;x64</Platforms>
-	<Authors>sangduck</Authors>
-	<Company>CGCIII</Company>
-    <AssemblyName>CGDK.buffer_for.NET_core</AssemblyName>
-	<VersionPrefix>3.2.0.0</VersionPrefix>
-	<RootNamespace>CGDK</RootNamespace>
+    <AssemblyName>CGDK.buffer.NET.core</AssemblyName>
+    <RootNamespace>CGDK</RootNamespace>
     <BaseOutputPath></BaseOutputPath>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageId>$(AssemblyName)</PackageId>
-    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <EnableNETAnalyzers>True</EnableNETAnalyzers>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <SignAssembly>False</SignAssembly>
-    <RepositoryUrl>https://github.com/CGLabs/CGDK.buffer</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/CGLabs/CGDK.buffer</PackageProjectUrl>
-    <Copyright>ⓒ 2023. Cho SangHyun all rights reserved.</Copyright>
-    <PackageTags>serialization;buffer;performance</PackageTags>
-    <RepositoryType>git</RepositoryType>
-    <Company>$(Company)</Company>
-    <Product>$(Title)</Product>
+    <Title>CGDK.buffer</Title>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

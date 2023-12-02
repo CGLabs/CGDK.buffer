@@ -1,3 +1,13 @@
+## CGDK 3.20 (2023.12.1)
+   #### (C#)
+   * 성능 최적화 
+     - Boxing/Unboxing의 최소화 (Enumerator를 최대한 Boxing/Unboxing이 발생하지 않는 것으로 선택)
+     - List<T>, Dictionary<T>에서 Capacity를 미리 확보하는 처리 추가
+   * Nuget에 대응
+     - Nuget에 대응해 Project 설정 변경
+   * Roslyn을 이용해 Source Generaion하는 과정에서 오류 메시지 추가
+     - Source Ganeration 하는 과정에서 오류가 발생하면 Error 메시지가 제대로 출력하도록 처리했습니다.
+
 ## CGDK 3.10 (2023.11.26)
    #### (C#)
    * Roslyn을 사용해 Source generator를 추가
