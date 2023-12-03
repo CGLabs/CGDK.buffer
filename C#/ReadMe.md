@@ -1,11 +1,11 @@
 ## CGDK::buffer란
-엄청나게 빠른 메시지 직렬화 버퍼 시스템<br>
-protobuf, MessagePack,MemoryPack에 비해서 압도적인 성능을 제공합니다.<br>
-<br>
+엄청나게 편리하고 빠른 메시지 직렬화 버퍼 시스템<br/>
+게임 서버 제작을 위해 특화된 직렬화 버퍼 시스템<br/>
+<br/>
 <img src="https://github.com/sangduck/CGDK.buffer/blob/master/C%23/document/benchmark_20231203_2.png"/>
-<br>
-c# 최고의 성능을 제공한다는 직렬화 라이브러리보다 수배에서 수십배의 성능을 보여 줍니다.
-
+<br/>
+protobuf, MessagePack,MemoryPack 등등 <br/>
+c# 최고 성능을 제공한다는 직렬화 라이브러리들보다 수배에서 수십배의 압도적 성능을 제공합니다.<br/>
 <br>
 
 - CGD.buffer의  특징
