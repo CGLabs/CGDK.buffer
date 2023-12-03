@@ -27,8 +27,9 @@ C# 버전은 CGDK.buffer<br>
       * Ibuffer_serialzable<br>
       * 기타...<br>
 
-#### CGD.buffer
+#### CGD.buffer 
    - C#버전<br>
+      (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23)
    - 직렬화/역직렬화 방법은 C++과 동일합니다.(append/extract)<br>
    - reflection을 사용하여 구현하였습니다.<br>
    - C++ 버전과 호환됩니다.<br>
