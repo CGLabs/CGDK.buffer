@@ -1,6 +1,6 @@
 ## CGDK::buffer란
-엄청나게 편리하고 빠른 메시지 직렬화 버퍼 시스템<br/>
-게임 서버 제작을 위해 특화된 직렬화 버퍼 시스템<br/>
+압도적으로 빠르고 편리한 메시지 직렬화 버퍼 시스템<br/>
+C++,C#간 고성능 게임 송수신을 위한 직렬화 버퍼 시스템<br/>
 <br/>
 <img src="https://github.com/sangduck/CGDK.buffer/blob/master/C%23/document/benchmark_20231203_2.png"/>
 <br/>
