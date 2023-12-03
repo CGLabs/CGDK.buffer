@@ -28,7 +28,230 @@ protobuf, MessagePack,MemoryPack에 비해서도 앞도적인 성능을 제공�
 <br>
 <br>
 
-## CGD.buffer 구성<br/>
+## CGD.buffer 직렬화/역직렬화 하기
+### 1. 직렬화하기(Schemaless)  
+   버퍼에 데이터 쓰기는 Append<T>(...)로 간단히 가능합니다.<br>
+   (데이터형을 생략할 경우 인자의 자료형으로 간주합니다.)<br>
+
+   ``` C#
+   // CGDK.buffer를 생성하고 메모리 256byte를 할당합니다.
+   var buf = new CGDK.buffer(256);
+         
+   buf.Append<byte>(10); // byte형 10을 직렬화합니다.
+   buf.Append<sbyte>(20); // sbyte형 20을 직렬화합니다.
+   buf.Append<int>(-100); // int형 -100을 직렬화합니다.
+   buf.Append<uint>(1000); // uint형 1000을 직렬화합니다.
+   buf.Append<string>("Test String");	// 문자열을 직렬화합니다.
+   ```
+<br>
+
+### 2. 역직렬화하기(Schemaless)<br>
+- Extract<T>() 함수로 간단히 역직렬화를 할 수 있습니다.<br>
+
+   ``` C#
+   var temp1 = buf.Extract<byte>(); // 10 => byte형 값을 역직렬화합니다.
+   var temp2 = buf.Extract<sbyte>(); // 20 => sbyte형 값을 역직렬화합니다.
+   var temp3 = buf.Extract<int>(); // -100 => int형 값을 역직렬화합니다.
+   var temp4 = buf.Extract<uint>(); // 1000 => uint형 값을 역직렬화합니다.
+   var temp5 = buf.Extract<string>(); // "Test String" => 문자열을 역직렬화합니다.
+   ```
+<br/>
+
+- 컬렉션 직렬화/역직렬화<br> 
+C#의 List<T>, Dictionary<K,V> ... 등의 데이터도 직렬화/역직렬화 가능합니다.<br/>
+
+   ``` C#
+   List<int>                      listTest = new ...;
+   List<string>                   listStringTest = new ...;
+   Dictionary<string, int>        dicTest = new ...;
+   Dictionary<int, List<string>>  dicListTest = new ...;
+         
+   CGD.buffer buf = new CGD.buffer(new byte[256]);
+         
+   buf.Append(listTest);
+   buf.Append(listStringTest);
+   buf.Append(dicTest);
+   buf.Append(dicListTest);
+         
+   .................
+   // 역직렬화
+   var temp1 = buf.Extract<List<int>> ();
+   var temp2 = buf.Extract<List<string>> ();
+   var temp3 = buf.Extract<Dictionary<string,int>> ();
+   var temp4 = buf.Extract<Dictionary<string,List<int>>> ();
+   ```
+<br>
+
+### 3. 읽어만 내기
+- Extract<T>를 사용해 값을 읽어내면 그만큼의 오프셋과 크기가 변경됩니다.<br/>
+  변경없이 값만 읽어 내고 싶다면 GetFront<T>([offset])을 사용하면 됩니다.
+
+   ``` C#
+   var buf = new CGDK.buffer(1024);
+   buf.Append<int>(100);
+   buf.Append<long>(200);
+   buf.Append<string>("test");
+   
+   // 버퍼의 앞에서 4Byte Offset만큼 떨어진 곳에서 long값을 값을 읽어냅니다.
+   var temp1 = buf.GetFront<long>(4); // temp는 200이 되겠죠.
+
+   // 버퍼의 앞에서 12Byte Offset만큼 떨어진 곳에서 string값을 값을 읽어냅니다.
+   var tenp2 = buf.GetFront<string>(12); // 
+   ```
+<br/>
+
+- GetFront로 변경된 Offset을 얻고 싶다면 __CGDK.Offset__을 사용하면 됩니다.<br/>
+Offset을 사용해 GetFront<T>를 수행하면 읽어낸만큼 Offset값을 업데이트 해주므로 연속적으로 Offset을 사용해 값을 읽어낼 수 있습니다.<br/>
+
+   ``` C#
+   var buf = new CGDK.buffer(1024);
+   buf.Append<int>(100);
+   buf.Append<long>(200);
+   buf.Append<string>("test");
+   
+
+   // Offset을 정의합니다.
+   var temp_offset = new CGDK.Offset(4);
+
+   // 버퍼의 앞에서 4Byte Offset만큼 떨어진 곳에서 long값을 값을 읽어옵니다.
+   var temp1 = buf.GetFront<long>(ref temp_offset); // temp는 200이 되며 temp_offset값은 12로 변경됩니다.
+   var tenp2 = buf.GetFront<string>(ref temp_offset); // "test"가 될 것이며 temp_offset값은 20로 변경됩니다.
+   ```
+- 주의) 타입에 대한 안정성을 제공하지는 않습니다. 즉 GetFront<int>(8); 하면 그냥 8Byte Offset이 떨어진 값을 int로 가정해서 읽어올 뿐입니다. 원래 데이터의 형이 int가 아닐 경우 원하지 않는 값을 얻을 수도 있습니다.
+타입 안정성을 제공하지 않을 것을 인해 많은 사용상의 편리함은 있을 수 있습니다만 예외를 발생시킬 수도 있으면 잘 사용할 필요가 있습니다.
+
+<br>
+
+### 4. 덥어 쓰기
+- Append<T>는 버퍼읠 제일 끝에만 붙이는 처리입니다.<br/>
+근데 이미 쓰여진 데이터를 덥어쓰거나 먼저 버퍼에 값을 써넣은 후 추후 값을 써넣어야 하는 경우도 있을 수 있습니다.<br/>
+그럴 때 __SetFront<T>()__ 함수를 사용하시면 됩니다.
+
+   ``` C#
+   var buf = new CGDK.buffer(1024);
+   buf.Append<int>(100);
+   buf.Append<long>(); // 일단 공간만 잡고 값을 쓰지 않았습니다.
+   buf.Append<string>("test");
+   
+   // 추후에 Offset 4byte 떨어진 곳에 long 타입으로 값을 덥어 써줍니다. 
+   // 여기서는 buf의 직렬화한 길이를 써넣었습니다.
+   buf.SetFront<long>(4, buf.Count); // temp는 200이 되겠죠.
+   ```
+- SetFront<T>() 함수의 리턴값을 기본적으로 값을 써넣은 후에 변경된 Offset값을 리턴값으로 돌려줍니다.<br>
+이 값을 받아 값을 읽거나 써넣는 데에 사용할 수 있지만 타입 안정성을 제공하지 않으므로 주의해서 사용할 필요가 있습니다.<br>
+<br>
+<br>
+
+### 5. 직렬화에 필요한 메모리 크기 구하기<br>
+- 데이터를 직렬화 했을 때의 크기를 CGDK.GetSizeOf<V>(...)르 사용해 미리 얻을 수 있습니다. <br>
+
+   ``` C#
+   var maplistTemp = new Dictionary<int,string>();
+   ...
+
+   var size = CGDK.buffer.GetSizeOf(maplistTemp);
+   ```
+<br>
+- 다만 GetSizeOf<T>()함수는 큰 비용은 아니지만 동적 처리 함수이므로 실시간 비용이 들어가므로 만큼 고려해 사용하시길 바랍니다.<br/>
+<br/>
+
+### 4. 동적 메모리 할당 받기<br>
+메모리는 3가지 방법으로 설정이 가능합니다.
+- 생성자에서 바로 생성하기
+   ``` C#
+   // 1000byte 메모리를 동적 할당 받는다.
+   var buf = new CGDK.buffer(1000);
+   ```
+<br/>
+
+- 생성 후에 할당하기
+   ``` C#
+   // 1000byte 메모리를 동적 할당 받는다.
+   var buf = new CGDK.buffer();
+   buf.Alloc(1000);
+   ```
+<br/>
+
+- 외부에서 생성해서 넣기
+   ``` C#
+   // 1000byte 메모리를 동적 할당 받는다.
+   var temp = new byte[1000];
+
+   var buf = new CGDK.buffer(temp);
+   ```
+   <br/>
+   혹은 
+      ``` C#
+      // 1000byte 메모리를 동적 할당 받는다.
+      var temp = new byte[1000];
+
+      var buf = new CGDK.buffer();
+      buf.SetBuffer(temp, 0, 0); // 0은 offset과 count값입니다.
+      ```
+   <br/>
+따라서 GetSizeOf와 함께 사용하면 직렬화 크기 맞는 버퍼를 할당 가능합니다.<br/>
+
+``` C#
+// 1000byte 메모리를 동적 할당 받는다.
+TEST temp = new TEMP();
+...
+
+var buf = new CGDK.buffer(CGDK.buffer.GetSizeOf(temp));
+buf.Append(temp);
+```
+<br>
+<br>
+
+### 6. 구조체 직렬화
+직렬화 대상 구조체는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
+구조체가 static이 아니어야 하며 public 속성을 가져야 합니다.
+구조체의 멤버 변수들은 기본적으로 모두 직렬화의 대상이 됩니다.
+다만 public 속성이 아니거나 const, read_only,write_only 같은 속성이 가지면 직렬화에서 제외됩니다.
+특별히 직렬화/역직렬화에서 제외하고 싶으면 '[CGDK.Attribute.Filed(false)]'를 붙혀주면 됩니다.
+
+``` C#
+[CGDK.Attribute.Serializable]
+public struct TEST
+{
+    public int       x;
+    public float     y;
+    [CGDK.Attribute.Filed(false)]
+    public string    z; // z는 직렬화에서 제외됩니다.
+    public List<int> w;
+};
+	    
+```
+구조체 직렬화는 동적 할당을 하지 않아도 되기 때문에 성능상 이점이 있을 수 있지만 상속 할수 없다는 단점도 있습니다.
+
+
+### 7. 클래스 직렬화
+직렬화 대상 클래서는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
+클래스가 static이 아니어야 하며 public 속성을 가져야 합니다.
+클래스의 멤버 변수는 기본적으로 직렬화의 대상이 아닌 것으로 간주합니다.
+직렬화를 하고자 하는 멤버만 '[CGDK.Attribute.Filed]'를 붙혀줘야 합니다.
+또 이 멤버는 public 속성이어야 하며 const, read_only,write_only 속성을 가져서는 안됩니다.
+(단 '[CGDK.Attribute.Filed(false)]'를 붙혀 주면 직렬화를 하지 않습니다. 즉 Attribute를 안붙힌 것과 같습니다.)
+
+``` C#
+[CGDK.Attribute.Serializable]
+public class TEST
+{
+   [CGDK.Attribute.Field]
+    public int       x;
+   [CGDK.Attribute.Field]
+    public float     y;
+
+    public string    z; // z는 직렬화에서 제외됩니다.
+
+   [CGDK.Attribute.Field]
+    public List<int> w;
+};
+	    
+```
+클래스 직렬화는 동적 할당을 해야 하므로 작고 빈번한 메시지 사용에는 약간 단점이 될수 있지만 상속이 가능하다는 장점이 있습니다.<br/>
+<br/>
+
+## CGD.buffer 구조<br/>
 CGDK.buffer의 멤버변수는 buffer, m_offset, m_count 3개의 멤버 변수로 구성되어 있습니다.
 
    ``` C#
@@ -147,229 +370,6 @@ CGDK.buffer의 기본적으로 구조체이므로 구조체 자체는 통채로 
 <br/>
 <br/>
 
-## CGD.buffer 직렬화/역직렬화 하기
-### 1. 직렬화하기(Schemaless)  
-   버퍼에 데이터를 버퍼에 쓰기는 간단히 Append<T>()로 가능<br>
-   (TYPE를 생략할 경우 입력되는 값의 자료형으로 간주gkqslek)<br>
-
-   ``` C#
-   var buf = new CGDK.buffer(new byte[256]);
-         
-   buf.Append<byte>(10);
-   buf.Append<sbyte>(20);
-   buf.Append<int>(-100);
-   buf.Append<uint>(1000);
-   buf.Append<string>("Test String");	// 문자열도 가능
-   ```
-<br>
-
-### 2. 역직렬화하기(Schemaless)<br>
-- Extract<T>() 함수로 간단히 역직렬화를 할 수 있습니다.<br>
-
-   ``` C#
-   var temp1 = buf.Extract<byte>();
-   var temp2 = buf.Extract<sbyte>();
-   var temp3 = buf.Extract<int>();
-   var temp4 = buf.Extract<uint>();
-   var temp5 = buf.Extract<string>();
-   ```
-<br/>
-
-- 컬렉션 직렬화/역직렬화<br> 
-C#의 List<T>, Dictionary<K,V> ...<br>
-
-   ``` C#
-   List<int>                      listTest = new ...;
-   List<string>                   listStringTest = new ...;
-   Dictionary<string, int>        dicTest = new ...;
-   Dictionary<int, List<string>>  dicListTest = new ...;
-         
-   CGD.buffer buf = new CGD.buffer(new byte[256]);
-         
-   buf.Append(listTest);
-   buf.Append(listStringTest);
-   buf.Append(dicTest);
-   buf.Append(dicListTest);
-         
-   .................
-   // 역직렬화
-   var temp1 = buf.Extract<List<int>> ();
-   var temp2 = buf.Extract<List<string>> ();
-   var temp3 = buf.Extract<Dictionary<string,int>> ();
-   var temp4 = buf.Extract<Dictionary<string,List<int>>> ();
-
-   buf.append(maplistTemp);
-   ```
-<br>
-
-### 3. 읽어만 내기
-- Extract<T>를 하면 그만큼 버퍼의 오프셋과 크기가 변경됩니다.<br/>
-그런 변경없이 특정 위치에서 값만 읽어 내고 싶다면 GetFront<T>([offset])을 사용하면 됩니다.
-
-   ``` C#
-   var buf = new CGDK.buffer(1024);
-   buf.Append<int>(100);
-   buf.Append<long>(200);
-   buf.Append<string>("test");
-   
-   // 버퍼의 앞에서 4Byte Offset만큼 떨어진 곳에서 long값을 값을 읽어옵니다.
-   var temp1 = buf.GetFront<long>(4); // temp는 200이 되겠죠.
-
-   // 버퍼의 앞에서 12Byte Offset만큼 떨어진 곳에서 string값을 값을 읽어옵니다.
-   var tenp2 = buf.GetFront<string>(12); // 
-   ```
-<br/>
-
-- GetFront로 변경된 Offset을 얻고 싶다면 __CGDK.Offset__을 사용하면 됩니다.<br/>
-Offset을 사용해 GetFront<T>를 수행하면 읽어낸만큼 Offset값을 업데이트 해주므로 연속적으로 Offset을 사용할 수 있습니다.<br/>
-
-   ``` C#
-   var buf = new CGDK.buffer(1024);
-   buf.Append<int>(100);
-   buf.Append<long>(200);
-   buf.Append<string>("test");
-   
-
-   // Offset을 정의합니다.
-   var temp_offset = new CGDK.Offset(4);
-
-   // 버퍼의 앞에서 4Byte Offset만큼 떨어진 곳에서 long값을 값을 읽어옵니다.
-   var temp1 = buf.GetFront<long>(ref temp_offset); // temp는 200이 되며 temp_offset값은 12로 변경됩니다.
-   var tenp2 = buf.GetFront<string>(ref temp_offset); // "test"가 될 것이며 temp_offset값은 20로 변경됩니다.
-   ```
-- 주의) 타입에 대한 안정성을 제공하지는 않습니다. 즉 GetFront<int>(8); 하면 그냥 8Byte Offset이 떨어진 값을 int로 가정해서 읽어올 뿐입니다.
-타입 안정성을 제공하지 않을 것을 인해 많은 사용상의 편리함은 있을 수 있습니다만 예외를 발생시키기도 하므로 잘 사용할 필요가 있습니다.
-
-<br>
-
-### 4. 덥어 쓰기
-- Append<T>는 버퍼읠 제일 끝에만 붙이는 처리입니다.<br/>
-근데 이미 쓰여진 데이터를 업데이트하거나 혹은 먼저 버퍼에 값을 써넣은 후 추후 값을 써넣어야 하는 경우도 있을 수 있습니다.<br/>
-그럴 때 SetFront<T>() 함수를 사용하시면 됩니다.
-
-   ``` C#
-   var buf = new CGDK.buffer(1024);
-   buf.Append<int>(100);
-   buf.Append<long>(); // 일단 공간만 잡고 값을 쓰지 않았습니다.
-   buf.Append<string>("test");
-   
-   // 추후에 Offset 4byte 떨어진 곳에 long 타입으로 값을 덥어 써줍니다. 
-   // 여기서는 buf의 직렬화한 길이를 써넣었습니다.
-   buf.SetFront<long>(4, buf.Count); // temp는 200이 되겠죠.
-   ```
-- SetFront<T>() 함수의 리턴값을 기본적으로 값을 써넣은 후에 변경된 Offset값을 리턴값으로 돌려줍니다.<br>
-이 값을 사용해서 값을 읽거나 써넣을 수는 있지만 타입 안정성을 제공하지 않으므로 주의할 필요가 있습니다.<br>
-<br>
-<br>
-
-
-### 5. 직렬화에 필요한 메모리 크기 구하기<br>
-- 데이터를 직렬화 했을 때의 메모리 크기를 CGDK.GetSizeOf<V>(...)르 사용해 얻을 수 있습니다. <br>
-
-   ``` C#
-   var maplistTemp = new Dictionary<int,string>();
-   ...
-
-   var size = CGDK.buffer.GetSizeOf(maplistTemp);
-   ```
-<br>
-
-### 4. 동적 메모리 할당 받기<br>
-메모리는 3가지 방법으로 설정이 가능합니다.
-- 생성자에서 바로 생성하기
-   ``` C#
-   // 1000byte 메모리를 동적 할당 받는다.
-   var buf = new CGDK.buffer(1000);
-   ```
-<br/>
-
-- 생성 후에 할당하기
-   ``` C#
-   // 1000byte 메모리를 동적 할당 받는다.
-   var buf = new CGDK.buffer();
-   buf.Alloc(1000);
-   ```
-<br/>
-
-- 외부에서 생성해서 넣기
-   ``` C#
-   // 1000byte 메모리를 동적 할당 받는다.
-   var temp = new byte[1000];
-
-   var buf = new CGDK.buffer(temp);
-   ```
-   <br/>
-
-   혹은 
-      ``` C#
-      // 1000byte 메모리를 동적 할당 받는다.
-      var temp = new byte[1000];
-
-      var buf = new CGDK.buffer();
-      buf.SetBuffer(temp, 0, 0); // 0은 offset과 count값입니다.
-      ```
-   <br/>
-따라서 GetSizeOf와 함께 사용하면 직렬화 크기 맞는 버퍼를 할당 가능합니다.<br/>
-
-``` C#
-// 1000byte 메모리를 동적 할당 받는다.
-TEST temp = new TEMP();
-...
-
-var buf = new CGDK.buffer(CGDK.buffer.GetSizeOf(temp));
-buf.Append(temp);
-```
-<br>
-<br>
-
-### 6. 구조체 직렬화
-직렬화 대상 구조체는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
-구조체가 static이 아니어야 하며 public 속성을 가져야 합니다.
-구조체의 멤버 변수들은 기본적으로 모두 직렬화의 대상이 됩니다.
-다만 public 속성이 아니거나 const, read_only,write_only 같은 속성이 가지면 직렬화에서 제외됩니다.
-특별히 직렬화/역직렬화에서 제외하고 싶으면 '[CGDK.Attribute.Filed(false)]'를 붙혀주면 됩니다.
-
-``` C#
-[CGDK.Attribute.Serializable]
-public struct TEST
-{
-    public int       x;
-    public float     y;
-    [CGDK.Attribute.Filed(false)]
-    public string    z; // z는 직렬화에서 제외됩니다.
-    public List<int> w;
-};
-	    
-```
-구조체 직렬화는 동적 할당을 하지 않아도 되기 때문에 성능상 이점이 있을 수 있지만 상속 할수 없다는 단점도 있습니다.
-
-
-### 7. 클래스 직렬화
-직렬화 대상 클래서는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
-클래스가 static이 아니어야 하며 public 속성을 가져야 합니다.
-클래스의 멤버 변수는 기본적으로 직렬화의 대상이 아닌 것으로 간주합니다.
-직렬화를 하고자 하는 멤버만 '[CGDK.Attribute.Filed]'를 붙혀줘야 합니다.
-또 이 멤버는 public 속성이어야 하며 const, read_only,write_only 속성을 가져서는 안됩니다.
-(단 '[CGDK.Attribute.Filed(false)]'를 붙혀 주면 직렬화를 하지 않습니다. 즉 Attribute를 안붙힌 것과 같습니다.)
-
-``` C#
-[CGDK.Attribute.Serializable]
-public class TEST
-{
-   [CGDK.Attribute.Field]
-    public int       x;
-   [CGDK.Attribute.Field]
-    public float     y;
-
-    public string    z; // z는 직렬화에서 제외됩니다.
-
-   [CGDK.Attribute.Field]
-    public List<int> w;
-};
-	    
-```
-클래스 직렬화는 동적 할당을 해야 하므로 작고 빈번한 메시지 사용에는 약간 단점이 될수 있지만 상속이 가능하다는 장점이 있습니다.<br/>
-<br/>
 
 ## 지원 가능<br/>
 * C# .NET core<br/>
