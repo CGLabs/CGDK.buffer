@@ -1,6 +1,6 @@
 ## CGDK::buffer란
 엄청나게 빠른 메시지 직렬화 버퍼 시스템<br>
-protobuf, MessagePack,MemoryPack에 비해서도 앞도적인 성능을 제공합니다.<br>
+protobuf, MessagePack,MemoryPack에 비해서 압도적인 성능을 제공합니다.<br>
 <br>
 
 <br>
