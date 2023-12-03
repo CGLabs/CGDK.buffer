@@ -21,28 +21,28 @@ namespace UnitTest_Performance_Protobuf
 		class TEST_BYTE
 		{
 			[ProtoMember(1)]
-			public	byte value {	get; set;}
+			public	byte value { get; set;}
 		}
 
 		[ProtoContract]
 		class TEST_SBYTE
 		{
 			[ProtoMember(1)]
-			public	sbyte value {	get; set;}
+			public	sbyte value { get; set;}
 		}
 
 		[ProtoContract]
 		class TEST_SHORT
 		{
 			[ProtoMember(1)]
-			public	short value {	get; set;}
+			public	short value { get; set;}
 		}
 
 		[ProtoContract]
 		class TEST_USHORT
 		{
 			[ProtoMember(1)]
-			public	ushort value {	get; set;}
+			public	ushort value { get; set;}
 		}
 
 		[ProtoContract]
@@ -56,35 +56,35 @@ namespace UnitTest_Performance_Protobuf
 		class TEST_UINT
 		{
 			[ProtoMember(1)]
-			public	uint value {	get; set;}
+			public	uint value { get; set;}
 		}
 
 		[ProtoContract]
 		class TEST_LONG
 		{
 			[ProtoMember(1)]
-			public	long value {	get; set;}
+			public	long value { get; set;}
 		}
 
 		[ProtoContract]
 		class TEST_ULONG
 		{
 			[ProtoMember(1)]
-			public	ulong value {	get; set;}
+			public	ulong value { get; set;}
 		}
 
 		[ProtoContract]
 		class TEST_FLOAT
 		{
 			[ProtoMember(1)]
-			public	float value {	get; set;}
+			public	float value { get; set;}
 		}
 
 		[ProtoContract]
 		class TEST_DOUBLE
 		{
 			[ProtoMember(1)]
-			public	double value {	get; set;}
+			public	double value { get; set;}
 		}
 
 		[ProtoContract]
@@ -147,20 +147,20 @@ namespace UnitTest_Performance_Protobuf
 			public string? value1 = default;
 			[ProtoMember(3)]
 			public List<int>? value2 = default;
-#else
+		#else
 			[ProtoMember(2)]
 			public string value1 = default;
 			[ProtoMember(3)]
 			public List<int> value2 = default;
-#endif
+		#endif
 			[ProtoMember(4)]
 			public UInt64 value3;
 			[ProtoMember(5)]
 		#if NET
 			public Dictionary<string,int>? value4 = default;
-#else
+		#else
 			public Dictionary<string,int> value4 = default;
-#endif
+		#endif
 		};
 
 		class TEST_Y
@@ -180,10 +180,10 @@ namespace UnitTest_Performance_Protobuf
 		{
 			[ProtoMember(1)]
 		#if NET
-			public	string?	value0 = default;
-#else
-			public	string	value0 = default;
-#endif
+			public string? value0 = default;
+		#else
+			public string value0 = default;
+		#endif
 		};
 
 		[ProtoContract]
@@ -191,10 +191,10 @@ namespace UnitTest_Performance_Protobuf
 		{
 			[ProtoMember(1)]
 		#if NET
-			public	List<int>?	value0 = default;
-#else
-			public	List<int>	value0 = default;
-#endif
+			public List<int>? value0 = default;
+		#else
+			public List<int> value0 = default;
+		#endif
 		};
 
 		[ProtoContract]
@@ -202,10 +202,10 @@ namespace UnitTest_Performance_Protobuf
 		{
 			[ProtoMember(1)]
 		#if NET
-			public	List<string>?	value0 = default;
-#else
-			public	List<string>	value0 = default;
-#endif
+			public List<string>? value0 = default;
+		#else
+			public List<string> value0 = default;
+		#endif
 		};
 
 		[ProtoContract]
@@ -213,25 +213,34 @@ namespace UnitTest_Performance_Protobuf
 		{
 			[ProtoMember(1)]
 		#if NET
-			public	Dictionary<string, List<int>>?	value0 = default;
-#else
-			public	Dictionary<string, List<int>>	value0 = default;
-#endif
+			public Dictionary<int, int>? value0 = default;
+		#else
+			public Dictionary<int, int> value0 = default;
+		#endif
 		};
 
 		[ProtoContract]
 		class TEST6
 		{
 			[ProtoMember(1)]
-			public int		value0 = default;
-
-			[ProtoMember(2)]
 		#if NET
-			public	TEST2?	value1 = default;
-#else
-			public	TEST2	value1 = default;
-#endif
+			public Dictionary<string, string>? value0 = default;
+		#else
+			public Dictionary<string, string> value0 = default;
+		#endif
 		};
+
+		[ProtoContract]
+		class TEST7
+		{
+			[ProtoMember(1)]
+		#if NET
+			public Dictionary<string, List<int>>? value0 = default;
+		#else
+			public Dictionary<string, List<int>> value0 = default;
+		#endif
+		};
+
 
 
 		int[] array_int = 
@@ -435,47 +444,7 @@ namespace UnitTest_Performance_Protobuf
 		[TestMethod]
 		public void PrBfn_benchmark_05_key_value_int_int()
 		{
-			//var tempObject = new TEST5 { value0 = dictionary_int_int };
-
-			//MemoryStream memSerialize = new MemoryStream();
-
-			//for (int i = 0; i < _TEST_COUNT; ++i)
-			//{
-			//	memSerialize.SetLength(0);
-
-			//	// 1) 값 써넣기
-			//	ProtoBuf.Serializer.Serialize<TEST5>((Stream)memSerialize, tempObject);
-
-			//	memSerialize.Seek(0, SeekOrigin.Begin);
-
-			//	// 2) 값 읽기
-			//	var tempDeserialize = Serializer.Deserialize<TEST5>(memSerialize);
-			//}
-		}
-		[TestMethod]
-		public void PrBfn_benchmark_05_key_value_string_string()
-		{
-			//var tempObject = new TEST5 { value0 = dictionary_string_string };
-
-			//MemoryStream memSerialize = new MemoryStream();
-
-			//for (int i = 0; i < _TEST_COUNT; ++i)
-			//{
-			//	memSerialize.SetLength(0);
-
-			//	// 1) 값 써넣기
-			//	ProtoBuf.Serializer.Serialize<TEST5>((Stream)memSerialize, tempObject);
-
-			//	memSerialize.Seek(0, SeekOrigin.Begin);
-
-			//	// 2) 값 읽기
-			//	var tempDeserialize = Serializer.Deserialize<TEST5>(memSerialize);
-			//}
-		}
-		[TestMethod]
-		public void PrBfn_benchmark_07_key_value_string_list_int()
-		{
-			var tempObject = new TEST5 { value0 = dictionary_string_List_int };
+			var tempObject = new TEST5 { value0 = dictionary_int_int };
 
 			MemoryStream memSerialize = new MemoryStream();
 
@@ -490,6 +459,46 @@ namespace UnitTest_Performance_Protobuf
 
 				// 2) 값 읽기
 				var tempDeserialize = Serializer.Deserialize<TEST5>(memSerialize);
+			}
+		}
+		[TestMethod]
+		public void PrBfn_benchmark_05_key_value_string_string()
+		{
+			var tempObject = new TEST6 { value0 = dictionary_string_string };
+
+			MemoryStream memSerialize = new MemoryStream();
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				memSerialize.SetLength(0);
+
+				// 1) 값 써넣기
+				ProtoBuf.Serializer.Serialize<TEST6>((Stream)memSerialize, tempObject);
+
+				memSerialize.Seek(0, SeekOrigin.Begin);
+
+				// 2) 값 읽기
+				var tempDeserialize = Serializer.Deserialize<TEST6>(memSerialize);
+			}
+		}
+		[TestMethod]
+		public void PrBfn_benchmark_07_key_value_string_list_int()
+		{
+			var tempObject = new TEST7 { value0 = dictionary_string_List_int };
+
+			MemoryStream memSerialize = new MemoryStream();
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				memSerialize.SetLength(0);
+
+				// 1) 값 써넣기
+				ProtoBuf.Serializer.Serialize<TEST7>((Stream)memSerialize, tempObject);
+
+				memSerialize.Seek(0, SeekOrigin.Begin);
+
+				// 2) 값 읽기
+				var tempDeserialize = Serializer.Deserialize<TEST7>(memSerialize);
 			}
 		}
 		[TestMethod]

@@ -8,7 +8,7 @@
 	<Authors>sangduck</Authors>
 	<Company>CGCIII</Company>
     <AssemblyName>CGDK.buffer</AssemblyName>
-	<VersionPrefix>3.2.0.2</VersionPrefix>
+	<VersionPrefix>3.2.0.3</VersionPrefix>
 	<RootNamespace>CGDK</RootNamespace>
     <BaseOutputPath>..\..\dll\NET.Core\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -28,6 +28,7 @@
     <Company>$(Company)</Company>
     <Product>$(Title)</Product>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -61,5 +62,12 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;..\..\dll\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;..\..\dll\&quot; /y" />
   </Target>
+
+  <ItemGroup>
+    <None Include="..\..\ReadMe.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

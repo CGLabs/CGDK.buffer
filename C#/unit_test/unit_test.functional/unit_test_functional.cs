@@ -1483,57 +1483,68 @@ namespace CGDBuffer_CSharp_UnitTest
 				var buf_temp = new CGDK.buffer(1024);
 
 				buf_temp.Append<char>((char)12);
-				buf_temp.SetFront<char>((char)12);
+				var p0 = buf_temp.SetFront<char>((char)12);
+				Assert.IsTrue(p0 == 2);
 				var a0 = buf_temp.GetFront<char>();
 				Assert.IsTrue(a0 == 12);
 
 				buf_temp.Append<sbyte>((sbyte)3);
-				buf_temp.SetFront<sbyte>(3);
+				var p1 = buf_temp.SetFront<sbyte>(3);
+				Assert.IsTrue(p1 == 1);
 				var a1 = buf_temp.GetFront<sbyte>();
 				Assert.IsTrue(a1 == 3);
 
 				buf_temp.Append<byte>((byte)4);
-				buf_temp.SetFront<byte>(4);
+				var p2 = buf_temp.SetFront<byte>(4);
+				Assert.IsTrue(p2 == 1);
 				var a2 = buf_temp.GetFront<byte>();
 				Assert.IsTrue(a2 == 4);
 
 				buf_temp.Append<short>((short)4100);
-				buf_temp.SetFront<short>(4100);
+				var p3 = buf_temp.SetFront<short>(4100);
+				Assert.IsTrue(p3 == 2);
 				var a3 = buf_temp.GetFront<short>();
 				Assert.IsTrue(a3 == 4100);
 
 				buf_temp.Append<ushort>((ushort)32210);
-				buf_temp.SetFront<ushort>(32210);
+				var p4 = buf_temp.SetFront<ushort>(32210);
+				Assert.IsTrue(p4 == 2);
 				var a4 = buf_temp.GetFront<ushort>();
 				Assert.IsTrue(a4 == 32210);
 
 				buf_temp.Append<int>((int)123310);
-				buf_temp.SetFront<int>(123310);
+				var p5 = buf_temp.SetFront<int>(123310);
+				Assert.IsTrue(p5 == 4);
 				var a5 = buf_temp.GetFront<int>();
 				Assert.IsTrue(a5 == 123310);
 
 				buf_temp.Append<uint>((uint)12);
-				buf_temp.SetFront<uint>(12);
+				var p6 = buf_temp.SetFront<uint>(12);
+				Assert.IsTrue(p6 == 4);
 				var a6 = buf_temp.GetFront<uint>();
 				Assert.IsTrue(a6 == 12);
 
 				buf_temp.Append<long>((long)-1000443L);
-				buf_temp.SetFront<long>(-1000443L);
+				var p7 = buf_temp.SetFront<long>(-1000443L);
+				Assert.IsTrue(p7 == 8);
 				var a7 = buf_temp.GetFront<long>();
 				Assert.IsTrue(a7 == -1000443L);
 
 				buf_temp.Append<ulong>((ulong)12233094310UL);
-				buf_temp.SetFront<ulong>(12233094310UL);
+				var p8 = buf_temp.SetFront<ulong>(12233094310UL);
+				Assert.IsTrue(p8 == 8);
 				var a8 = buf_temp.GetFront<ulong>();
 				Assert.IsTrue(a8 == 12233094310UL);
 
 				buf_temp.Append<float>((float)1.0f);
-				buf_temp.SetFront<float>(1.0f);
+				var p9 = buf_temp.SetFront<float>(1.0f);
+				Assert.IsTrue(p9 == 4);
 				var a9 = buf_temp.GetFront<float>();
 				Assert.IsTrue(a9 == 1.0f);
 
 				buf_temp.Append<double>((double)2.0);
-				buf_temp.SetFront<double>(2.0);
+				var p10 = buf_temp.SetFront<double>(2.0);
+				Assert.IsTrue(p10 == 8);
 				var a10 = buf_temp.GetFront<double>();
 				Assert.IsTrue(a10 == 2.0);
 			}
@@ -1845,8 +1856,14 @@ namespace CGDBuffer_CSharp_UnitTest
 				// check) 
 				Assert.IsTrue(size_source == buf_temp.Count);
 
+				var temp_size = buf_temp.Count;
+				var temp_offset = new CGDK.Offset(0);
+
 				// - 값 읽기
-				var temp = buf_temp.GetFront<Dictionary<int, int>>();
+				var temp = buf_temp.GetFront<Dictionary<int, int>>(ref temp_offset);
+
+				// check)
+				Assert.IsTrue(temp_offset.amount == temp_size);
 
 				// check) 
 				Assert.IsTrue(temp != null);
