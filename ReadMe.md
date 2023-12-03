@@ -1,12 +1,14 @@
 ## CGDK::buffer란
 CGDK::buffer는 메시지 직렬화 버퍼 시스템<br>
-C++버전은 CGDK::buffer이며<br>
-C# 버전은 CGDK.buffer<br>
+C++버전은 CGDK::buffer (https://github.com/CGLabs/CGDK.buffer/tree/master/C%2B%2B) 이며<br>
+C# 버전은 CGDK.buffer (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23) <br>
 
 자세한 소개 (https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/intruduce_CGDK.buffer.pptx)<br>
 
 
 #### CGD::buffer
+   - C++ 버전
+     (https://github.com/CGLabs/CGDK.buffer/tree/master/C%2B%2B)
    - 매우 간단(사실상 append/extract/front가 전부...)<br>
    - 초고성능 (c++ 버전은 tmp로 구현되어 압도적 최강의 성능을 자랑합니다.)<br>
    - 작고 가벼움<br>
