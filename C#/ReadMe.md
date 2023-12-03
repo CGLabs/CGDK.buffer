@@ -4,6 +4,9 @@ protobuf, MessagePack,MemoryPack에 비해서 압도적인 성능을 제공합�
 <br>
 <img src="https://github.com/sangduck/CGDK.buffer/blob/master/C%23/document/benchmark_20231203_2.png"/>
 <br>
+c# 최고의 성능을 제공한다는 직렬화 라이브러리보다 수배에서 수십배의 성능을 보여 줍니다.
+
+<br>
 
 - CGD.buffer의  특징
    - 매우 간단(Append/Extract/SetFront/GetFront/GetSizeOf가 사실상 대부분...)<br>
@@ -25,6 +28,7 @@ protobuf, MessagePack,MemoryPack에 비해서 압도적인 성능을 제공합�
    - Reflection과 Roslyn & Source Generator를 사용하여 구현하였습니다.<br>
      (Roslyn과 Source Generator의 성능 버프를 받으시려면 CGDK.buffer.Generator도 nuget으로 설치를 하셔야 합니다.)
    - C++ 버전인 CGDK::buffer와 호환됩니다.<br>
+   - 단점. 현재는 프로젝트에 Unsafe 설정이 필요합니다.<br>
 <br>
 <br>
 
