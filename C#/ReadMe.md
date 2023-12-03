@@ -5,7 +5,7 @@ protobuf, MessagePack,MemoryPack에 비해서도 앞도적인 성능을 제공�
 
 <br>
 
-#### CGD.buffer
+- CGD.buffer의  특징
    - 매우 간단(Append/Extract/SetFront/GetFront/GetSizeOf가 사실상 대부분...)<br>
    - 초고성능 (Reflection & Roslyn & Souce Generator로 제작되어 압도적 성능을 자랑합니다.)<br>
    - 작고 가볍습니다.<br>
