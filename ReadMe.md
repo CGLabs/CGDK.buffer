@@ -8,7 +8,6 @@ C# 버전은 CGDK.buffer (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23
 
 #### CGD::buffer
    - C++ 버전
-     (https://github.com/CGLabs/CGDK.buffer/tree/master/C%2B%2B)
    - 매우 간단(사실상 append/extract/front가 전부...)<br>
    - 초고성능 (c++ 버전은 tmp로 구현되어 압도적 최강의 성능을 자랑합니다.)<br>
    - 작고 가벼움<br>
@@ -31,7 +30,6 @@ C# 버전은 CGDK.buffer (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23
 
 #### CGD.buffer 
    - C#버전<br>
-      (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23)
    - 직렬화/역직렬화 방법은 C++과 동일합니다.(append/extract)<br>
    - reflection을 사용하여 구현하였습니다.<br>
    - C++ 버전과 호환됩니다.<br>
