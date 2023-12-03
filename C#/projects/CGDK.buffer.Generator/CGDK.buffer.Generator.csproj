@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
 	<Authors>sangduck</Authors>
 	<Company>CGCIII</Company>
-    <AssemblyName>CGDK.buffer_Generator</AssemblyName>
+    <AssemblyName>CGDK.buffer.Generator</AssemblyName>
 	<VersionPrefix>3.2.0.0</VersionPrefix>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
-    <BaseOutputPath>..\..\dll\NET\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
+    <BaseOutputPath>..\..\dll\NET.Core\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -22,12 +22,17 @@
     <RepositoryType>git</RepositoryType>
     <Product />
     <Company></Company>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>	
+	
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
       <PrivateAssets>all</PrivateAssets>
