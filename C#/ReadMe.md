@@ -2,7 +2,7 @@
 엄청나게 빠른 메시지 직렬화 버퍼 시스템<br>
 protobuf, MessagePack,MemoryPack에 비해서 압도적인 성능을 제공합니다.<br>
 <br>
-
+<img src="https://github.com/sangduck/CGDK.buffer/blob/master/C%23/document/benchmark_20231203_2.png"/>
 <br>
 
 - CGD.buffer의  특징
