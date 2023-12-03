@@ -21,8 +21,8 @@
     <Analyzer Include="..\..\..\dll\CGDK.buffer.Generator.dll" />
   </ItemGroup>
 	<ItemGroup>
-    <Reference Include="CGDK.buffer.NET.core">
-      <HintPath>..\..\..\dll\CGDK.buffer.NET.core.dll</HintPath>
+    <Reference Include="CGDK.buffer">
+      <HintPath>..\..\..\dll\CGDK.buffer.dll</HintPath>
     </Reference>
   </ItemGroup>
 
