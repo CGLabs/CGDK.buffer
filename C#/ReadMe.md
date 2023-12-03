@@ -83,7 +83,58 @@ C#의 List<T>, Dictionary<K,V> ... 등의 데이터도 직렬화/역직렬화 �
    var temp4 = buf.Extract<Dictionary<string,List<int>>> ();
    ```
 
-### 3. 직렬화에 필요한 메모리 크기 구하기<br>
+### 3. 구조체 직렬화
+직렬화 대상 구조체는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
+구조체가 static이 아니어야 하며 public 속성을 가져야 합니다.
+구조체의 멤버 변수들은 기본적으로 모두 직렬화의 대상이 됩니다.
+다만 public 속성이 아니거나 const, read_only,write_only 같은 속성이 가지면 직렬화에서 제외됩니다.
+특별히 직렬화/역직렬화에서 제외하고 싶으면 '[CGDK.Attribute.Filed(false)]'를 붙혀주면 됩니다.
+
+``` C#
+[CGDK.Attribute.Serializable]
+public struct TEST
+{
+    public int       x;
+    public float     y;
+    [CGDK.Attribute.Filed(false)]
+    public string    z; // z는 직렬화에서 제외됩니다.
+    public List<int> w;
+};
+	    
+```
+
+구조체 직렬화는 동적 할당을 하지 않아도 되기 때문에 성능상 이점이 있을 수 있지만 상속 할수 없다는 단점도 있습니다.<br>
+<br>
+
+### 4. 클래스 직렬화
+직렬화 대상 클래서는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
+클래스가 static이 아니어야 하며 public 속성을 가져야 합니다.
+클래스의 멤버 변수는 기본적으로 직렬화의 대상이 아닌 것으로 간주합니다.
+직렬화를 하고자 하는 멤버만 '[CGDK.Attribute.Filed]'를 붙혀줘야 합니다.
+또 이 멤버는 public 속성이어야 하며 const, read_only,write_only 속성을 가져서는 안됩니다.
+(단 '[CGDK.Attribute.Filed(false)]'를 붙혀 주면 직렬화를 하지 않습니다. 즉 Attribute를 안붙힌 것과 같습니다.)
+
+``` C#
+[CGDK.Attribute.Serializable]
+public class TEST
+{
+   [CGDK.Attribute.Field]
+    public int       x;
+   [CGDK.Attribute.Field]
+    public float     y;
+
+    public string    z; // z는 직렬화에서 제외됩니다.
+
+   [CGDK.Attribute.Field]
+    public List<int> w;
+};
+	    
+```
+클래스 직렬화는 동적 할당을 해야 하므로 작고 빈번한 메시지 사용에는 약간 단점이 될수 있지만 상속이 가능하다는 장점이 있습니다.<br/>
+<br/>
+<br>
+
+### 5. 직렬화에 필요한 메모리 크기 구하기<br>
 - 데이터를 직렬화 했을 때의 크기를 CGDK.GetSizeOf<V>(...)르 사용해 미리 얻을 수 있습니다. <br>
 
    ``` C#
@@ -92,11 +143,20 @@ C#의 List<T>, Dictionary<K,V> ... 등의 데이터도 직렬화/역직렬화 �
 
    var size = CGDK.buffer.GetSizeOf(maplistTemp);
    ```
-- 다만 GetSizeOf<T>()함수는 큰 비용은 아니지만 동적 처리 함수이므로 실시간 비용이 들어가므로 만큼 고려해 사용하시길 바랍니다.<br/>
 <br>
 
+- 구조체 역시 GetSizeOf<T>()함수로 직렬화 크기를 구할 수 있습니다.
 
-### 4. 동적 메모리 할당 받기<br>
+   ``` C#
+   var temp = new TEST();
+
+   // - temp를 직렬화 했을 때 크기
+   var size = CGDK.buffer.GetSizeOf(temp);
+   ```
+- 다만 GetSizeOf<T>()함수는 큰 비용은 아니지만 동적 처리 함수이므로 실시간 비용이 들어가므로 만큼 고려해 사용하시길 바랍니다.<br/>
+<br/>
+
+### 6. 동적 메모리 할당 받기<br>
 메모리는 3가지 방법으로 설정이 가능합니다.
 - 생성자에서 바로 생성하기
    ``` C#
@@ -162,7 +222,7 @@ var is_empty3 = buf.IsEmpty(); // true
 ```
 <br>
 
-### 5. 읽어만 내기
+### 7. 읽어만 내기
 - Extract<T>를 사용해 값을 읽어내면 그만큼의 오프셋과 크기가 변경됩니다.<br/>
   변경없이 값만 읽어 내고 싶다면 GetFront<T>([offset])을 사용하면 됩니다.
 
@@ -199,7 +259,7 @@ Offset을 사용해 GetFront<T>를 수행하면 읽어낸만큼 Offset값을 업
 타입 안정성을 제공하지 않을 것을 인해 많은 사용상의 편리함은 있을 수 있습니다만 예외를 발생시킬 수도 있으면 잘 사용할 필요가 있습니다.<br>
 <br>
 
-### 6. 덥어 쓰기
+### 8. 덥어 쓰기
 - Append<T>는 버퍼읠 제일 끝에만 붙이는 처리입니다.<br/>
 근데 이미 쓰여진 데이터를 덥어쓰거나 먼저 버퍼에 값을 써넣은 후 추후 값을 써넣어야 하는 경우도 있을 수 있습니다.<br/>
 그럴 때 __SetFront<T>()__ 함수를 사용하시면 됩니다.<br>
@@ -218,55 +278,6 @@ Offset을 사용해 GetFront<T>를 수행하면 읽어낸만큼 Offset값을 업
 이 값을 받아 값을 읽거나 써넣는 데에 사용할 수 있지만 타입 안정성을 제공하지 않으므로 주의해서 사용할 필요가 있습니다.<br>
 <br>
 
-### 7. 구조체 직렬화
-직렬화 대상 구조체는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
-구조체가 static이 아니어야 하며 public 속성을 가져야 합니다.
-구조체의 멤버 변수들은 기본적으로 모두 직렬화의 대상이 됩니다.
-다만 public 속성이 아니거나 const, read_only,write_only 같은 속성이 가지면 직렬화에서 제외됩니다.
-특별히 직렬화/역직렬화에서 제외하고 싶으면 '[CGDK.Attribute.Filed(false)]'를 붙혀주면 됩니다.
-
-``` C#
-[CGDK.Attribute.Serializable]
-public struct TEST
-{
-    public int       x;
-    public float     y;
-    [CGDK.Attribute.Filed(false)]
-    public string    z; // z는 직렬화에서 제외됩니다.
-    public List<int> w;
-};
-	    
-```
-구조체 직렬화는 동적 할당을 하지 않아도 되기 때문에 성능상 이점이 있을 수 있지만 상속 할수 없다는 단점도 있습니다.<br>
-<br>
-
-### 8. 클래스 직렬화
-직렬화 대상 클래서는 '[CGDK.Attribute.Serializable]' Attribue를 붙혀 줘야 합니다.<br>
-클래스가 static이 아니어야 하며 public 속성을 가져야 합니다.
-클래스의 멤버 변수는 기본적으로 직렬화의 대상이 아닌 것으로 간주합니다.
-직렬화를 하고자 하는 멤버만 '[CGDK.Attribute.Filed]'를 붙혀줘야 합니다.
-또 이 멤버는 public 속성이어야 하며 const, read_only,write_only 속성을 가져서는 안됩니다.
-(단 '[CGDK.Attribute.Filed(false)]'를 붙혀 주면 직렬화를 하지 않습니다. 즉 Attribute를 안붙힌 것과 같습니다.)
-
-``` C#
-[CGDK.Attribute.Serializable]
-public class TEST
-{
-   [CGDK.Attribute.Field]
-    public int       x;
-   [CGDK.Attribute.Field]
-    public float     y;
-
-    public string    z; // z는 직렬화에서 제외됩니다.
-
-   [CGDK.Attribute.Field]
-    public List<int> w;
-};
-	    
-```
-클래스 직렬화는 동적 할당을 해야 하므로 작고 빈번한 메시지 사용에는 약간 단점이 될수 있지만 상속이 가능하다는 장점이 있습니다.<br/>
-<br/>
-<br>
 
 ## CGD.buffer 구조<br/>
 CGDK.buffer의 멤버변수는 buffer, m_offset, m_count 3개의 멤버 변수로 구성되어 있습니다.
@@ -435,7 +446,7 @@ CGDK.buffer의 기본적으로 구조체이므로 구조체 자체는 통채로 
 
 ## 지원 가능<br/>
 * C# .NET core<br/>
-* C# .NET framework 버전을 설시하셔야 합니다. (다만 Roslyn과 Source Generator)는 지원하지 않습니다)<br/>
+* C# .NET framework 버전을 설치해야 합니다. (다만 Roslyn과 Source Generator)는 지원하지 않습니다)<br/>
 * unity 3D(c#) 지원<br/>
 
 <br/>
