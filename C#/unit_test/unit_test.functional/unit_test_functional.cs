@@ -2385,6 +2385,105 @@ namespace CGDBuffer_CSharp_UnitTest
 			}
 		}
 
+		struct TEST_STATIC
+		{
+			public static int a;
+			public int x;
+			public string y;
+			public UInt32 z;
+			public List<int> w;
+		};
+
+		[TestMethod]
+		public void test_buffer_struct_TEST_STATIC()
+		{
+			var temp = new TEST_STATIC();
+			TEST_STATIC.a = 100;
+			temp.x = 10;
+			temp.y = "Tesfdsafdsafdsafdst";
+			temp.z = 100;
+			temp.w = new List<int> { 10, 20, 30 };
+
+			string temp_string = "Txxfasgfsgfdfx";
+
+			var size_a = CGDK.buffer.GetSizeOf((int)10);
+			var size_b = CGDK.buffer.GetSizeOf(temp);
+			var size_c = CGDK.buffer.GetSizeOf(temp_string);
+			var size_source = size_a + size_b + size_c;
+
+			var buf_Alloc = new CGDK.buffer();
+
+			buf_Alloc.Alloc(size_source);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				var buf_temp = buf_Alloc;
+
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST_STATIC>(temp);
+				buf_temp.Append<string>(temp_string);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST_STATIC>();
+				var a3 = buf_temp.Extract<string>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+			}
+		}
+
+		struct TEST_CONST
+		{
+			public const int a = 100;
+			public int x;
+			public string y;
+			public UInt32 z;
+			public List<int> w;
+		};
+
+		[TestMethod]
+		public void test_buffer_struct_TEST_CONST()
+		{
+			var temp = new TEST_CONST();
+			temp.x = 10;
+			temp.y = "Tesfdsafdsafdsafdst";
+			temp.z = 100;
+			temp.w = new List<int> { 10, 20, 30 };
+
+			string temp_string = "Txxfasgfsgfdfx";
+
+			var size_a = CGDK.buffer.GetSizeOf((int)10);
+			var size_b = CGDK.buffer.GetSizeOf(temp);
+			var size_c = CGDK.buffer.GetSizeOf(temp_string);
+			var size_source = size_a + size_b + size_c;
+
+			var buf_Alloc = new CGDK.buffer();
+
+			buf_Alloc.Alloc(size_source);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				var buf_temp = buf_Alloc;
+
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST_CONST>(temp);
+				buf_temp.Append<string>(temp_string);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST_CONST>();
+				var a3 = buf_temp.Extract<string>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+			}
+		}
+
 		struct TEST_C
 		{
 			public int x;
@@ -2528,20 +2627,6 @@ namespace CGDBuffer_CSharp_UnitTest
 			public ENUM_A e;
 		};
 
-		public class TEST_CLASS2 : TEST_CLASS1
-		{
-			[CGDK.Attribute.Field]
-			public UInt32 f;
-
-		#if NET
-			[CGDK.Attribute.Field]
-			public int[]? g;
-		#else
-			[CGDK.Attribute.Field]
-			public int[] g;
-		#endif
-		};
-
 		[TestMethod]
 		public void test_buffer_class_TEST_CLASS1_append_extract()
 		{
@@ -2611,6 +2696,21 @@ namespace CGDBuffer_CSharp_UnitTest
 				Assert.IsTrue(size_source == buf_temp.Count);
 			}
 		}
+
+		public class TEST_CLASS2 : TEST_CLASS1
+		{
+			[CGDK.Attribute.Field]
+			public UInt32 f;
+
+		#if NET
+			[CGDK.Attribute.Field]
+			public int[]? g;
+		#else
+			[CGDK.Attribute.Field]
+			public int[] g;
+		#endif
+		};
+
 
 		[TestMethod]
 		public void test_buffer_class_TEST_CLASS2_append_extract()
