@@ -5,18 +5,32 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	<LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <BaseOutputPath>..\..\dll\NET\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <Platforms>AnyCPU;x64</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <BaseOutputPath>..\..\dll\NET\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
+	<Authors>sangduck</Authors>
+    <AssemblyName>CGDK.buffer</AssemblyName>
+	<VersionPrefix>3.2.0.3</VersionPrefix>
+	<RootNamespace>CGDK</RootNamespace>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <DocumentationFile>..\..\dll\CGDK.buffer.xml</DocumentationFile>
-    <Copyright>ⓒ2023. Cho SangHyun all rights reserved.</Copyright>
-    <PackageProjectUrl>https://github.com/CGLabs/CGDK.buffer</PackageProjectUrl>
-    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <SignAssembly>False</SignAssembly>
     <RepositoryUrl>https://github.com/CGLabs/CGDK.buffer</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/CGLabs/CGDK.buffer</PackageProjectUrl>
+    <Copyright>ⓒ2023. Cho SangHyun all rights reserved.</Copyright>
     <PackageTags>serialization;buffer;performance</PackageTags>
+    <RepositoryType>git</RepositoryType>
+	<Company>CGCIII</Company>
+    <Product>$(Title)</Product>
+	<DocumentationFile>..\..\dll\CGDK.buffer.xml</DocumentationFile>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
