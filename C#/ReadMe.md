@@ -32,6 +32,37 @@ c# 최고 성능을 제공한다는 직렬화 라이브러리들보다 수배에
 <br>
 <br>
 
+## CGD.buffer 설치 및 적용하기
+### 1. 설치하기
+#### nuget으로 설치하기<br>
+   - 설치를 원하는 project에서 'Nuget 패키지 관리'로 Nuget 관리 창을 열어 '찾아보기'에서 'CGDK'로 검색하시면<br>
+   - 'CGDK.buffer'와 'CGDK.buffer.Generator'를 찾을 수 있습니다.<br>
+     이걸 모두 설치하십시요.<br>
+   - 'CGDK.buffer'만 설치하셔도 되지만 높은 class/struct의 직렬화/역직렬화 성능을 원하시면 CGDK.buffer.Generator를 같이 설치하는 것을 권장드립니다.<br>
+
+#### 수동 설치하기<br>
+   - 'CGDK.buffer.dll'과 'CGDK.buffer.Generator.dll'만 있다면 직접 dll 파일을 포함시켜 설정할 수 있습니다.
+   - 설치를 원하는 프로젝트의 '종속성/프로젝트 참조 추가'로 'CGDK.buffer.dll'과 'CGDK.buffer.Generator.dll'을  추가해 주시면 됩니다.<br>
+   - 다만 CGDK.buffer.Generator.dll은 직접 .csproj을 택스트로 열어서 직접 수정해 주셔야 합니다.<br>
+
+      ``` XML
+      <ItemGroup>
+         <Analyzer Include="[Path]\CGDK.buffer.Generator.dll" />
+      </ItemGroup>
+      ```
+      이렇게 포함시켜 주십시요.<br>
+
+### 2. 초기화 하기<br>
+   - 'CGDK.buffer'만 설치했다면 특별히 초기화를 할 필요가 없습니다.<br>
+   - 'CGDK.buffer.Generator'까지 설치를 했다면 활성화를 위해 프로그램 시작 부분에서 초기화를 위한 함수를 호출해 주어야 합니다.<br>
+      ``` C#
+         CGDK.BufferSerializer.Generator.Initialize();
+      ```
+   
+      이 함수를 호출해 주어야 합니다.<br>
+      호출해 주지 않아도 동작은 하지만 'CGDK.buffer.Generator'가 적용 되지 않아 향상된 성능을 제공하지 않습니다.<br>
+
+
 ## CGD.buffer 직렬화/역직렬화 하기
 ### 1. 직렬화하기(Schemaless)  
    버퍼에 데이터 쓰기는 Append<T>(...)로 간단히 가능합니다.<br>
