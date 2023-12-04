@@ -710,7 +710,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		if (count_primitive != 0)
 		{
 			_out.AppendLine("");
-			_out.Append("		_count += ");
+			_out.Append("		_count -= ");
 			foreach (var iter_member in _class_info.list_member_node_info)
 			{
 				if (iter_member.type == 2)
@@ -823,7 +823,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		if (count_primitive != 0)
 		{
 			_out.AppendLine("");
-			_out.Append("		_count += ");
+			_out.Append("		_count -= ");
 			foreach (var iter_member in _struct_info.list_member_node_info)
 			{
 				if (iter_member.type == 2)
@@ -954,7 +954,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		if (count_primitive != 0)
 		{
 			_out.AppendLine("");
-			_out.Append("		_count += ");
+			_out.Append("		_count -= ");
 			foreach (var iter_member in _object_info.list_member_node_info)
 			{
 				if (iter_member.type == 2)

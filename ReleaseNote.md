@@ -2,7 +2,9 @@
    #### (C#)
    * No Unsafe
    * Roslyn을 이용해 Source Generaion하는 과정
-     - 
+   * Unit_test를 추가했습니다.(static, const 멤버 테스트) 
+   * 배열의 Append,Extract시 중대 버그 수정
+   * Class/Struct의 크기 계산 중대 버그 수정
      
 ## CGDK 3.20 (2023.12.1)
    #### (C#)
