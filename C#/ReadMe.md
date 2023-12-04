@@ -51,6 +51,7 @@ c# 최고 성능을 제공한다는 직렬화 라이브러리들보다 수배에
       </ItemGroup>
       ```
       이렇게 포함시켜 주십시요.<br>
+   - .NET framework 버전의 경우 'CGDK.buffer.NET.framework.dll'파일을 수동으로 '참조 추가'를 통해 추가해 주시면 됩니다.<br>
 
 ### 2. 초기화 하기<br>
    - 'CGDK.buffer'만 설치했다면 특별히 초기화를 할 필요가 없습니다.<br>
