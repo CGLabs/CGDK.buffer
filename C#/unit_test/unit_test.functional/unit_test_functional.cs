@@ -2420,6 +2420,9 @@ namespace CGDBuffer_CSharp_UnitTest
 			var size_c = CGDK.buffer.GetSizeOf(temp_string);
 			var size_source = size_a + size_b + size_c;
 
+			// check) 
+			Assert.IsTrue(size_b == CGDK.buffer.GetSizeOf(temp.x) + CGDK.buffer.GetSizeOf(temp.y) + CGDK.buffer.GetSizeOf(temp.z) + CGDK.buffer.GetSizeOf(temp.w));
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(size_source);
@@ -2468,6 +2471,9 @@ namespace CGDBuffer_CSharp_UnitTest
 			var size_b = CGDK.buffer.GetSizeOf(temp);
 			var size_c = CGDK.buffer.GetSizeOf(temp_string);
 			var size_source = size_a + size_b + size_c;
+
+			// check) 
+			Assert.IsTrue(size_b == CGDK.buffer.GetSizeOf(temp.x) + CGDK.buffer.GetSizeOf(temp.y) + CGDK.buffer.GetSizeOf(temp.z) + CGDK.buffer.GetSizeOf(temp.w));
 
 			var buf_Alloc = new CGDK.buffer();
 
@@ -2733,7 +2739,6 @@ namespace CGDBuffer_CSharp_UnitTest
 			temp.d.z = 100;
 			temp.d.w = ENUM_A.A;
 			temp.e = ENUM_A.B;
-			temp.f = 5;
 			// temp.g 는 설정하지 않는다. -> null
 
 			string temp_string = "Txxx";
@@ -2801,8 +2806,7 @@ namespace CGDBuffer_CSharp_UnitTest
 		[CGDK.Attribute.Serializable]
 		public class TEST_CLASS3
 		{
-			[CGDK.Attribute.Field]
-			public UInt32 f;
+		static	public UInt32 f;
 
 		#if NET
 			[CGDK.Attribute.Field]
@@ -2813,29 +2817,11 @@ namespace CGDBuffer_CSharp_UnitTest
 		#endif
 		};
 
-
-		//	public int a;
-		//#if NET
-		//	[CGDK.Attribute.Field]
-		//	public List<int>? b;
-		//#else
-		//	[CGDK.Attribute.Field]
-		//	public List<int> b;
-		//#endif
-
-		//	int c { get { return 100; } set { } }
-
-		//	[CGDK.Attribute.Field]
-		//	public TEST d;
-
-		//	public ENUM_A e;
-
-
 		[TestMethod]
 		public void test_buffer_class_TEST_CLASS3_static_member()
 		{
 			TEST_CLASS3 temp = new TEST_CLASS3();
-			temp.f = 5;
+			//temp.f = 5;
 			temp.g = new int[5];
 			temp.g[0] = 1;
 			temp.g[1] = 2;
@@ -2881,15 +2867,15 @@ namespace CGDBuffer_CSharp_UnitTest
 
 				Assert.IsTrue(buf_temp.Count == 0);
 
-				//// check) 
-				//Assert.IsTrue(a2 != null);
-				//Assert.IsTrue(a2.a == 0); // excepted
-				//Assert.IsTrue(a2.b == null);
-				//Assert.IsTrue(a2.d.x == temp.d.x);
-				//Assert.IsTrue(a2.d.y == temp.d.y);
-				//Assert.IsTrue(a2.d.z == temp.d.z);
-				//Assert.IsTrue(a2.d.w == temp.d.w);
-				//Assert.IsTrue(a2.e == 0); // excepted
+				// check) 
+				Assert.IsTrue(a1 == 10);
+				Assert.IsTrue(a2 != null);
+				Assert.IsTrue(a2.g != null);
+			#if NET
+				foreach (var (x, y) in a2.g.Zip(temp.g))
+					Assert.AreEqual(x, y);
+			#endif
+				Assert.IsTrue(a3 == temp_string);
 			}
 		}
 
