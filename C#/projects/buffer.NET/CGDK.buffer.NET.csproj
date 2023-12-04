@@ -11,6 +11,12 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DocumentationFile>..\..\dll\CGDK.buffer.xml</DocumentationFile>
+    <Copyright>ⓒ2023. Cho SangHyun all rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/CGLabs/CGDK.buffer</PackageProjectUrl>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/CGLabs/CGDK.buffer</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>serialization;buffer;performance</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -36,5 +42,12 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;..\..\dll\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;..\..\dll\&quot; /y" />
   </Target>
+
+  <ItemGroup>
+    <None Include="..\..\ReadMe.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
