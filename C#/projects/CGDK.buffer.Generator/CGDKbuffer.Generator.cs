@@ -560,35 +560,13 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			if (type_info == null)
 				throw new Exception();
 
-			// check) must be 'public' accessbility
-			Debug.Assert(type_info.DeclaredAccessibility == Accessibility.Public);
-
-
-			// check) must be 'public' accessbility
-			if (type_info.DeclaredAccessibility != Accessibility.Public)
-			{
-				_context.ReportDiagnostic(Diagnostic.Create(
-				new DiagnosticDescriptor(
-					"CBE0001",
-					"error",
-					$"class '{type_info.ToString()}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
-				null,
-				type_info.Locations.FirstOrDefault(),
-				null));
-			}
-
-			// check) must be no 'static'
+			// check) skip 'static' member
 			if (type_info.IsStatic == true)
-			{
-				_context.ReportDiagnostic(Diagnostic.Create(
-				new DiagnosticDescriptor(
-					"CBE0006",
-					"error",
-					$"class '{type_info.ToString()}' is static.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
-				null,
-				type_info.Locations.FirstOrDefault(),
-				null));
-			}
+				continue;
+
+			// check) skip not 'public' accessbility
+			if (type_info.DeclaredAccessibility != Accessibility.Public)
+				continue;
 
 			// 4) make full typ name string and identifier name
 			struct_info.type_name = type_info.ToString();
