@@ -2488,8 +2488,11 @@ namespace CGDK
 				// 4) write
 				fixed(void* ptr_src = _object)
 				{
-					System.Buffer.MemoryCopy(ptr_src, (void*)_ptr, _ptr_bound - _ptr,  sizeof(V) * _object.Length); // NULL 포함 복사
+					System.Buffer.MemoryCopy(ptr_src, (void*)_ptr, _ptr_bound - _ptr,  _object.Length * sizeof(V)); // NULL 포함 복사
 				}
+
+				// 4) add ptr
+				_ptr += _object.Length * sizeof(V);
 			}
 			public unsafe V[]? ProcessExtract(ref long _ptr, ref int _count)
 			{
@@ -2516,11 +2519,12 @@ namespace CGDK
 				// 4) write items
 				fixed (void* ptr_dest = obj_array)
 				{
-					System.Buffer.MemoryCopy((void*)_ptr, ptr_dest, _count, sizeof(V) * item_count); // NULL 포함 복사
+					System.Buffer.MemoryCopy((void*)_ptr, ptr_dest, _count, item_count * sizeof(V)); // NULL 포함 복사
 				}
 
 				// 5) update count
-				_count -= sizeof(Int32) * item_count;
+				_ptr += item_count * sizeof(V);
+				_count -= item_count * sizeof(V);
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -2789,8 +2793,11 @@ namespace CGDK
 				// 4) write
 				fixed (void* ptr_src = obj_array)
 				{
-					System.Buffer.MemoryCopy(ptr_src, (void*)_ptr, _ptr_bound - _ptr, sizeof(V) * obj_array.Length); // NULL 포함 복사
+					System.Buffer.MemoryCopy(ptr_src, (void*)_ptr, _ptr_bound - _ptr, obj_array.Length * sizeof(V)); // NULL 포함 복사
 				}
+
+				// 4) add ptr
+				_ptr += sizeof(V) * obj_array.Length;
 			}
 			public unsafe object? ProcessExtract(ref long _ptr, ref int _count)
 			{
@@ -2817,11 +2824,12 @@ namespace CGDK
 				// 4) write items
 				fixed (void* ptr_dest = obj_array)
 				{
-					System.Buffer.MemoryCopy((void*)_ptr, ptr_dest, _count, sizeof(V) * item_count); // NULL 포함 복사
+					System.Buffer.MemoryCopy((void*)_ptr, ptr_dest, _count, item_count * sizeof(V)); // NULL 포함 복사
 				}
 
 				// 5) update count
-				_count -= sizeof(Int32) * item_count;
+				_ptr += item_count * sizeof(V);
+				_count -= item_count * sizeof(V);
 
 				// check)
 				Debug.Assert(obj_array != null);
@@ -3964,9 +3972,6 @@ namespace CGDK
 			public unsafe int ProcessGetSizeOf(List<V>? _object)
 			{
 				// check)
-				Debug.Assert(_object != null);
-
-				// check)
 				if (_object == null)
 					return sizeof(Int32);
 
@@ -4981,6 +4986,14 @@ namespace CGDK
 					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Field), false).Where(x => ((CGDK.Attribute.Field)x).IsSerializable == false).Any())
 						continue;
 
+					// check) static일 경우 제외한다.
+					if (iter.IsStatic == true)
+						continue;
+
+					// check) public이 아니면 제외한다.
+					if (iter.IsPublic == false)
+						continue;
+
 					// - ger serializer
 					var serializer = (IBase<object>?)ProcessGetSerializer_object(iter.FieldType);
 
@@ -5745,6 +5758,14 @@ namespace CGDK
 					// check)
 					if (iter.GetCustomAttributes(typeof(CGDK.Attribute.Field), false).Where(x => ((CGDK.Attribute.Field)x).IsSerializable).Any() == false)
 						continue;
+
+					// check) static일 경우 예외를 던진다.
+					if (iter.IsStatic == true)
+						throw new System.MemberAccessException($"[{_type.Name}.{iter.Name}] is static");
+
+					// check) public이 아니면 예외를 던진다.
+					if (iter.IsPublic == false)
+						throw new System.MemberAccessException($"[{_type.Name}.{iter.Name}] is not public.");
 
 					// - set serializer
 					var temp_membeer_serialization_info = new MemberSerializationInfo (
