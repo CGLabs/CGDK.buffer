@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CGDK.buffer.NET.framework">
-      <HintPath>..\..\dll\CGDK.buffer.NET.framework.dll</HintPath>
+      <HintPath>..\..\..\dll\CGDK.buffer.NET.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

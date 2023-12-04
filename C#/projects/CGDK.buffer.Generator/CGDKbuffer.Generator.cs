@@ -919,7 +919,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("	}");
 
 		// 3) member fucntion 'ProcessExtract'
-		_out.AppendLine($"	public object? ProcessExtract(ref long _ptr, ref int _count)");
+		_out.AppendLine($"	public object ProcessExtract(ref long _ptr, ref int _count)");
 		_out.AppendLine("	{");
 		_out.AppendLine($"		var temp = new {_object_info.type_name}();");
 		_out.AppendLine("");
