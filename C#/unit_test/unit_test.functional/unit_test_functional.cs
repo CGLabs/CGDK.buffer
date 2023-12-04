@@ -190,17 +190,17 @@ namespace CGDBuffer_CSharp_UnitTest
 			_buffer.Append<string>(array_string[7]);
 		}
 
-#if NET
+	#if NET
 		string?[] function_extract_STRING(ref CGDK.buffer _buffer)
-#else
+	#else
 		string[] function_extract_STRING(ref CGDK.buffer _buffer)
-#endif
+	#endif
 		{
-#if NET
+		#if NET
 			string?[] temp = new string[8];
-#else
+		#else
 			string[] temp = new string[8];
-#endif
+		#endif
 
 			temp[0] = _buffer.Extract<string>();
 			temp[1] = _buffer.Extract<string>();
@@ -212,6 +212,15 @@ namespace CGDBuffer_CSharp_UnitTest
 			temp[7] = _buffer.Extract<string>();
 
 			return temp;
+		}
+
+		[TestInitialize]
+		public void TestInitialize()
+		{
+		#if NET
+			CGDK.BufferSerializer.Generator.Initialize();
+		#endif
+
 		}
 
 		[TestMethod]
@@ -2385,6 +2394,105 @@ namespace CGDBuffer_CSharp_UnitTest
 			}
 		}
 
+		struct TEST_STATIC
+		{
+			public static int a;
+			public int x;
+			public string y;
+			public UInt32 z;
+			public List<int> w;
+		};
+
+		[TestMethod]
+		public void test_buffer_struct_TEST_STATIC()
+		{
+			var temp = new TEST_STATIC();
+			TEST_STATIC.a = 100;
+			temp.x = 10;
+			temp.y = "Tesfdsafdsafdsafdst";
+			temp.z = 100;
+			temp.w = new List<int> { 10, 20, 30 };
+
+			string temp_string = "Txxfasgfsgfdfx";
+
+			var size_a = CGDK.buffer.GetSizeOf((int)10);
+			var size_b = CGDK.buffer.GetSizeOf(temp);
+			var size_c = CGDK.buffer.GetSizeOf(temp_string);
+			var size_source = size_a + size_b + size_c;
+
+			var buf_Alloc = new CGDK.buffer();
+
+			buf_Alloc.Alloc(size_source);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				var buf_temp = buf_Alloc;
+
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST_STATIC>(temp);
+				buf_temp.Append<string>(temp_string);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST_STATIC>();
+				var a3 = buf_temp.Extract<string>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+			}
+		}
+
+		struct TEST_CONST
+		{
+			public const int a = 100;
+			public int x;
+			public string y;
+			public UInt32 z;
+			public List<int> w;
+		};
+
+		[TestMethod]
+		public void test_buffer_struct_TEST_CONST()
+		{
+			var temp = new TEST_CONST();
+			temp.x = 10;
+			temp.y = "Tesfdsafdsafdsafdst";
+			temp.z = 100;
+			temp.w = new List<int> { 10, 20, 30 };
+
+			string temp_string = "Txxfasgfsgfdfx";
+
+			var size_a = CGDK.buffer.GetSizeOf((int)10);
+			var size_b = CGDK.buffer.GetSizeOf(temp);
+			var size_c = CGDK.buffer.GetSizeOf(temp_string);
+			var size_source = size_a + size_b + size_c;
+
+			var buf_Alloc = new CGDK.buffer();
+
+			buf_Alloc.Alloc(size_source);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				var buf_temp = buf_Alloc;
+
+				buf_temp.Append<int>(10);
+				buf_temp.Append<TEST_CONST>(temp);
+				buf_temp.Append<string>(temp_string);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var a1 = buf_temp.Extract<int>();
+				var a2 = buf_temp.Extract<TEST_CONST>();
+				var a3 = buf_temp.Extract<string>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+			}
+		}
+
 		struct TEST_C
 		{
 			public int x;
@@ -2528,20 +2636,6 @@ namespace CGDBuffer_CSharp_UnitTest
 			public ENUM_A e;
 		};
 
-		public class TEST_CLASS2 : TEST_CLASS1
-		{
-			[CGDK.Attribute.Field]
-			public UInt32 f;
-
-		#if NET
-			[CGDK.Attribute.Field]
-			public int[]? g;
-		#else
-			[CGDK.Attribute.Field]
-			public int[] g;
-		#endif
-		};
-
 		[TestMethod]
 		public void test_buffer_class_TEST_CLASS1_append_extract()
 		{
@@ -2611,6 +2705,21 @@ namespace CGDBuffer_CSharp_UnitTest
 				Assert.IsTrue(size_source == buf_temp.Count);
 			}
 		}
+
+		public class TEST_CLASS2 : TEST_CLASS1
+		{
+			[CGDK.Attribute.Field]
+			public UInt32 f;
+
+		#if NET
+			[CGDK.Attribute.Field]
+			public int[]? g;
+		#else
+			[CGDK.Attribute.Field]
+			public int[] g;
+		#endif
+		};
+
 
 		[TestMethod]
 		public void test_buffer_class_TEST_CLASS2_append_extract()
@@ -2686,6 +2795,101 @@ namespace CGDBuffer_CSharp_UnitTest
 				int size_source = CGDK.buffer.GetSizeOf(temp);
 
 				Assert.IsTrue(size_source == buf_temp.Count);
+			}
+		}
+
+		[CGDK.Attribute.Serializable]
+		public class TEST_CLASS3
+		{
+			[CGDK.Attribute.Field]
+			public UInt32 f;
+
+		#if NET
+			[CGDK.Attribute.Field]
+			public int[]? g;
+		#else
+			[CGDK.Attribute.Field]
+			public int[] g;
+		#endif
+		};
+
+
+		//	public int a;
+		//#if NET
+		//	[CGDK.Attribute.Field]
+		//	public List<int>? b;
+		//#else
+		//	[CGDK.Attribute.Field]
+		//	public List<int> b;
+		//#endif
+
+		//	int c { get { return 100; } set { } }
+
+		//	[CGDK.Attribute.Field]
+		//	public TEST d;
+
+		//	public ENUM_A e;
+
+
+		[TestMethod]
+		public void test_buffer_class_TEST_CLASS3_static_member()
+		{
+			TEST_CLASS3 temp = new TEST_CLASS3();
+			temp.f = 5;
+			temp.g = new int[5];
+			temp.g[0] = 1;
+			temp.g[1] = 2;
+			temp.g[2] = 3;
+			temp.g[3] = 4;
+			temp.g[4] = 5;
+
+			string temp_string = "Txxx";
+
+			var buf_Alloc = new CGDK.buffer();
+
+			buf_Alloc.Alloc(256);
+
+			var size_1 = CGDK.buffer.GetSizeOf(10);
+			var size_2 = CGDK.buffer.GetSizeOf(temp);
+			var size_3 = CGDK.buffer.GetSizeOf(temp_string);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				var buf_temp = buf_Alloc;
+
+				buf_temp.Append<int>(10);
+
+				Assert.IsTrue(buf_temp.Count == size_1);
+
+				buf_temp.Append<TEST_CLASS3>(temp);
+
+				Assert.IsTrue(buf_temp.Count == size_1 + size_2);
+
+				buf_temp.Append<string>(temp_string);
+
+				Assert.IsTrue(buf_temp.Count == size_1 + size_2 + size_3);
+
+				var a1 = buf_temp.Extract<int>();
+
+				Assert.IsTrue(buf_temp.Count == size_2 + size_3);
+
+				var a2 = buf_temp.Extract<TEST_CLASS3>();
+
+				Assert.IsTrue(buf_temp.Count == size_3);
+
+				var a3 = buf_temp.Extract<string>();
+
+				Assert.IsTrue(buf_temp.Count == 0);
+
+				//// check) 
+				//Assert.IsTrue(a2 != null);
+				//Assert.IsTrue(a2.a == 0); // excepted
+				//Assert.IsTrue(a2.b == null);
+				//Assert.IsTrue(a2.d.x == temp.d.x);
+				//Assert.IsTrue(a2.d.y == temp.d.y);
+				//Assert.IsTrue(a2.d.z == temp.d.z);
+				//Assert.IsTrue(a2.d.w == temp.d.w);
+				//Assert.IsTrue(a2.e == 0); // excepted
 			}
 		}
 

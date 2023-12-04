@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
 	<IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 	<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 

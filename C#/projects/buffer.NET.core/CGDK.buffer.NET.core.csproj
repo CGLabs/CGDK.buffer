@@ -5,12 +5,11 @@
 	<LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <Platforms>AnyCPU;x64</Platforms>
+    <BaseOutputPath>..\..\dll\NET.Core\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
 	<Authors>sangduck</Authors>
-	<Company>CGCIII</Company>
     <AssemblyName>CGDK.buffer</AssemblyName>
 	<VersionPrefix>3.2.0.3</VersionPrefix>
 	<RootNamespace>CGDK</RootNamespace>
-    <BaseOutputPath>..\..\dll\NET.Core\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>$(AssemblyName)</PackageId>
@@ -25,8 +24,9 @@
     <Copyright>ⓒ2023. Cho SangHyun all rights reserved.</Copyright>
     <PackageTags>serialization;buffer;performance</PackageTags>
     <RepositoryType>git</RepositoryType>
-    <Company>$(Company)</Company>
+	<Company>CGCIII</Company>
     <Product>$(Title)</Product>
+	<DocumentationFile>..\..\dll\CGDK.buffer.xml</DocumentationFile>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
