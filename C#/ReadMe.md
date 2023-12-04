@@ -223,8 +223,9 @@ var is_empty3 = buf.IsEmpty(); // true
 <br>
 
 ### 7. 읽어만 내기
-- Extract<T>를 사용해 값을 읽어내면 그만큼의 오프셋과 크기가 변경됩니다.<br/>
-  변경없이 값만 읽어 내고 싶다면 GetFront<T>([offset])을 사용하면 됩니다.
+- 변경없이 값만 읽어 내고 싶다면 GetFront<T>([offset])을 사용하면 됩니다.
+  (Extract<T>를 사용해 값을 읽어내면 그만큼의 오프셋과 크기가 변경됩니다.)<br/>
+  
 
    ``` C#
    var buf = new CGDK.buffer(1024);
@@ -272,7 +273,7 @@ Offset을 사용해 GetFront<T>를 수행하면 읽어낸만큼 Offset값을 업
    
    // 추후에 Offset 4byte 떨어진 곳에 long 타입으로 값을 덥어 써줍니다. 
    // 여기서는 buf의 직렬화한 길이를 써넣었습니다.
-   buf.SetFront<long>(4, buf.Count); // temp는 200이 되겠죠.
+   buf.SetFront<long>(buf.Count, 4); // 4Byte offset 떨어진 곳에 long형으로 buf.Count(버퍼의 길이)를 써넣는다.
    ```
 - SetFront<T>() 함수의 리턴값을 기본적으로 값을 써넣은 후에 변경된 Offset값을 리턴값으로 돌려줍니다.<br>
 이 값을 받아 값을 읽거나 써넣는 데에 사용할 수 있지만 타입 안정성을 제공하지 않으므로 주의해서 사용할 필요가 있습니다.<br>
