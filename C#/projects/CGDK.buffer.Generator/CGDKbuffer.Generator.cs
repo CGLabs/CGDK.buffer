@@ -71,7 +71,18 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	//		 - struct용 Serializer를 등록하는 처리를 작성한다.
 	//		 - 마지막으로 작성한 source를 AddSource()함수로 등록한다.
 	//
+	//
+	//  Error code)
+	//		 CBE0001  '[typs_name]' has not public accessibitity."
+	//		 CBE0002  class '[class_name]' is read-only."
+	//		 CBE0003  class '[class_name]' is const."
+	//		 CBE0003  class '[class_name]' is const."
+	//		 CBE0004  class '[class_name]' is write-olny."
+	//		 CBE0005  class '[class_name]' have no [CGDK.serializable]"
+	//		 CBE0006  class '[class_name]' is static."
+	//		 CBE0007  member '[class_name].[member_name]' is static member."
 	//------------------------------------------------------------------
+
 	public void Execute(GeneratorExecutionContext context)
 	{
 		//------------------------------------------------------------------
@@ -437,7 +448,20 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				new DiagnosticDescriptor(
 					"CBE0001",
 					"error",
-					$"class '{type_info.ToString()}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					$"class '{type_info.ToString()}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				type_info.Locations.FirstOrDefault(),
+				null));
+			}
+
+			// check) must be no 'static'
+			if (type_info.IsStatic == true)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0006",
+					"error",
+					$"class '{type_info.ToString()}' is static.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
 				type_info.Locations.FirstOrDefault(),
 				null));
@@ -464,7 +488,20 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					new DiagnosticDescriptor(
 						"CBE0001",
 						"error",
-						$"member '{type_info.ToString()}.{member.Name}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+						$"member '{type_info.ToString()}.{member.Name}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					null,
+					type_info.Locations.FirstOrDefault(),
+					null));
+				}
+
+				// check)
+				if (member.IsStatic == true)
+				{
+					_context.ReportDiagnostic(Diagnostic.Create(
+					new DiagnosticDescriptor(
+						"CBE0007",
+						"error",
+						$"member '{type_info.ToString()}.{member.Name}' is static member.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 					null,
 					type_info.Locations.FirstOrDefault(),
 					null));
@@ -526,6 +563,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			// check) must be 'public' accessbility
 			Debug.Assert(type_info.DeclaredAccessibility == Accessibility.Public);
 
+
 			// check) must be 'public' accessbility
 			if (type_info.DeclaredAccessibility != Accessibility.Public)
 			{
@@ -533,7 +571,20 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				new DiagnosticDescriptor(
 					"CBE0001",
 					"error",
-					$"class '{type_info.ToString()}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					$"class '{type_info.ToString()}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+				null,
+				type_info.Locations.FirstOrDefault(),
+				null));
+			}
+
+			// check) must be no 'static'
+			if (type_info.IsStatic == true)
+			{
+				_context.ReportDiagnostic(Diagnostic.Create(
+				new DiagnosticDescriptor(
+					"CBE0006",
+					"error",
+					$"class '{type_info.ToString()}' is static.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
 				type_info.Locations.FirstOrDefault(),
 				null));
@@ -560,11 +611,15 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					new DiagnosticDescriptor(
 						"CBE0001",
 						"error",
-						$"member '{type_info.ToString()}.{member.Name}' has has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+						$"member '{type_info.ToString()}.{member.Name}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 					null,
 					type_info.Locations.FirstOrDefault(),
 					null));
 				}
+
+				// check) static이면 넘어간다.
+				if (member.IsStatic == true)
+					continue;
 
 				// - get member mode info
 				var member_node_info = GetMembeInfo(_context, member);
@@ -592,13 +647,13 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("#nullable enable");
 
 		// 2) member fucntion 'ProcessAppend'
-		_out.AppendLine($"	public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, {_class_info.type_name}? _object)");
+		_out.AppendLine($"	public void ProcessAppend(ref long _ptr, long _ptr_bound, {_class_info.type_name}? _object)");
 		_out.AppendLine("	{");
 
 		// - null object check
 		_out.AppendLine("		if(_object == null)");
 		_out.AppendLine("		{");
-		_out.AppendLine("			*(int*)_ptr = -1;");
+		_out.AppendLine("			CGDK.BufferSerializer.Common.ProcessWrite<int>(_ptr, -1);");
 		_out.AppendLine("			_ptr += sizeof(int);");
 		_out.AppendLine("			return;");
 		_out.AppendLine("		}");
@@ -610,7 +665,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			// - primitive type
 			if (iter_member.type == 2)
 			{
-				_out.AppendLine($"		*({iter_member.type_name}*)_ptr = _object.{iter_member.identifier}; _ptr += sizeof({iter_member.type_name});");
+				_out.AppendLine($"		CGDK.BufferSerializer.Common.ProcessWrite<{iter_member.type_name}>(_ptr, _object.{iter_member.identifier}); _ptr += sizeof({iter_member.type_name});");
 			}
 			// -  value type
 			else if (iter_member.type == 1)
@@ -626,7 +681,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("	}");
 
 		// 3) member fucntion 'ProcessExtract'
-		_out.AppendLine($"	public unsafe {_class_info.type_name}? ProcessExtract(ref byte* _ptr, ref int _count)");
+		_out.AppendLine($"	public {_class_info.type_name}? ProcessExtract(ref long _ptr, ref int _count)");
 		_out.AppendLine("	{");
 
 		// - create object
@@ -635,13 +690,13 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		int count_primitive = 0;
 		foreach (var iter_member in _class_info.list_member_node_info)
 		{
-			// - primitive type
+			// - value type
 			if (iter_member.type == 2)
 			{
-				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
+				_out.AppendLine($"		temp.{iter_member.identifier} = CGDK.BufferSerializer.Common.ProcessRead<{iter_member.type_name}>(_ptr); _ptr += sizeof({iter_member.type_name});");
 				++count_primitive;
 			}
-			// -  value type
+			// -  value type but assign
 			else if (iter_member.type == 1)
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = serializer_{iter_member.identifier}.ProcessExtract(ref _ptr, ref _count);");
@@ -650,7 +705,6 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			else
 			{
 				_out.AppendLine($"		temp.{iter_member.identifier} = serializer_{iter_member.identifier}.ProcessExtract(ref _ptr, ref _count);");
-
 			}
 		}
 		if (count_primitive != 0)
@@ -670,7 +724,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("	}");
 
 		// 4) member fucntion 'ProcessGetSizeOf'
-		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_class_info.type_name}? _object)");
+		_out.AppendLine($"	public int ProcessGetSizeOf({_class_info.type_name}? _object)");
 		_out.AppendLine("	{");
 		if (_class_info.list_member_node_info.Count != 0)
 		{
@@ -718,7 +772,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("{");
 
 		// 2) member fucntion 'ProcessAppend'
-		_out.AppendLine($"	public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, {_struct_info.type_name} _object)");
+		_out.AppendLine($"	public void ProcessAppend(ref long _ptr, long _ptr_bound, {_struct_info.type_name} _object)");
 		_out.AppendLine("	{");
 
 		foreach (var iter_member in _struct_info.list_member_node_info)
@@ -726,7 +780,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			// - value type
 			if (iter_member.type == 2)
 			{
-				_out.AppendLine($"		*({iter_member.type_name}*)_ptr = _object.{iter_member.identifier}; _ptr += sizeof({iter_member.type_name});");
+				_out.AppendLine($"		CGDK.BufferSerializer.Common.ProcessWrite<{iter_member.type_name}>(_ptr, _object.{iter_member.identifier}); _ptr += sizeof({iter_member.type_name});");
 			}
 			// -  value type
 			else if (iter_member.type == 1)
@@ -742,17 +796,17 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("	}");
 
 		// 3) member fucntion 'ProcessExtract'
-		_out.AppendLine($"	public unsafe {_struct_info.type_name} ProcessExtract(ref byte* _ptr, ref int _count)");
+		_out.AppendLine($"	public {_struct_info.type_name} ProcessExtract(ref long _ptr, ref int _count)");
 		_out.AppendLine("	{");
 		_out.AppendLine($"		var temp = new {_struct_info.type_name}();");
 
 		int count_primitive = 0;
 		foreach (var iter_member in _struct_info.list_member_node_info)
 		{
-			// -  value type
+			// - value type
 			if (iter_member.type == 2)
 			{
-				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
+				_out.AppendLine($"		temp.{iter_member.identifier} = CGDK.BufferSerializer.Common.ProcessRead<{iter_member.type_name}>(_ptr); _ptr += sizeof({iter_member.type_name});");
 				++count_primitive;
 			}
 			// -  value type but assign
@@ -783,7 +837,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("	}");
 
 		// 4) member fucntion 'ProcessGetSizeOf'
-		_out.AppendLine($"	public unsafe int ProcessGetSizeOf({_struct_info.type_name} _object)");
+		_out.AppendLine($"	public int ProcessGetSizeOf({_struct_info.type_name} _object)");
 		_out.AppendLine("	{");
 
 		if (_struct_info.list_member_node_info.Count != 0)
@@ -831,13 +885,13 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("#nullable enable");
 
 		// 2) member fucntion 'ProcessAppend'
-		_out.AppendLine($"	public unsafe void ProcessAppend(ref byte* _ptr, byte* _ptr_bound, object? _object)");
+		_out.AppendLine($"	public void ProcessAppend(ref long _ptr, long _ptr_bound, object? _object)");
 		_out.AppendLine("	{");
 
 		// - null object check
 		_out.AppendLine( "		if(_object == null)");
 		_out.AppendLine( "		{");
-		_out.AppendLine( "			*(int*)_ptr = -1;");
+		_out.AppendLine("			CGDK.BufferSerializer.Common.ProcessWrite<int>(_ptr, -1);");
 		_out.AppendLine( "			_ptr += sizeof(int);");
 		_out.AppendLine( "			return;");
 		_out.AppendLine( "		}");
@@ -850,7 +904,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			// -  value type
 			if (iter_member.type == 2)
 			{
-				_out.AppendLine($"		*({iter_member.type_name}*)_ptr = temp.{iter_member.identifier}; _ptr += sizeof({iter_member.type_name});");
+				_out.AppendLine($"		CGDK.BufferSerializer.Common.ProcessWrite<{iter_member.type_name}>(_ptr, temp.{iter_member.identifier}); _ptr += sizeof({iter_member.type_name});");
 			}
 			// -  value type but assign
 			else if (iter_member.type == 1)
@@ -866,7 +920,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("	}");
 
 		// 3) member fucntion 'ProcessExtract'
-		_out.AppendLine($"	public unsafe object? ProcessExtract(ref byte* _ptr, ref int _count)");
+		_out.AppendLine($"	public object? ProcessExtract(ref long _ptr, ref int _count)");
 		_out.AppendLine("	{");
 		_out.AppendLine($"		var temp = new {_object_info.type_name}();");
 		_out.AppendLine("");
@@ -876,10 +930,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		int count_object= 0;
 		foreach (var iter_member in _object_info.list_member_node_info)
 		{
-			// -  value type
+			// - value type
 			if (iter_member.type == 2)
 			{
-				_out.AppendLine($"		temp.{iter_member.identifier} = *({iter_member.type_name}*)_ptr; _ptr += sizeof({iter_member.type_name});");
+				_out.AppendLine($"		temp.{iter_member.identifier} = CGDK.BufferSerializer.Common.ProcessRead<{iter_member.type_name}>(_ptr); _ptr += sizeof({iter_member.type_name});");
 				++count_primitive;
 			}
 			// -  value type but assign
@@ -914,7 +968,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		_out.AppendLine("	}");
 
 		// 4) member fucntion 'ProcessGetSizeOf'
-		_out.AppendLine($"	public unsafe int ProcessGetSizeOf(object? _object)");
+		_out.AppendLine($"	public int ProcessGetSizeOf(object? _object)");
 		_out.AppendLine("	{");
 		_out.AppendLine("		if(_object == null)");
 		_out.AppendLine("			return sizeof(int);");
