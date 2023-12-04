@@ -307,7 +307,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					"error",
 					$"class '{x.ToString()}' is read-only.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				x.Locations.FirstOrDefault(),
+				x.Locations.FirstOrDefault<Location>(),
 				null));
 			}
 
@@ -320,7 +320,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					"error",
 					$"class '{x.ToString()}' is const.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				x.Locations.FirstOrDefault(),
+				x.Locations.FirstOrDefault<Location>(),
 				null));
 			}
 
@@ -354,7 +354,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					"error",
 					$"class '{y.ToString()}' is read-olny.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				y.Locations.FirstOrDefault(),
+				y.Locations.FirstOrDefault<Location>(),
 				null));
 			}
 
@@ -367,7 +367,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					"error",
 					$"class '{y.ToString()}' is write-olny.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				y.Locations.FirstOrDefault(),
+				y.Locations.FirstOrDefault<Location>(),
 				null));
 			}
 
@@ -380,7 +380,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					"error",
 					$"class '{y.ToString()}' have no [CGDK.serializable]", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				y.Locations.FirstOrDefault(),
+				y.Locations.FirstOrDefault<Location>(),
 				null));
 			}
 
@@ -448,10 +448,12 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				new DiagnosticDescriptor(
 					"CBE0001",
 					"error",
-					$"class '{type_info.ToString()}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					$"class '{type_info.ToString()}' is not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				type_info.Locations.FirstOrDefault(),
+				type_info.Locations.FirstOrDefault<Location>(),
 				null));
+
+				continue;
 			}
 
 			// check) must be no 'static'
@@ -463,8 +465,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					"error",
 					$"class '{type_info.ToString()}' is static.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				type_info.Locations.FirstOrDefault(),
+				type_info.Locations.FirstOrDefault<Location>(),
 				null));
+
+				continue;
 			}
 
 			// 5) make full typ name string and identifier name
@@ -488,10 +492,12 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					new DiagnosticDescriptor(
 						"CBE0001",
 						"error",
-						$"member '{type_info.ToString()}.{member.Name}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+						$"class member '{type_info.ToString()}.{member.Name}' is not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 					null,
-					type_info.Locations.FirstOrDefault(),
+					member.Locations.FirstOrDefault<Location>(),
 					null));
+
+					continue;
 				}
 
 				// check)
@@ -501,10 +507,12 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 					new DiagnosticDescriptor(
 						"CBE0007",
 						"error",
-						$"member '{type_info.ToString()}.{member.Name}' is static member.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+						$"class member '{type_info.ToString()}.{member.Name}' is static member.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 					null,
-					type_info.Locations.FirstOrDefault(),
+					member.Locations.FirstOrDefault<Location>(),
 					null));
+
+					continue;
 				}
 
 				// - get member mode info
@@ -560,9 +568,9 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			if (type_info == null)
 				throw new Exception();
 
-			// check) must be 'public' accessbility
-			Debug.Assert(type_info.DeclaredAccessibility == Accessibility.Public);
-
+			// check) skip 'static' member
+			if (type_info.IsStatic == true)
+				continue;
 
 			// check) must be 'public' accessbility
 			if (type_info.DeclaredAccessibility != Accessibility.Public)
@@ -571,9 +579,9 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				new DiagnosticDescriptor(
 					"CBE0001",
 					"error",
-					$"class '{type_info.ToString()}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					$"struct '{type_info.ToString()}' is not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				type_info.Locations.FirstOrDefault(),
+				type_info.Locations.FirstOrDefault<Location>(),
 				null));
 			}
 
@@ -584,9 +592,9 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				new DiagnosticDescriptor(
 					"CBE0006",
 					"error",
-					$"class '{type_info.ToString()}' is static.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
+					$"struct '{type_info.ToString()}' is static.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
 				null,
-				type_info.Locations.FirstOrDefault(),
+				type_info.Locations.FirstOrDefault<Location>(),
 				null));
 			}
 
@@ -606,16 +614,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			{
 				// check)
 				if (member.DeclaredAccessibility != Accessibility.Public)
-				{
-					_context.ReportDiagnostic(Diagnostic.Create(
-					new DiagnosticDescriptor(
-						"CBE0001",
-						"error",
-						$"member '{type_info.ToString()}.{member.Name}' has not public accessibitity.", "CGDK.buffer.type", DiagnosticSeverity.Error, true),
-					null,
-					type_info.Locations.FirstOrDefault(),
-					null));
-				}
+					continue;
 
 				// check) static이면 넘어간다.
 				if (member.IsStatic == true)

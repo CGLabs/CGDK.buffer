@@ -7,7 +7,7 @@
 	<Authors>sangduck</Authors>
 	<Company>CGCIII</Company>
     <AssemblyName>CGDK.buffer.Generator</AssemblyName>
-	<VersionPrefix>3.2.0.2</VersionPrefix>
+	<VersionPrefix>3.2.1.0</VersionPrefix>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
