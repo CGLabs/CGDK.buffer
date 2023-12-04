@@ -28,7 +28,7 @@ c# 최고 성능을 제공한다는 직렬화 라이브러리들보다 수배에
    - Reflection과 Roslyn & Source Generator를 사용하여 구현하였습니다.<br>
      (Roslyn과 Source Generator의 성능 버프를 받으시려면 CGDK.buffer.Generator도 nuget으로 설치를 하셔야 합니다.)
    - C++ 버전인 CGDK::buffer와 호환됩니다.<br>
-   - 단점. 현재는 프로젝트에 Unsafe 설정이 필요합니다.<br>
+   - 단점. 현재는 프로젝트에 __Unsafe 설정이 필요__ 합니다.<br>
 <br>
 <br>
 
