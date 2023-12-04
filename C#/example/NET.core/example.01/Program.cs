@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Example
 {
-	class Program
+	public class Program
 	{
 		static void Main(string[] args)
 		{
@@ -59,15 +60,21 @@ namespace Example
 			// Case 6) 생성된 CGDK.buffer에서 가져온다.(얕은 복사)
 			CGDK.buffer bufTemp5 = bufTemp1;
 
+			// - 임시로 data 추간
+			bufTemp2.Append<int>(10);
+			bufTemp2.Append<int>(20);
+			bufTemp2.Append<int>(30);
+			bufTemp2.Append<int>(40);
+
 			// Case 7) 생성된 기본 버퍼에서 Offset을 10만큼 더한 후 가져오기
 			CGDK.buffer bufTemp6 = bufTemp2 + 10;
 
 
 			// Case 8) 복사본을 만든다. (깊은 복사)
-			CGDK.buffer bufTemp7 = bufTemp1.clone();
+			CGDK.buffer bufTemp7 = bufTemp1.Clone();
 
 			// 할당 해제
-			bufTemp1.clear();
+			bufTemp1.Clear();
 		}
 
 		//----------------------------------------------------------------------------
@@ -169,8 +176,13 @@ namespace Example
 			var data2 = bufTemp.Extract<List<string>>();
 			var data3 = bufTemp.Extract<Dictionary<string, int>>();
 
+			// check)
+			Debug.Assert(data1 != null);
+			Debug.Assert(data2 != null);
+			Debug.Assert(data3 != null);
+
 			// 2) 출력한다.
-			foreach(var iter in data1) {Console.WriteLine(iter.ToString());}
+			foreach (var iter in data1) {Console.WriteLine(iter.ToString());}
 			foreach(var iter in data2) {Console.WriteLine(iter.ToString());}
 			foreach(var iter in data3) {Console.WriteLine(iter.ToString());}
 		}
@@ -227,10 +239,11 @@ namespace Example
 		//  읽고 쓸수 있다.
 		// 
 		//----------------------------------------------------------------------------
+		[CGDK.Attribute.Serializable]
 		public struct TEST2
 		{
 			public int a;
-			public List<int> b;
+			public List<int>? b;
 			public TEST c;
 		};
 
@@ -273,11 +286,11 @@ namespace Example
 		[CGDK.Attribute.Serializable]
 		public class TEST3
 		{
-			[CGDK.Attribute.Serializable]
+			[CGDK.Attribute.Field]
 			public int a;
-			[CGDK.Attribute.Serializable]
-			public List<int> b = null;
-			[CGDK.Attribute.Serializable]
+			[CGDK.Attribute.Field]
+			public List<int>? b = default;
+			[CGDK.Attribute.Field]
 			public TEST c;
 		};
 
@@ -308,7 +321,10 @@ namespace Example
 			// EXTRACT 1) 추가했던 문자열을 읽어낸다.
 			var tempRead = bufTemp.Extract<TEST3>();
 
-			// 4) 출력한다.
+			// check)
+			Debug.Assert(tempRead != null);
+
+			// 2) 출력한다.
 			Console.WriteLine(tempRead.a);
 			Console.WriteLine(tempRead.b);
 			Console.WriteLine(tempRead.c.x);
