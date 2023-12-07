@@ -1061,6 +1061,34 @@ namespace CGDK
 			}
 		}
 
+		/// <summary>
+		/// 바이트 데이터를 빼낸다.(역직렬화한다.)
+		/// </summary>
+		/// <param name="_bytes">빼낼 바이트 수</param>
+		/// <exception cref="System.NullReferenceException"></exception>
+		/// <exception cref="CGDK.Exception.Serialize"></exception>
+        public void Extract(in int _bytes)
+        {
+            // 설명) 역직렬화 함수
+            // 
+            //  1. byte 수만큼 Extract한다.
+
+            // check) 
+            Debug.Assert(this.m_buffer != null);
+
+            // check)
+            if (this.IsEmpty())
+                throw new System.NullReferenceException("buffer is not allocated");
+
+            // check) Buffer의 길이가 String 최소크기보다 작을 경우 Exception
+            if (this.m_count > _bytes)
+                throw new CGDK.Exception.Serialize(_bytes, "[CGDK.buffer] buffer size is short");
+
+            // 2) update offset & count
+            this.m_offset += _bytes;
+            this.m_count -= _bytes;
+        }
+
 
 		// ----------------------------------------------------------------
 		//
