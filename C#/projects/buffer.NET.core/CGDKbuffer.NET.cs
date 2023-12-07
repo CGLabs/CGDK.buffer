@@ -783,7 +783,7 @@ namespace CGDK
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
 		/// <see cref="GetSizeOf{T}(in T)"/>
-		public unsafe void	Append<T>(in T _value)
+		public unsafe void	Append<T>(in T? _value)
 		{
 			//  [동작설명]
 			//
