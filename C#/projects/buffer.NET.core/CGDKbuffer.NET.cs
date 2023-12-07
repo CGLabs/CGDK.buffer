@@ -778,7 +778,6 @@ namespace CGDK
 		/// <see cref="AppendSkip(in int)"/>
 		/// <see cref="Append(in byte[], in int, in int)"/>
 		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
-		/// <see cref="Append{T}(in List{T})"/>
 		/// <see cref="AppendText(in string)"/>
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
@@ -835,7 +834,6 @@ namespace CGDK
 		/// <see cref="Append{T}(in T)"/>
 		/// <see cref="AppendSkip(in int)"/>
 		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
-		/// <see cref="Append{T}(in List{T})"/>
 		/// <see cref="AppendText(in string)"/>
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
@@ -874,7 +872,6 @@ namespace CGDK
 		/// <see cref="AppendSkip(in int)"/>
 		/// <see cref="Append(in byte[], in int, in int)"/>
 		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
-		/// <see cref="Append{T}(in List{T})"/>
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
 		/// <see cref="GetSizeOf{T}(in T)"/>
@@ -919,7 +916,6 @@ namespace CGDK
 		/// <see cref="AppendSkip(in int)"/>
 		/// <see cref="Append(in byte[], in int, in int)"/>
 		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
-		/// <see cref="Append{T}(in List{T})"/>
 		/// <see cref="AppendText(in string)"/>
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
@@ -940,7 +936,6 @@ namespace CGDK
 		/// <see cref="AppendSkip(in int)"/>
 		/// <see cref="Append(in byte[], in int, in int)"/>
 		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
-		/// <see cref="Append{T}(in List{T})"/>
 		/// <see cref="AppendText(in string)"/>
 		/// <see cref="Extract{T}"/>
 		/// <see cref="GetSizeOf{T}(in T)"/>
@@ -965,7 +960,6 @@ namespace CGDK
 		/// <see cref="Append{T}(in T)"/>
 		/// <see cref="AppendSkip(in int)"/>
 		/// <see cref="Append(in byte[], in int, in int)"/>
-		/// <see cref="Append{T}(in List{T})"/>
 		/// <see cref="AppendText(in string)"/>
 		/// <see cref="AppendText(string[])"/>
 		/// <see cref="Extract{T}"/>
@@ -993,62 +987,6 @@ namespace CGDK
 				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
-
-		/// <summary>
-		/// List&lt;K,V&gt;를 직렬화해 버퍼에 써넣는다.
-		/// </summary>
-		/// <typeparam name="T">List의 값 타입</typeparam>
-		/// <param name="_value">List 데이터</param>
-		/// <remarks>
-		/// 제너릭 타입의 명시 없이 Apppend()를 호출 했을 때 데이터가 List라면 이 함수가 호출된다.<br/>
-		/// T 타입을 알 수 있어 조금 더 나은 성능을 제공해 줄 수 있다.<br/>
-		/// </remarks>
-		/// <see cref="Append{T}(in T)"/>
-		/// <see cref="AppendSkip(in int)"/>
-		/// <see cref="Append(in byte[], in int, in int)"/>
-		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
-		/// <see cref="AppendText(in string)"/>
-		/// <see cref="AppendText(string[])"/>
-		/// <see cref="Extract{T}"/>
-		/// <see cref="GetSizeOf{T}(in T)"/>
-		public unsafe void	Append<T>(in List<T> _value)
-		{
-			// 설명) 직렬화 함수
-			//
-			//       1. 먼저해당 Serializer를 얻어 온다.(이것은 처음에 생성해 static 변수에 저장해 놓고 계속 사용한다.
-			//          (BufferSerializer.Get_List<T>.instance 가 Caching된 Serializer)
-			//       2. 처음 Serialize가 생성될 때만 Reflection을 사용해 T 클래스에 적합한 Serialize를 생성한다.
-			//       3. Serializer가 Extract나 GetSizeOf 과정에서 만들어 질 수도 있다.
-			//       4. 직렬화에 필요한 파라미터들을 얻는다.
-			//          ptr_pre   -> ProcessAppend 함수가 수행된 후 쓰여진 길이를 구하기 위해 저장해 놓는다.
-			//          ptr_now   -> 쓰여질 위치 포인터. 버퍼에서 쓰여진 멘 끝을 가르킨다.(m_buffer + m_offset + m_count)
-			//	   	    ptr_bound -> 할당된 버퍼의 제일 끝을 가르킨다. bound 검사에 사용된다.
-			//       5. Serializer에 이 파라미터들을 넘겨 ProcessAppend를 호출하면 이 함수에서 실직적으로 직렬화를 수행한다.
-			//       6. 직렬화가 모두 끝난후 ptr_now - ptr_pre를 해서 쓰여진 길이를 구해 m_count에 더해 준다.
-			//       7. 직렬화 끝!
-
-			// check) 
-			Debug.Assert(this.m_buffer != null);
-
-			// check)
-			if(this.m_buffer == null)
-				throw new System.NullReferenceException("buffer is not allocated");
-
-			fixed (byte* ptr = this.m_buffer)
-			{
-				// 1) calculare ptr_now & ptr_bound
-				var ptr_pre = (long)ptr + this.m_offset + this.m_count;
-				var ptr_now = ptr_pre;
-				var ptr_bound = (long)ptr + this.m_buffer.Length;
-
-				// 2) append
-				BufferSerializer.Get_List<T>.instance.ProcessAppend(ref ptr_now, ptr_bound, _value);
-
-				// 3) update offset & count
-				this.m_count += (int)(ptr_now - ptr_pre);
-			}
-		}
-
 
 		// ----------------------------------------------------------------
 		//
