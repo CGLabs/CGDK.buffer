@@ -4,7 +4,7 @@
 - 'CGDK.buffer/C++/include'를 include 디렉토리에 포함시켜 주십시요.<br>
 - 소스 파일에 '#include "cgdk/shared_buffer"'를 추가해 사용하시면 됩니다.<br>
 visual studio, linux, unreal 3D 모두 설정이 동일합니다.<br>
-자세한 설정 방법은 문서('https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/Getting_start_CGDK.buffer.pptx')를 참조해 주십시요.<br>
+자세한 설정 방법은 문서(' https://github.com/CGLabs/CGDK.buffer/blob/master/C%2B%2B/document/Getting_start_CGDK.buffer.pptx ')를 참조해 주십시요.<br>
 
 ### '/project'
 - 그냥 CGDK::buffer를 visual studio에서 볼 수 있도록 project를 만들어 놓은 것일 뿐 header 파일로만 되어 있어 컴파일을 하실 필요 없고 할 수도 없습니다.<br>
