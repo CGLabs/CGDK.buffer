@@ -1,0 +1,98 @@
+//==============================================================================
+//                                                                            
+//                       Cho sanghyun's Game Classes II
+//                         Ver 9.0 / Release 2017.01.03
+//                                                                            
+//                        Socket Classes Tutorial (Ex8)
+//                                     protobuf
+//-----------------------------------------------------------------------------
+//
+// - protobuf message definitions
+//
+//
+//
+//
+//
+
+//-----------------------------------------------------------------------------
+// Declaration
+//-----------------------------------------------------------------------------
+// 1) Protobuf¿« Version
+syntax = "proto3";
+
+// 2) Package∏Ì
+package		tutorial;
+
+
+//-----------------------------------------------------------------------------
+// Definitions of 
+//-----------------------------------------------------------------------------
+// 1) java_declaration
+option java_package			 = "com.example.tutorial";
+option java_outer_classname	 = "SimpleProtos";
+
+// 2) C# declaration
+option csharp_namespace		 = "Google.Protobuf.Examples.tutorial";
+
+
+
+//-----------------------------------------------------------------------------
+// Enum
+//-----------------------------------------------------------------------------
+//enum eMESSAGE_COMMAND
+//{
+//	MESSAGE_FIRST	 = 0;
+//	MESSAGE_SEND_A	 = 20;
+//	MESSAGE_SEND_B	 = 21;
+//	MESSAGE_SEND_C	 = 22;
+//}
+
+
+//-----------------------------------------------------------------------------
+// Message definitions
+//-----------------------------------------------------------------------------
+// [Message] protobuf_message_GENERAL
+message protobuf_message_GENERAL
+{
+	sint32				value_1 = 1;
+	uint32				value_2 = 2;
+	sint64				value_3 = 3;
+	uint64				value_4 = 4;
+	float				value_5 = 5;
+	double				value_6 = 6;
+}
+
+// [Message] protobuf_message_string
+message protobuf_message_string
+{
+	bytes				value_1 = 1;
+	bytes				value_2 = 2;
+	bytes				value_3 = 3;
+	bytes				value_4 = 4;
+	bytes				value_5 = 5;
+	bytes				value_6 = 6;
+	bytes				value_7 = 7;
+	bytes				value_8 = 8;
+}
+
+// [Message] protobuf_message_list_int
+message protobuf_message_list_int
+{
+	repeated int32		value_1 = 1;
+}
+
+// [Message] protobuf_message_map_std_string_int
+message protobuf_message_map_std_string_int
+{
+	map<string, int32>	value_1 = 1;
+}
+
+// [Message] SendC
+message protobuf_message_struct
+{
+	sint32				value_1 = 1;
+	bytes				value_2 = 2;
+	repeated int32		value_3 = 3;
+	uint64				value_4 = 4;
+	map<string, int32>	value_5 = 5;
+}
