@@ -8,7 +8,7 @@
     <BaseOutputPath>..\..\dll\NET.Core\$(PlatformName)\$(ConfigurationName)</BaseOutputPath>
 	<Authors>sangduck</Authors>
     <AssemblyName>CGDK.buffer</AssemblyName>
-	<VersionPrefix>3.2.1.1</VersionPrefix>
+	<VersionPrefix>3.2.1.2</VersionPrefix>
 	<RootNamespace>CGDK</RootNamespace>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
