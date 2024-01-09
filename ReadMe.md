@@ -8,13 +8,13 @@ C# 버전은 CGDK.buffer (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23
 
 #### CGD::buffer
    - C++ 버전
-   - 매우 간단(사실상 append/extract/front가 전부...)<br>
+   - 매우 간단합니다.(사실상 append/extract/front가 전부...)<br>
    - 초고성능 (c++ 버전은 tmp로 구현되어 압도적 최강의 성능을 자랑합니다.)<br>
-   - 작고 가벼움<br>
-   - Schemaless와 Schema(구조체 직렬화)를 모두 지원<br>
-   - 설정이나 스크립트(IDL)없이 구조체를 그대로 Schema로 사용 가능<br>
-   - C++은 C++11 Template Meta Programming을 사용해 구현해 100% template이므로 Include만으로 사용 가능<br>
-   - 자료형에 따라 그에 맞는 직렬화를 수행<br>
+   - 작고 가볍습니다.<br>
+   - 자료형에 따라 그에 맞는 직렬화를 수행합니다.<br>
+   - Schemaless와 Schema(구조체 직렬화)를 모두 지원합니다.<br>
+   - 설정이나 스크립트(IDL)없이 구조체를 그대로 Schema로 사용 가능합니다.<br>
+   - C++11 Template Meta Programming을 사용해 구현해 100% template이므로 Include만으로 사용 가능합니다.<br>
    - 지원되는 자료형은<br>
       * 기본 자료형(char,int32_t, ... float, double)<br>
       * enum<br>
@@ -38,32 +38,32 @@ C# 버전은 CGDK.buffer (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23
 
 ## buffer 클래스 종류
 [C++]<br>
-   3종류의 buffer를 제공하고 있으며 모두 상속 관계<br>
+   3종류의 buffer를 제공하고 있으며 모두 상속 관계를 가집니다.<br>
 
   - CGDK::buffer_view<br>
-     data_와 size_만 가진 buffer로 읽기나 덥어쓰기만 가능<br>
+     data_와 size_만 가진 buffer로 읽기나 덥어쓰기만 가능합니다.<br>
      'extract<T>' 함수(읽어내기)<br>
      'front<T>' 함수(읽기와 덥어 쓰기)<br><br>
   - CGDK::buffer<br>
-     CGDK::buffer_view를 상속받아 경계정보(boung_info)를 추가한 버퍼 클래스<br>
-     'append<T>'함수로 붙히기를 지원<br><br>
+     CGDK::buffer_view를 상속받아 경계정보(boung_info)를 추가한 버퍼 클래스입니다.<br>
+     'append<T>'함수로 직렬화가 가능합니다.<br><br>
   - CGDK::shared_buffer<br>
      CGDK::buffer를 상속 받아 스마트 포인터 기능을 더한 버퍼 클래스<br>
-     할당된 원본 버퍼를 스마트포인터로 관리함<br>
-     alloc_shared_buffer(SIZE) 혹은 make_shared_buffer<T>를 사용해 버퍼를 할당 받을 수 있음<br>
+     할당된 원본 버퍼를 스마트포인터로 관리합니다.<br>
+     alloc_shared_buffer(SIZE) 혹은 make_shared_buffer<T>를 사용해 버퍼를 할당 받을 수 있습니다.<br>
 <br>
 
 [C#]<br>
-   단일 클라스 종류만 존재.<br>
-   (C#은 shared_buffer가 필요하지 않음)<br>
+   하나의 버퍼 클라스만 존재합니다.<br>
+   (C#은 shared_buffer가 필요하지 않습니다.)<br>
   - CGDK.buffer <br>
      <br>
      <br>
 
 ## CGD::buffer 사용하기
 ### 1. 직렬화하기(Schemaless)  
-   버퍼에 데이터를 버퍼에 쓰기는 간단히 append<T>()로 가능<br>
-   (TYPE를 생략할 경우 입력되는 값의 자료형으로 간주함)<br>
+   버퍼에 데이터를 버퍼에 쓰기는 간단히 append<T>()로 가능합니다.<br>
+   (TYPE를 생략할 경우 입력되는 값의 자료형으로 간주합니다.)<br>
 
    ``` C++
      buf.append<[TYPE]>([value]);
@@ -174,7 +174,7 @@ bufTemp.append(maplistTemp);
 <br>
 
 ### 3. 직렬화에 필요한 메모리 크기 구하기<br>
-데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있음 <br>
+데이터를 직렬화 했을 때의 메모리 크기를 CGDK::get_size_of()르 사용해 얻을 수 있습니다.<br>
 
 [C++]
 ``` C++
@@ -184,8 +184,8 @@ auto size = CGDK::get_size_of(maplistTemp);
 <br>
 
 ### 4. 동적 메모리 할당 받기<br>
-CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 가능<br> 
-CGDK::shared_buffer로 할당받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당 해제 됨<br>
+CGDK::alloc_shared_buffer([SIZE])를 사용해 메모리를 동적 할당 가능합니다.<br> 
+CGDK::shared_buffer로 할당 받은 버퍼를 받을 수 있으며 스마트 포인터로 관리되므로 참조가 모두 끝나면 자동 할당 해제 됩니다.<br>
 
 [C++]
 ``` C++
@@ -199,9 +199,8 @@ auto temp2 = CGDK::alloc_shared_buffer(CGDK::get_size_of(maplistTemp));
 <br>
 
 ### 5. 정적 메모리 사용하기<br>
-C++의 경우 CGDK::bufer는 배열이나 std::array를 임시 버퍼로 사용할 수 있습니다.<br>
-지역 변수에 직렬화/역직렬화를 하고자 할 경우 성능에 유리할 수 있습니다.<br>
-다만 <br>
+CGDK::bufer는 배열이나 std::array를 임시 버퍼로 사용할 수 있습니다.<br>
+지역 변수에 직렬화/역직렬화를 하면 성능에 유리할 수 있습니다.<br>
 
 [C++]
 ``` C++
@@ -218,8 +217,7 @@ bufTemp.append<int>(100);
 <br>
 
 ### 6. 구조체 직렬화
-'구조체 직렬화'를 원하는 구조체의 'ENABLE_STRUCT_SERIALIZABLE'을 추가해 주면 됨<br>
-구조체를 Schema로 사용 가능<br>
+'구조체 직렬화'를 원하는 구조체에 'ENABLE_STRUCT_SERIALIZABLE'을 추가해 주면 Schema로 사용 가능합니다.<br>
 
 [C++]
 ``` C++
@@ -272,14 +270,14 @@ bufTemp.Append<TEST2>(tempData);
 var temp1 = bufTemp.Extract<TEST2>();
 
 ```
-이렇게 직렬화/역직렬화를 수행 <br>
-주의) C++의 경우 생성자와 virtaul 함수를 가져서는 안됨<br>
+이렇게 직렬화/역직렬화를 수행가능합니다.<br>
+주의) C++의 경우 생성자와 virtaul 함수를 가져서는 안됩니다.<br>
 <br>
 <br>
 
 ### 7. 읽기(peek)만 하기
-front<T> 함수를 사용하여 읽기가 가능합니다.<br>
-front 함수를 사용할 경우 읽을 위치(offset)를 지정하여야 합니다. (읽을 위치를 생략하면 0으로 간주합니다.)<br>
+front<T> 함수를 사용하여 읽어내기만 가능합니다.<br>
+front<T> 함수를 사용할 경우 읽을 위치(offset)를 지정하여야 합니다. (읽을 위치를 생략하면 0으로 간주합니다.)<br>
 c#의 경우 ref set_front와 get_front 함수가 분리 되어 있습니다.<br>
 
 [C++]
@@ -330,11 +328,11 @@ bufTemp.SetFront<int>(2, 300); // offset 2위치에 int값 300을 덥어 씁니�
 <br>
 
 ### 8. 나중에 덥어 쓰기<br>
-c++은 기본 자료형의 append 수행시 위치를 참조형 변수로 받아 놓았다 나중에 덮어 쓸 수 있습니다.<br>
-기본 자료형(char, short, int, float 등..)을 append할 경우 해당 위치의 참조형을 리턴해줍니다.<br>
-즉, int를 append하면 그 리턴 값은 int& 이 됩니다. 이것을 사용해서 추후 업데이트가 가능합니다.<br>
-front함수를 사용해 덥어 쓸 때 처럼 위치를 직접 지정해 주지 않아도 됩니다.<br>
-C#은 포인터가 없으므로 위치를 저장했다 SetFront<T>() 함수를 사용해서 업데이트 해야 합니다. (위치는 Append 전에 Offset으로 구해 저장해 놓을 수 있습니다.)
+c++은 기본 자료형의 append 수행시 참조형 변수로 위치를 받아 놓았다 나중에 그 위치에 다시 덮어 쓸 수 있습니다.<br>
+기본 자료형(char, short, int, float 등..)을 append<T>할 경우 해당 위치의 참조형 변수를 리턴해줍니다.<br>
+즉, int를 append하면 리턴 값은 int&형이 됩니다. 이것을 사용해서 추후 업데이트가 가능합니다.<br>
+front<T>함수를 사용할 때처럼 위치를 직접 지정해 주지 않아도 됩니다.<br>
+C#은 포인터가 없어 이러한 방법은 사용할 수 없으므로 위치(Offset값)를 저장했다 SetFront<T>() 함수를 사용해서 업데이트 해야 합니다.
 
 [C++]
 ``` C++
@@ -346,10 +344,10 @@ bufTemp.append<string>("Test String");	// 문자열도 가능
 
 .................
 
-// - 덥어쓰기! 이렇게만 하면 해당 위치에 덥어써져서 -100값이 100으로 바뀝니다.
+// - 덥어쓰기! 이렇게만 하면 해당 위치에 덥어써져 -100값이 100으로 바뀝니다.
 temp_pos = 100;
 ```
-이것을 이용해서 가변 메시지 길이를 나중에 써넣기가 가능합니다.<br>
+이것을 이용해서 메시지 길이를 나중에 써넣을 수 있습니다.<br>
 
 <br>
 
