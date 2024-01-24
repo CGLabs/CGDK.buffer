@@ -160,8 +160,8 @@ public class TEST
 	    
 ```
 클래스는 참조형으로 동작해 동적 할당을 동반해 가비지를 생성할 수 있기 때문에 성능에는 불리할 수 있습니다.
-하지만 속이 가능하다는 장점도 있습니다.<br/>
-따라서 매우 빈번하게 사용되는 메시지는 구조체체를 사용하고, 빈번하지 않고 복잡한 메시지만 클래스를 사용하는 것이 좋은 선택일 수 있습니다.<br/>
+하지만 상속이 가능하다는 장점도 있습니다.<br/>
+따라서 매우 빈번하게 사용되는 메시지는 구조체를 사용하고, 빈번하지 않으며 복잡한 메시지만 클래스를 사용하는 것이 좋은 선택일 수 있습니다.<br/>
 <br/>
 <br>
 
@@ -189,20 +189,20 @@ public class TEST
 
 ### 6. 동적 메모리 할당 받기<br>
 버퍼에 메모리를 설정하는 방법은 3가지 방법이 가능합니다.
-- buffer의 생성자에서 바로 생성하기
+- buffer의 생성자에서 바로 생성하기 (생성자에서)
    ``` C#
    // 1000byte 메모리를 동적 할당 받는다.
    var buf = new CGDK.buffer(1000);
    ```
 
-- buffer의 생성 후 할당하기
+- buffer의 생성 후 할당하기 (Alloc함수로)
    ``` C#
    // 1000byte 메모리를 동적 할당 받는다.
    var buf = new CGDK.buffer();
    buf.Alloc(1000);
    ```
 
-- 외부에서 생성해서 buffer에 설정해 넣기
+- 외부에서 생성해서 buffer에 설정해 넣기 (대입해 넣기)
    ``` C#
    // 1000byte 메모리를 동적 할당 받는다.
    var temp = new byte[1000];
@@ -284,19 +284,19 @@ Offset을 사용해 GetFront<T>를 수행하면 읽어낸 만큼 Offset값을 �
    var temp_offset = new CGDK.Offset(4);
 
    // 버퍼의 앞에서 4Byte Offset만큼 떨어진 곳에서 long값을 값을 읽어옵니다.
-   var temp1 = buf.GetFront<long>(ref temp_offset); // temp는 200이 되며 temp_offset값은 12로 변경됩니다.
-   var tenp2 = buf.GetFront<string>(ref temp_offset); // "test"가 될 것이며 temp_offset값은 20로 변경됩니다.
+   var temp1 = buf.GetFront<long>(ref temp_offset); // temp1는 200이 되며 temp_offset값은 12로 변경됩니다.
+   var tenp2 = buf.GetFront<string>(ref temp_offset); // temp2는 "test"가 될 것이며 temp_offset값은 20로 변경됩니다.
    ```
-- 주의) 타입에 대한 안정성은 제공하지는 않습니다. 즉 GetFront<int>(8)는 그냥 8Byte Offset이 떨어진 값을 int로 가정해서 읽어올 뿐입니다.<br/>
+- 주의) 타입 안정성은 제공하지는 않습니다. 즉 GetFront<int>(8)는 그냥 8Byte Offset이 떨어진 값을 int로 가정해서 읽어올 뿐입니다.<br/>
   원래 데이터 형이 int가 아닐 경우 원하지 않는 값을 얻을 수도 있습니다.<br/>
-타입 안정성을 제공하지 않을 것을 인해 많은 사용상의 편리함은 있을 수 있습니다만 예외를 발생시킬 수도 있으므로 잘 사용할 필요가 있습니다.<br>
+타입 안정성을 제공하지 않아 사용상의 편리함은 있을 수 있습니다만 예외를 발생시킬 수도 있으므로 잘 사용할 필요가 있습니다.<br>
 <br>
 
 ### 8. 덥어 쓰기
-- 이미 쓰여진 데이터를 덥어 쓰거나 먼저 버퍼에 값을 써넣은 후 추후 값을 써넣어야 하는 경우도 있을 수 있습니다.<br/>
- (Append<T>는 버퍼읠 제일 끝에만 붙이는 처리입니다.<br/>)
- 그럴 때 __SetFront<T>([offset], [값])__ 함수를 사용하시면 됩니다.<br>
-
+- 이미 쓰여진 데이터를 덥어 쓰거나 먼저 버퍼에 값을 써넣은 후 추후 값을 써넣어야 하는 경우가 있을 수 있습니다.<br/>
+  이럴 때 __SetFront<T>([값], [offset])__ 함수를 사용하시면 됩니다.<br>
+  (Append<T>는 버퍼읠 제일 끝에만 붙이는 처리입니다.<br/>)
+ 
    ``` C#
    var buf = new CGDK.buffer(1024);
    buf.Append<int>(100);
@@ -307,8 +307,9 @@ Offset을 사용해 GetFront<T>를 수행하면 읽어낸 만큼 Offset값을 �
    // 여기서는 buf의 직렬화한 길이를 써넣었습니다.
    buf.SetFront<long>(buf.Count, 4); // 4Byte offset 떨어진 곳에 long형으로 buf.Count(버퍼의 길이)를 써넣는다.
    ```
-- SetFront<T>() 함수의 리턴값을 기본적으로 값을 써넣은 후에 변경된 Offset값을 리턴값으로 돌려줍니다.<br>
-이 값을 받아 값을 읽거나 써넣는 데에 사용할 수 있지만 타입 안정성을 제공하지 않으므로 주의해서 사용할 필요가 있습니다.<br>
+- SetFront<T>() 함수의 리턴값을 값을 써넣은 후에 변경된 Offset값을 돌려 줍니다.<br>
+이 값을 받아 값을 읽거나 써넣는 데에 사용할 수 있습니다.<br>
+하지만 타입 안정성을 제공하지 않으므로 주의해서 사용할 필요가 있습니다.<br>
 <br>
 
 
@@ -394,7 +395,7 @@ CGDK.buffer의 멤버변수는 buffer, m_offset, m_count 3개의 멤버 변수�
 <br/>
 
 ## CGD.buffer 복사하기<br/>
-CGDK.buffer의 기본적으로 구조체이므로 구조체 자체는 통채로 복사가 됩니다.
+CGDK.buffer의 기본적으로 구조체이므로 그냥 대입을 하면 CGD.buffer 자체는 통채로 복사가 됩니다. 하지만 얕은 복사가 되죠.
 따라서 이렇게 복사를 하면
    ``` C#
    var buf = new CGDK.buffer(256);
@@ -412,9 +413,9 @@ CGDK.buffer의 기본적으로 구조체이므로 구조체 자체는 통채로 
    x1 = buf2.Extract<byte>(); // 10이 됩니다. Offset과 Count는 복사되어도 buffer 자체는 깊은 복사가 이루어지지 않아 공유됩니다.
    x2 = buf2.Extract<sbyte>(); // 20이 됩니다. 
    ```
-   기본적인 버퍼의 복사는 '얇은 복사'를 수행하며 <br/>
-   즉 m_buffer와 m_Offset값과 m_Count 값은 복사가 되지만 버퍼의 내용 자체는 복사되지 않고 공유합니다. <br/>
-   원본 CGDK.buffer의 Offset과 Count는 변경하지 않고 값을 읽고 싶을 경우 GetFront<T>()보다 얇은 복사로 임시 버퍼를 생성해 Extract<T>()하는  방식이 많이 사용됩니다. <br/>
+   기본적인 버퍼의 복사는 '얇은 복사'를 수행하므로<br/>
+   m_buffer, m_Offset, m_Count 값은 복사가 되지만 버퍼의 내용 자체는 복사되지 않고 공유됩니다. <br/>
+   원본 CGDK.buffer의 Offset과 Count는 변경하지 않고 값을 읽고 싶을 경우 GetFront<T>()보다 얇은 복사로 임시 버퍼를 생성해 Extract<T>()하는 방식이 많이 사용됩니다. <br/>
  <br/>
    만약에 깊은 복사를 원하면 멤버함수인 Clone()을 하십시요. <br/>
 
@@ -433,16 +434,16 @@ CGDK.buffer의 기본적으로 구조체이므로 구조체 자체는 통채로 
 ## CGD.buffer 연산자<br/>
 ### 1. Offset을 주어 얇은 복사하기
 -  '+ CGDK.Offset()'를 사용하면 Offset을 미리 주어 얇은 복사를 수행할 수 있습니다.<br>
-이 Offset을 주는 얇은 복사는 매우 많이 사용합니다.<br>
+이 Offset을 주는 얇은 복사는 매우 많이 사용됩니다.<br>
 
    ``` C#
-   // buf1을 Offset 8 만큼 주어서 얇은 복사를 한다.
+   // buf1을 Offset 8만큼 주어서 얇은 복사를 한다.
    // 즉, buf2.Offset = buf1.Offset + 8, buf2.Count = buf1.Count - 8
    CGDK.buffer buf2 = buf1 + new CGDK.Offset(8);
    ```
 
 ### 2. 크기를 조정해 얇은 복사하기
--  '+ CGDK.Size()'를 사용하면 Size를 늘리거나 줄여서 얇은 복사
+-  '+ CGDK.Size()'를 사용하면 Size를 늘리거나 줄여서 얇은 복사를 한다.
 
    ``` C#
    // buf1을 Size를 8만큼 줄여서 얇은 복사를 한다.
@@ -453,7 +454,7 @@ CGDK.buffer의 기본적으로 구조체이므로 구조체 자체는 통채로 
 ### 3. Offset을 대입한  얇은 복사하기
 - '* CGDK.Offset()'으로 Offset을 앗사리 특정 값으로 대입해 얇은 복사를 수행할 수 있습니다.
    ``` C#
-   // buf1을 Offset 8 만큼 주어서 얇은 복사를 한다.
+   // buf1을 Offset 8만큼 주어서 얇은 복사한다.
    // 즉, buf2.Offset = 8, buf2.Count = buf1.Count
    CGDK.buffer buf2 = buf1 ^ new CGDK.Offset(8);
    ```
