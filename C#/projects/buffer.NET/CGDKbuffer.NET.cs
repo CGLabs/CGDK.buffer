@@ -1122,6 +1122,35 @@ namespace CGDK
 				return temp;
 			}
 		}
+		/// <summary>
+		/// 데이터는 읽지 않고 _amount 만큼 버퍼를 데이트를 줄인다.
+		/// Count는 _acmount만큼 줄어들고 Offset는 _account만큼 늘어난다.
+		/// </summary>
+		/// <param name="_amount">줄일 데이터의 bytes 크기</param>
+		/// <returns></returns>
+		/// <exception cref="System.NullReferenceException"></exception>
+		/// <exception cref="System.OverflowException"></exception>
+		/// <see cref="Extract{T}"/>
+		public void			Extract(int _amount)
+		{
+			// check) 
+			Debug.Assert(this.m_buffer != null);
+
+			// check)
+			if (this.IsEmpty())
+				throw new System.NullReferenceException("buffer is not allocated");
+
+			// 1) get count
+			var count = this.m_count;
+
+			// check)
+			if (count < _amount)
+				throw new System.OverflowException("buffer size overflow");
+
+			// 2) set offset & count
+			this.m_offset += _amount;
+			this.m_count = count - _amount;
+		}
 
 
 		// ----------------------------------------------------------------
