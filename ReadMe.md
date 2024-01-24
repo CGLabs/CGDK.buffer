@@ -31,7 +31,8 @@ C# 버전은 CGDK.buffer (https://github.com/CGLabs/CGDK.buffer/tree/master/C%23
 #### CGD.buffer 
    - C#버전<br>
    - 직렬화/역직렬화 방법은 C++과 동일합니다.(append/extract)<br>
-   - reflection을 사용하여 구현하였습니다.<br>
+   - C# 버전 중 최고 성능을 자랑합니다. (Message Pack, Memory Pack 이상!)<br>
+   - reflection과 Roslyn + Source Generation을 사용하여 구현하였습니다.<br>
    - C++ 버전과 호환됩니다.<br>
 <br>
 <br>
