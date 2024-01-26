@@ -750,6 +750,7 @@ namespace CGDK
 		// Append (serialize)
 		//
 		//	1) void Append<T>(T)
+		//	1) void Append<T>()
 		//  2) void Append(byte[], int, int)
 		//	3) void AppendText(string)
 		//	4) void AppendText(ICollection<string>)
@@ -819,6 +820,48 @@ namespace CGDK
 				BufferSerializer.Get<T>.instance.ProcessAppend(ref ptr_now, ptr_bound, _value);
 
 				// 3) update offset & count
+				this.m_count += (int)(ptr_now - ptr_pre);
+			}
+		}
+
+		/// <summary>
+		/// 데이터를 직렬화해 버퍼에 써넣는다.
+		/// </summary>
+		/// <typeparam name="T">직렬화할 대상 클래스</typeparam> 
+		/// <remarks>
+		/// 빈 데이터를 직렬화해 버퍼에 써 넣는다.<br/>
+		/// </remarks>
+		/// <see cref="AppendSkip(in int)"/>
+		/// <see cref="Append(in byte[], in int, in int)"/>
+		/// <see cref="Append{K, V}(in Dictionary{K, V})"/>
+		/// <see cref="AppendText(in string)"/>
+		/// <see cref="AppendText(string[])"/>
+		/// <see cref="Extract{T}"/>
+		/// <see cref="GetSizeOf{T}(in T)"/>
+		public unsafe void	Append<T>() where T: new()
+		{
+			// check) 
+			Debug.Assert(this.m_buffer != null);
+
+		#if _USE_BOUND_CHECK
+			// check)
+			if(this.m_buffer == null)
+				throw new System.NullReferenceException("buffer is not allocated");
+		#endif
+			// 1) 기본형을 얻는다.
+			var value = new T();
+
+			fixed (byte* ptr = this.m_buffer)
+			{
+				// 2) calculare ptr_now & ptr_bound
+				var ptr_pre = (long)ptr + this.m_offset + this.m_count;
+				var ptr_now = ptr_pre;
+				var ptr_bound = (long)ptr + this.m_buffer.Length;
+
+				// 3) append
+				BufferSerializer.Get<T>.instance.ProcessAppend(ref ptr_now, ptr_bound, value);
+
+				// 4) update offset & count
 				this.m_count += (int)(ptr_now - ptr_pre);
 			}
 		}
