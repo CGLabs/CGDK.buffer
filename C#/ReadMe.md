@@ -54,14 +54,13 @@ c# 최고 성능을 제공한다는 직렬화 라이브러리들보다 수배에
 
 ### 2. 초기화 하기<br>
    - 'CGDK.buffer'만 설치했다면 특별히 초기화를 할 필요가 없습니다.<br>
-   - 'CGDK.buffer.Generator'까지 설치했다면 활성화를 위해 프로그램 시작 부분에서 초기화를 위한 함수를 호출해 주어야 합니다.<br>
+   - '구조체 직렬화'의 성능 향상을 위해서는 'CGDK.buffer.Generator'까지 설치할 필요가 있습니다.<br>
+     '구조체 직렬화'를 사용하지 않는 다면 'CGDK.buffer.Generator'는 큰 효과가 없습니다.<br>
+     'CGDK.buffer.Generator'를 설치했을 경우 활성화를 위해 프로그램 시작 부분에서 초기화를 위한 함수를 호출해 주어야 합니다.<br>
       ``` C#
          CGDK.BufferSerializer.Generator.Initialize();
       ```
-   
-      이 함수를 호출해 주어야 합니다.<br>
-      호출해 주지 않아도 동작은 하지만 'CGDK.buffer.Generator'가 적용 되지 않아 향상된 성능을 제공하지 않습니다.<br>
-
+      호출해 주지 않아도 동작은 하지만 'CGDK.buffer.Generator'가 적용 되지 않아 향상된 '구조체 직렬화' 성능을 제공하지 않습니다.<br>
 
 ## CGD.buffer 직렬화/역직렬화 하기
 ### 1. 직렬화하기(Schemaless)  
@@ -126,7 +125,7 @@ public struct TEST
 {
     public int       x;
     public float     y;
-    [CGDK.Attribute.Filed(false)]
+    [CGDK.Attribute.Field(false)]
     public string    z; // z는 직렬화에서 제외됩니다.
     public List<int> w;
 };
