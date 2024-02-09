@@ -126,7 +126,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 		{
 			// - get symantic model
 			var symantic_model = context.Compilation.GetSemanticModel(syntaxTree);
-
+			 
 			// - extract class declaration info
 			GetClassDeclarationInfo(ref list_class_declaration, context, syntaxTree, symantic_model);
 
@@ -549,7 +549,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	{
 		// 1) find struct class declation
 		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // (1) 모든 자손들 노드 중에
-							.Where(node => node.IsKind(SyntaxKind.StructDeclaration)) // (2) Node Kind가 'class 선언'인 것만 골라서
+							.Where(node => node.IsKind(SyntaxKind.StructDeclaration)) // (2) Node Kind가 'struct 선언'인 것만 골라서
 							.Cast<StructDeclarationSyntax>() // (4) StructDeclarationSyntax로 캐스팅해서
 							.Where(x => (x as StructDeclarationSyntax)?.AttributeLists // (3) Attribute 중에 "CGDK.Attribute.Serializable"을 가진 것만 골라낸다!
 								.Where(x => x.ToString() == "[CGDK.Attribute.Serializable]").Any() ?? false)
@@ -567,10 +567,6 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 			// check) throw exception if type_info is null!
 			if (type_info == null)
 				throw new Exception();
-
-			// check) skip 'static' member
-			if (type_info.IsStatic == true)
-				continue;
 
 			// check) must be 'public' accessbility
 			if (type_info.DeclaredAccessibility != Accessibility.Public)
@@ -596,6 +592,8 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				null,
 				type_info.Locations.FirstOrDefault<Location>(),
 				null));
+
+				continue;
 			}
 
 			// 4) make full typ name string and identifier name
