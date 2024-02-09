@@ -418,12 +418,12 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	private static  void GetClassDeclarationInfo(ref List<OBJECT_INFO> _output, GeneratorExecutionContext _context, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
 	{
 		// 1) find class declation
-		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // (1) 모든 자손들 노드 중에
-							.Where(node => node.IsKind(SyntaxKind.ClassDeclaration)) // (2) Node Kind가 'class 선언'인 것만 골라서
-							.Cast<ClassDeclarationSyntax>() // (4) ClassDeclarationSyntax 캐스팅해서
-							.Where(x => (x.AttributeLists // (3) Attribute 중에 "CGDK.Attribute.Serializable"을 가진 것만 골라낸다!
+		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // 1. 모든 자손들 노드 중에
+							.Where(node => node.IsKind(SyntaxKind.ClassDeclaration)) // 2. Node Kind가 'class 선언'인 것만 골라서
+							.Cast<ClassDeclarationSyntax>() // 3. ClassDeclarationSyntax 캐스팅해서
+							.Where(x => (x.AttributeLists // 4. Attribute 중에 "CGDK.Attribute.Serializable"을 가진 것만 골라낸다!
 								.Where(x => x.ToString() == "[CGDK.Attribute.Serializable]").Any()))
-							.ToList()) // (5) 리스트로~
+							.ToList()) // 5. 리스트로~
 		{
 			// 2) alloc OBJECT_INFO
 			var class_info = new OBJECT_INFO();
@@ -471,19 +471,19 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				continue;
 			}
 
-			// 5) make full typ name string and identifier name
+			// 4) make full typ name string and identifier name
 			class_info.type_name = type_info.ToString();
 			class_info.identifier = iter.Identifier.ToString() + iter.GetHashCode().ToString();
 
-			// 6) make 'member_node_info' list
+			// 5) make 'member_node_info' list
 			class_info.list_member_node_info = [];
 
-			// 7) gatter members info
+			// 6) gatter members info
 			foreach (var member in type_info.GetMembers()
-								.Where(x => x.Kind == SymbolKind.Field || x.Kind == SymbolKind.Property) // 1) Field(변수) 혹은 Property 만 얻어서
-								.Where(x => (x.GetAttributes() // (2) Attribute 중에 "CGDK.Field"을 가진 것만 골라낸다!
+								.Where(x => x.Kind == SymbolKind.Field || x.Kind == SymbolKind.Property) // 1. Field(변수) 혹은 Property 만 얻어서
+								.Where(x => (x.GetAttributes() // 2. Attribute 중에 "CGDK.Field"을 가진 것만 골라낸다!
 									.Where(y => y.ToString() == "CGDK.Attribute.Field(true)").Any()))
-								.ToList()) // (3) 리스트로~
+								.ToList()) // 3. 리스트로~
 			{
 				// check)
 				if (member.DeclaredAccessibility != Accessibility.Public)
@@ -522,7 +522,7 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 				class_info.list_member_node_info.Add(member_node_info);
 			}
 
-			// 8) add struct info
+			// 7) add struct info
 			_output.Add(class_info);
 		}
 	}
@@ -548,12 +548,12 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 	private static void GetStructDeclarationInfo(ref List<OBJECT_INFO> _output, GeneratorExecutionContext _context, in SyntaxTree _syntax_tree, in SemanticModel _semantic_model)
 	{
 		// 1) find struct class declation
-		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // (1) 모든 자손들 노드 중에
-							.Where(node => node.IsKind(SyntaxKind.StructDeclaration)) // (2) Node Kind가 'struct 선언'인 것만 골라서
-							.Cast<StructDeclarationSyntax>() // (4) StructDeclarationSyntax로 캐스팅해서
-							.Where(x => (x as StructDeclarationSyntax)?.AttributeLists // (3) Attribute 중에 "CGDK.Attribute.Serializable"을 가진 것만 골라낸다!
+		foreach (var iter in _syntax_tree.GetRoot().DescendantNodes() // 1. 모든 자손들 노드 중에
+							.Where(node => node.IsKind(SyntaxKind.StructDeclaration)) // 2. Node Kind가 'struct 선언'인 것만 골라서
+							.Cast<StructDeclarationSyntax>() // 3. StructDeclarationSyntax로 캐스팅해서
+							.Where(x => (x as StructDeclarationSyntax)?.AttributeLists // 4. Attribute 중에 "CGDK.Attribute.Serializable"을 가진 것만 골라낸다!
 								.Where(x => x.ToString() == "[CGDK.Attribute.Serializable]").Any() ?? false)
-							.ToList()) // (5) List로...
+							.ToList()) // 5. List로...
 		{
 			// 2) alloc OBJECT_INFO
 			var struct_info = new OBJECT_INFO();
@@ -605,10 +605,10 @@ public partial class CGDKbufferGenerator : ISourceGenerator
 
 			// 6) gatter members info
 			foreach (var member in type_info.GetMembers()
-								.Where(x => x.Kind == SymbolKind.Field || x.Kind == SymbolKind.Property) // 1) Field(변수) 혹은 Property 만 얻어서
-								.Where(x => !(x.GetAttributes() // (2) Attribute 중에 "CGDK.Field"을 가진 것만 골라낸다!
+								.Where(x => x.Kind == SymbolKind.Field || x.Kind == SymbolKind.Property) // 1. Field(변수) 혹은 Property 만 얻어서
+								.Where(x => !(x.GetAttributes() // 2. Attribute 중에 "CGDK.Field"을 가진 것만 골라낸다!
 									.Where(y => y.ToString() == "CGDK.Attribute.Field(false)").Any()))
-								.ToList()) // (3) 리스트로~
+								.ToList()) // 3. 리스트로~
 			{
 				// check)
 				if (member.DeclaredAccessibility != Accessibility.Public)
