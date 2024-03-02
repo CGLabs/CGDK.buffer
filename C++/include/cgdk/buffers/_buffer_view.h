@@ -53,7 +53,7 @@ public:
 	template <class T, size_t N>
 	constexpr _buffer_view(std::array<T, N>& _array) noexcept : base_t{ N * sizeof(T), reinterpret_cast<element_t*>(_array.data()) } {}
 	template <class T>
-	constexpr _buffer_view(std::basic_string_view<T> _string) noexcept : base_t{ _string.size() * sizeof(T), reinterpret_cast<element_t*>(_string.data()) } {}
+	constexpr _buffer_view(std::basic_string_view<T> _string) noexcept : base_t{ _string.size() * sizeof(T), reinterpret_cast<element_t*>(const_cast<T*>(_string.data())) } {}
 
 // public) 
 public:
@@ -61,8 +61,14 @@ public:
 	constexpr bool				exist() const noexcept					{ return this->size_ != 0;}
 	constexpr bool				empty() const noexcept					{ return this->size_ == 0;}
 	constexpr size_type			size() const noexcept					{ return this->size_;}
+#ifdef _WIN32
+	#pragma warning(disable:4267)
+#endif
 	template <class CAST_SIZE_T>
 	constexpr CAST_SIZE_T		size() const noexcept					{ CGDK_ASSERT(this->size_ == static_cast<size_type>(static_cast<CAST_SIZE_T>(this->size_))); return static_cast<CAST_SIZE_T>(this->size_);}
+#ifdef _WIN32
+	#pragma warning(default:4267)
+#endif
 	constexpr size_type			size_bytes() const noexcept				{ return this->size_ * sizeof(element_t);}
 	template <class CAST_SIZE_T>
 	constexpr CAST_SIZE_T		size_bytes() const noexcept				{ auto bytes = size_bytes(); CGDK_ASSERT(bytes == static_cast<size_type>(static_cast<CAST_SIZE_T>(bytes))); return static_cast<CAST_SIZE_T>(bytes);}
