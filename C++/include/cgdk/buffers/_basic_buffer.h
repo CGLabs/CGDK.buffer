@@ -14,6 +14,10 @@
 
 #pragma once
 
+#if !defined(FMT_FORMAT_H_) && defined(__cpp_lib_format)
+	#include <format>
+#endif
+
 namespace CGDK
 {
 #if defined(FMT_FORMAT_H_)
@@ -22,21 +26,12 @@ namespace CGDK
 	{
 		return fmt::format(_format, std::forward<TREST>(_rest)...);
 	}
-#elif defined(__cpp_lib_format) && defined(_FORMAT_)
-	#include <format>
-	#if defined(__GNUC__)
+#else
+	#if !defined(__cpp_lib_format)
 		template <class T, class... TREST>
 		constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
 		{
-		#if defined(__linux__)
-			// check) GCC don't support {fmt} yet~ include {fmt} manually
-			assert(false);
-
-			// retrun) failre
-			return std::basic_string<T>();
-		#else
-			return std::format(_format, std::forward<TREST>(_rest)...);
-		#endif
+			static_assert(false, "no {fmt} support");
 		}
 	#else
 		template <class... TREST>
@@ -479,7 +474,7 @@ public:
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_prepend_string_format(const T* _format, TREST&&... _rest)
 	{
-#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+#if defined(FMT_FORMAT_H_) || defined(__cpp_lib_format)
 		// check) _format must not be nullptr
 		CGDK_ASSERT(_format != nullptr, throw std::invalid_argument("_format is nullptr [0]"));
 
@@ -586,7 +581,7 @@ public:
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_prepend_text_format(const T* _format, TREST&&... _rest)
 	{
-#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+#if defined(FMT_FORMAT_H_) || defined(__cpp_lib_format)
 		// check) _string이 nullptr이면 안된다.
 		CGDK_ASSERT(_format != nullptr, throw std::invalid_argument("_format is nullptr! [0]"));
 
@@ -1183,7 +1178,7 @@ public:
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_append_string_format(std::basic_string_view<T> _format, TREST&&... _rest)
 	{
-#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+#if defined(FMT_FORMAT_H_) || defined(__cpp_lib_format)
 		// 1) get formatted string
 		auto temp_buffer = _fmt_format_string(_format, std::forward<TREST>(_rest)...);
 		const auto length_string = temp_buffer.size() + 1;
@@ -1324,7 +1319,7 @@ public:
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_append_text_sprintf(const T* _format, TREST&&... _rest)
 	{
-#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+#if defined(FMT_FORMAT_H_) || defined(__cpp_lib_format)
 		//// 1) get max length
 		//const std::size_t max_length = _buffer_string_size_saturate((reinterpret_cast<const T*>(bound_upper) - reinterpret_cast<const T*>(buf_dest + sizeof(COUNT_T))));
 
@@ -1380,28 +1375,7 @@ public:
 		return this->_append_text(std::basic_string_view<T>(temp_buffer.data(), temp_buffer.size()));
 	}
 
-#elif defined(__cpp_lib_format) && defined(_FORMAT_)
-	#if defined(__GNUC__)
-	template <class T, class TFIRST, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-		_append_text_format(const T* _format, TFIRST&& _first, TREST&&... _rest)
-	{
-		// declare)
-		auto buf_dest = this->data_ + this->size_;
-
-		// 1) Generate trace Message
-		auto result = std::format_to_n(buf_dest, get_remained_size() - 1, std::_Fmt_string < T, TFIRST, TREST...>(std::forward<const T*>(_format)), std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...);
-
-		// 2) [문자열_길이]를 구한다.
-		auto size_string = result.out - buf_dest;
-
-		// 3) [문자열_길이]만큼 더한다.
-		this->size_ += size_string;
-
-		// return) 
-		return base_t(buf_dest, size_string);
-	}
-	#else
+#elif defined(__cpp_lib_format)
 	template <class TFIRST, class... TREST>
 	base_t _append_text_format(const char* _format, TFIRST&& _first, TREST&&... _rest)
 	{
@@ -1428,18 +1402,16 @@ public:
 		// return) 
 		return this->_append_text(std::wstring_view(temp_buffer.data(), temp_buffer.size()));
 	}
-	#endif
+
 #else
 	template <class T, class TFIRST, class... TREST>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-		_append_text_format(const T * _format, TFIRST && _first, TREST&&... _rest)
+		_append_text_format(const T* _format, TFIRST && _first, TREST&&... _rest)
 	{
 		#if defined(__cpp_lib_format)
-			//static_assert(false, "include <format> before including 'CGDK.buffer'");
-			throw std::exception("include <format> before including 'CGDK.buffer'");
+			static_assert(false, "include <format> before including 'CGDK.buffer'");
 		#else
-			//static_assert(false, "'std::format' is not supported");
-			throw std::exception("'std::format' is not supported");
+			static_assert(false, "'std::format' is not supported");
 		#endif
 	}
 #endif
@@ -1959,7 +1931,7 @@ protected:
 
 									// check) 
 									if(_rhs.get_front_ptr() < this->get_lower_bound())
-										throw std::length_error("buffer overflow. out of lower bound'");
+										throw std::length_error("buffer overflow. out of lower bound'");									
 
 									// check) 
 									CGDK_ASSERT(_rhs.get_back_ptr() <= this->get_upper_bound());

@@ -40,7 +40,7 @@ public:
 };
 
 // alloc_shared_buffer
-inline [[nodiscard]] _shared_buffer<buffer> _alloc_shared_buffer(std::size_t _size)
+inline _shared_buffer<buffer> _alloc_shared_buffer(std::size_t _size)
 {
 	// 1) alloc memory object
 	auto temp = std::make_shared<memory_general>(_size);
@@ -56,7 +56,7 @@ inline [[nodiscard]] _shared_buffer<buffer> _alloc_shared_buffer(std::size_t _si
 }
 
 template <class T>
-[[nodiscard]] _shared_buffer<buffer> _make_shared_buffer(const T& _data)
+_shared_buffer<buffer> _make_shared_buffer(const T& _data)
 {
 	// 1) allocate shared_buffer
 	auto buf_serialized = _alloc_shared_buffer(get_size_of(_data));
@@ -66,25 +66,6 @@ template <class T>
 
 	// 3) do post_process (optional)
 	_do_post_make_shared_buffer<T>(buf_serialized);
-
-	// return) 
-	return buf_serialized;
-}
-
-template <class T>
-[[nodiscard]] _shared_buffer<buffer> _make_shared_buffer()
-{
-	// definition)
-	typedef std::remove_reference_t<std::remove_cv_t<T>> TX;
-
-	// 1) allocate shared_buffer
-	auto buf_serialized = _alloc_shared_buffer(get_size_of(T()));
-
-	// 2) append _data
-	buf_serialized.template append<TX>();
-
-	// 3) do post_process (optional)
-	_do_post_make_shared_buffer<TX>(buf_serialized);
 
 	// return) 
 	return buf_serialized;
