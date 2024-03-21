@@ -136,7 +136,7 @@ public:
 			template <class T>																					  
 	constexpr prpd_tr<T>		prepend(const T& _data) { return PRPD_t<self_t, T>::_do_prepend(*this, _data);;}
 			template <class T>																					  
-	constexpr prpd_tr<T>		prepend(T&& _data) { return PRPD_t<self_t, T>::_do_prepend(*this, _data); _data = T();}
+	constexpr prpd_tr<T>		prepend(T&& _data) { return PRPD_t<self_t, T>::_do_prepend(*this, std::move(_data));}
 			template <class T> 																					  
 	constexpr base_t			prepend(const T* _data, std::size_t _count) { return _prepend_array(_data, _count);}
 			template <class T> 																					  
