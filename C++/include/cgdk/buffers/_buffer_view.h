@@ -36,24 +36,24 @@ public:
 	constexpr _buffer_view() noexcept {}
 	constexpr _buffer_view(_element_void_t<element_t>* _ptr, size_type _size = 0) noexcept : base_t{ _size, reinterpret_cast<element_t*>(_ptr) } {}
 	constexpr _buffer_view(const self_t& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
-	constexpr _buffer_view(self_t&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
+	constexpr _buffer_view(self_t&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } { _buffer = self_t(); }
 	template <class T>
 	constexpr _buffer_view(const _buffer_view<T>& _buffer) noexcept : base_t{ _buffer.size(), const_cast<std::remove_const_t<T>*>(_buffer.data()) } {}
 	template <class T>
-	constexpr _buffer_view(_buffer_view<T>&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
+	constexpr _buffer_view(_buffer_view<T>&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } { _buffer=_buffer_view<T>(); }
 	constexpr _buffer_view(const base_t& _buffer) noexcept : base_t{ _buffer.size_, _buffer.data_ } {}
 	template <class T>
 	constexpr _buffer_view(const buffer_base<T>& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
-	constexpr _buffer_view(base_t&& _buffer) noexcept : base_t{ _buffer.size_, _buffer.data_ } {}
+	constexpr _buffer_view(base_t&& _buffer) noexcept : base_t{ _buffer.size_, _buffer.data_ } { _buffer = base_t(); }
 	template <class T>
-	constexpr _buffer_view(buffer_base<T>&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } {}
+	constexpr _buffer_view(buffer_base<T>&& _buffer) noexcept : base_t{ _buffer.size(), _buffer.data() } { _buffer = buffer_base<T>(); }
 
 	template <class T, size_t N>
 	constexpr _buffer_view(T(&_array)[N]) noexcept : base_t{ N * sizeof(T), reinterpret_cast<element_t*>(_array) } {}
 	template <class T, size_t N>
 	constexpr _buffer_view(std::array<T, N>& _array) noexcept : base_t{ N * sizeof(T), reinterpret_cast<element_t*>(_array.data()) } {}
 	template <class T>
-	constexpr _buffer_view(std::basic_string_view<T> _string) noexcept : base_t{ _string.size() * sizeof(T), reinterpret_cast<element_t*>(const_cast<T*>(_string.data())) } {}
+	constexpr _buffer_view(std::basic_string_view<T> _string) noexcept : base_t{ _string.size() * sizeof(T), reinterpret_cast<element_t*>(_string.data()) } {}
 
 // public) 
 public:
@@ -126,66 +126,66 @@ public:
 			template<class... T>
 	constexpr self_t			extract(const std::tuple<T...>& _tuple)	{ auto buf_old = this->data_; _extract_tuple(_tuple); return self_t(buf_old, this->data_ - buf_old);}
 			template<class... T>
-	constexpr self_t			extract(std::tuple<T...>&& _tuple)		{ auto buf_old = this->data_; _extract_tuple(std::move(_tuple)); return self_t(buf_old, this->data_ - buf_old);}
-	constexpr std::string_view	extract_web_modify()					{ return _extract_web_modify();}
+	constexpr self_t			extract(std::tuple<T...>&& _tuple)		{ auto buf_old = this->data_; _extract_tuple(std::move(_tuple)); return self_t(buf_old, this->data_ - buf_old); _tuple = std::tuple<T...>(); }
+	constexpr std::string_view	extract_web_modify()					{ return this->_extract_web_modify();}
 			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
-								extract_text(T _terminal = 0)			{ return _extract_text(_terminal);}
+								extract_text(T _terminal = 0)			{ return this->_extract_text(_terminal);}
 			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
-								extract_text(T _terminal, T _modify)	{ return _extract_text(_terminal, _modify);}
+								extract_text(T _terminal, T _modify)	{ return this->_extract_text(_terminal, _modify);}
 			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
 								extract_text(CGDK::size _length)		{ return _extract_text<T>(_length.amount);}
 
 			template <class T>
-	constexpr auto&				subtract()								{ return _subtract_general<T>();}
-	constexpr auto				subtract(size_type _length)				{ return _subtract_bytes(_length);}
+	constexpr auto&				subtract()								{ return this->_subtract_general<T>();}
+	constexpr auto				subtract(size_type _length)				{ return this->_subtract_bytes(_length);}
 
 	// 5) front
-	constexpr auto				front(int64_t _offset = 0) const		{ return _front(_offset);}
+	constexpr auto				front(int64_t _offset = 0) const		{ return this->_front(_offset);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, peek_tr<T>>
-								front(int64_t _offset = 0) const		{ return _front<T>(_offset);}
+								front(int64_t _offset = 0) const		{ return this->_front<T>(_offset);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, T>
-								front(int64_t _offset = 0) const		{ return _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_offset);}
+								front(int64_t _offset = 0) const		{ return this->_front_general<std::remove_reference_t<std::remove_const_t<T>>>(_offset);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, void>
-								front_to(T& _dest, int64_t _offset = 0) const { _front<T>(_dest, _offset);}
+								front_to(T& _dest, int64_t _offset = 0) const { this->_front<T>(_dest, _offset);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, void>
-								front_to(T& _dest, int64_t _offset = 0) const { _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_dest, _offset);}
+								front_to(T& _dest, int64_t _offset = 0) const { this->_front_general<std::remove_reference_t<std::remove_const_t<T>>>(_dest, _offset);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, peek_tr<T>>
-								front(offset& _pos) const				{ return _front<T>(_pos.amount);}
+								front(offset& _pos) const				{ return this->_front<T>(_pos.amount);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, T>
-								front(offset& _pos) const				{ return _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_pos.amount);}
+								front(offset& _pos) const				{ return this->_front_general<std::remove_reference_t<std::remove_const_t<T>>>(_pos.amount);}
 			template <class T>
 	constexpr std::enable_if_t<!std::is_reference_v<T>, void>
-								front_to(T& _dest, offset& _pos) const	{ _front<T>(_dest, _pos.amount);}
+								front_to(T& _dest, offset& _pos) const	{ this->_front<T>(_dest, _pos.amount);}
 			template <class T>
 	constexpr std::enable_if_t<std::is_reference_v<T>, void>
-								front_to(T& _dest, offset& _pos) const	{ _front_general<std::remove_reference_t<std::remove_const_t<T>>>(_dest, _pos.amount);}
+								front_to(T& _dest, offset& _pos) const	{ this->_front_general<std::remove_reference_t<std::remove_const_t<T>>>(_dest, _pos.amount);}
 			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
-								front_text(T _terminal = 0, int64_t _offset = 0) { return _front(_text<T>(_terminal, _offset));}
+								front_text(T _terminal = 0, int64_t _offset = 0) { return this->_front(_text<T>(_terminal, _offset));}
 			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, std::basic_string_view<T>>
-								front_text(CGDK::size _length, int64_t _offset = 0) { return _front_text_by_length<T>(_length.amount, _offset);}
+								front_text(CGDK::size _length, int64_t _offset = 0) { return this->_front_text_by_length<T>(_length.amount, _offset);}
 
 	// 6) back
-	constexpr auto				back(int64_t _offset = 0) const			{ return _back(_offset);}
+	constexpr auto				back(int64_t _offset = 0) const			{ return this->_back(_offset);}
 			template <class T>
-	constexpr peek_tr<T>		back(int64_t _offset = 0) const			{ return _back<T>(_offset);}
+	constexpr peek_tr<T>		back(int64_t _offset = 0) const			{ return this->_back<T>(_offset);}
 			template <class T>
-	constexpr peek_tr<T>		back(offset& _pos) const				{ return _back<T>(_pos.amount);}
+	constexpr peek_tr<T>		back(offset& _pos) const				{ return this->_back<T>(_pos.amount);}
 
 	// 7) begin/end														  
-	constexpr auto				begin() const							{ return _begin();}
-	constexpr auto				end() const								{ return _end();}
-	constexpr auto				end(int _offset) const					{ return _end(_offset);}
+	constexpr auto				begin() const							{ return this->_begin();}
+	constexpr auto				end() const								{ return this->_end();}
+	constexpr auto				end(int _offset) const					{ return this->_end(_offset);}
 	constexpr auto				get_front_ptr() const noexcept			{ return this->data_;}
 			template <class T>
 	constexpr auto				get_front_ptr() const noexcept			{ return reinterpret_cast<T*>(this->data_); }
@@ -217,16 +217,16 @@ public:
 	constexpr self_t&			operator= (const self_t& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
 			template<class T>
 	constexpr self_t&			operator= (const _buffer_view<T>& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
-	constexpr self_t&			operator= (self_t&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
+	constexpr self_t&			operator= (self_t&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); _rhs.clear(); return *this; }
 			template<class T>
-	constexpr self_t&			operator= (_buffer_view<T>&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
+	constexpr self_t&			operator= (_buffer_view<T>&& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); _rhs.clear(); return *this; }
 			// [operator] =				   
 	constexpr self_t&			operator= (const base_t& _rhs) noexcept { this->data_ =_rhs.data(); this->size_ =_rhs.size(); return *this;}
 			template<class T>
 	constexpr self_t&			operator= (const buffer_base<T>& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
-	constexpr self_t&			operator= (base_t&& _rhs) noexcept { this->data_ =_rhs.data_; this->size_ =_rhs.size_; return *this;}
+	constexpr self_t&			operator= (base_t&& _rhs) noexcept { this->data_ =_rhs.data_; this->size_ =_rhs.size_; _rhs = base_t(); return *this;}
 			template<class T>
-	constexpr self_t&			operator= (buffer_base<T>&& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+	constexpr self_t&			operator= (buffer_base<T>&& _rhs) noexcept { this->data_ = _rhs.data(); this->size_ = _rhs.size(); _rhs = buffer_base<T>();return *this; }
 
 			// [operator] +=/-=
 	constexpr self_t&			operator+= (CGDK::offset _rhs)
@@ -252,11 +252,11 @@ public:
 			template<class T>
 	constexpr self_t&			operator^=(const _buffer_view<T>& _rhs)	{ this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
 			template<class T>
-	constexpr self_t&			operator^=(_buffer_view<T>&& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+			constexpr self_t& operator^=(_buffer_view<T>&& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); _rhs = _buffer_view<T>(); return *this; }
 			template<class T>
 	constexpr self_t&			operator^=(const buffer_base<T>& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
 			template<class T>
-	constexpr self_t&			operator^=(buffer_base<T>&& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); return *this; }
+	constexpr self_t&			operator^=(buffer_base<T>&& _rhs) { this->data_ = _rhs.data(); this->size_ = _rhs.size(); _rhs = buffer_base<T>();return *this; }
 	constexpr self_t&			operator^=(size_type _rhs) { this->size_ = _rhs; return *this;}
 			// [operator] >> - extract
 			template <class T>

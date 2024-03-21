@@ -1,3 +1,8 @@
+## CGDK 3.22 (2024.3.22)
+   #### (C++)
+   * buffer를 std::move했을 때 data_와 size_값을 nullptr와 0으로 reset 되도록 수정.
+   * gcc-13 컴파일 나는 error 수정.
+     
 ## CGDK 3.21 (2023.12.4)
    #### (C#)
    * No Unsafe
