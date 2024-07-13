@@ -14,40 +14,8 @@
 
 #pragma once
 
-#if !defined(FMT_FORMAT_H_) && defined(__cpp_lib_format)
-	#include <format>
-#endif
-
 namespace CGDK
 {
-#if defined(FMT_FORMAT_H_)
-	#define _CGDBUFFER_FMT
-	template <class T, class... TREST>
-	constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
-	{
-		return fmt::format(_format, std::forward<TREST>(_rest)...);
-	}
-#else
-	#if !defined(__cpp_lib_format)
-		template <class T, class... TREST>
-		constexpr std::basic_string<T> _fmt_format_string(std::basic_string_view<T> _format, TREST&&... _rest)
-		{
-			static_assert(false, "no {fmt} support");
-		}
-	#else
-		#define _CGDBUFFER_FMT
-		template <class... TREST>
-		constexpr std::string _fmt_format_string(std::string_view _format, TREST&&... _rest)
-		{
-			return std::vformat(_format, std::make_format_args(std::forward<TREST>(_rest)...));
-		}
-		template <class... TREST>
-		constexpr std::wstring _fmt_format_string(std::wstring_view _format, TREST&&... _rest)
-		{
-			return std::vformat(_format, std::make_wformat_args(std::forward<TREST>(_rest)...));
-		}
-	#endif
-#endif
 
 template <class ELEM_T>
 class _basic_buffer : public _buffer_view<char>
@@ -149,25 +117,10 @@ public:
 			auto				prepend(std::size_t _size, const void* _buffer) { return _prepend_bytes(_size, _buffer);}
 			template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_string(std::basic_string_view<T> _text) { return _prepend_string(_text);}
-			template <class T, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_string(const std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _prepend_string_format(_format.data(), std::forward<F>(_first), std::forward<TREST>(_rest)...);}
-			template <class T, std::size_t N, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_string(const T(&_format)[N], F&& _first, TREST&&... _rest) { return _prepend_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
-			template <class T>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								prepend_text(std::string_view _text) { return _prepend_text(_text);}
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								prepend_text(const T(&_text)[N]) { return _prepend_text(_text);}
-			template <class T, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return _prepend_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
-			template <class T, std::size_t N, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								prepend_text(const T(&_format)[N], F&& _first, TREST&&... _rest) { return _prepend_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 
 	// 4) append
 			template <std::size_t N>
@@ -192,26 +145,16 @@ public:
 								append(I _first, I _last) { return _append_iterator(_first, _last);}
 	constexpr auto				append(std::size_t _size, const void* _buffer) { return this->_append_bytes(_size, _buffer); }
 
-			template <class T, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return this->_append_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
-			template <class T, std::size_t N, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append(const T(&_format)[N], F&& _first, TREST&&... _rest) { return this->_append_string_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
 			template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(std::basic_string_view<T> _text) { return this->_append_text(_text);}
+								append_text(const std::basic_string_view<T> _text) { return this->_append_text(_text);}
+			template <class T>
+	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
+								append_text(const std::basic_string<T>& _text) { return this->_append_text(std::basic_string_view<T>(_text));}
 
 			template <class T, std::size_t N>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								append_text(const T(&_text)[N]) { return this->_append_text(_text);}
-			template <class T, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(std::basic_string_view<T> _format, F&& _first, TREST&&... _rest) { return this->_append_text_format(_format.data(), std::forward<F>(_first), std::forward<TREST>(_rest)...);}
-			template <class T, std::size_t N, class F, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(const T(&_format)[N] , F&& _first, TREST&&... _rest) { return this->_append_text_format(_format, std::forward<F>(_first), std::forward<TREST>(_rest)...);}
-
 			template <class T = char, class TNUM>
 	constexpr std::enable_if_t<std::is_integral_v<TNUM>, base_t>
 				 				append_text(TNUM _value) { return this->_append_text_integer<T>(_value);}
@@ -472,53 +415,6 @@ public:
 		return base_t(p, added_length);
 	}
 
-	template <class T, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								_prepend_string_format(const T* _format, TREST&&... _rest)
-	{
-#if defined(_CGDBUFFER_FMT)
-		// check) _format must not be nullptr
-		CGDK_ASSERT(_format != nullptr, throw std::invalid_argument("_format is nullptr [0]"));
-
-		// 1) store data_
-		auto buf_old = this->data_;
-
-		// 2) [원본_버퍼_시작_크기]에 [형식_문자열]를 써넣는다.
-		auto temp_buffer = _fmt_format_string(std::basic_string_view<T>(_format), std::forward<TREST>(_rest)...);
-		const auto str_start = temp_buffer.data();
-		const auto length_string = temp_buffer.size() + 1;
-		const auto size_string = length_string * sizeof(T);
-
-		// 3) [목표_포인터]를 구한다.
-		auto p = this->data_ - size_string;
-
-		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((p - sizeof(COUNT_T)) >= this->get_lower_bound());
-	
-		// 4) [문자열]을 복사한다.
-		memcpy(p, str_start, size_string);
-
-		// 5) [목표_포인터]를 sizeof(COUNT_T)만큼을 뺀다.
-		p -= sizeof(COUNT_T);
-
-		// 6) [문자열_길이]를 써넣는다.
-		*reinterpret_cast<COUNT_T*>(p) = static_cast<COUNT_T>(length_string);
-
-		// 7)[원본_버퍼_포인터]를 업데이트한다.
-		this->data_ = p;
-		this->size_ += size_string + sizeof(COUNT_T);
-
-		// return) 
-		return base_t(this->data_, buf_old - p);
-#else
-		#if defined(__cpp_lib_format)
-			CGDK_ASSERT(false, "include <format> before including 'CGDK.buffer'");
-			throw std::exception("include <format> before including 'CGDK.buffer'");
-		#else
-			throw std::exception("'std::format' is not supported");
-		#endif
-#endif
-	}
 	template <class T>
 	constexpr base_t			_prepend_text(std::string_view _string)
 	{
@@ -576,43 +472,6 @@ public:
 
 		// return) 
 		return base_t(p, size_string);
-	}
-
-	template <class T, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								_prepend_text_format(const T* _format, TREST&&... _rest)
-	{
-#if defined(_CGDBUFFER_FMT)
-		// check) _string이 nullptr이면 안된다.
-		CGDK_ASSERT(_format != nullptr, throw std::invalid_argument("_format is nullptr! [0]"));
-
-		auto temp_buffer = _fmt_format_string(std::basic_string_view<T>(_format), std::forward<TREST>(_rest)...);
-		const auto str_start = temp_buffer.data();
-		const auto size_string = (temp_buffer.size() + 1) * sizeof(T);
-
-		// 6) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
-		auto p = this->data_ - size_string;
-
-		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK(p >= this->get_lower_bound());
-
-		// 7) [문자열]을 추가한다.
-		memcpy(p, str_start, size_string);
-
-		// 9) [원본_버퍼_포인터]와 [원본_버퍼_길이]를 옮긴다.
-		this->data_ = p;
-		this->size_ += size_string;
-
-		// return) 
-		return base_t(p, size_string);
-#else
-		#if defined(__cpp_lib_format)
-			CGDK_ASSERT(false, "include <format> before including 'CGDK.buffer'");
-			throw std::exception("include <format> before including 'CGDK.buffer'");
-		#else
-			throw std::exception("'std::format' is not supported");
-		#endif
-#endif
 	}
 	constexpr base_t			_prepend_bytes(std::size_t _size, const void* _buffer)
 	{
@@ -1174,51 +1033,6 @@ public:
 		// return) 리턴
 		return base_t(buf_dest, added_length);
 	}
-	template <class T, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								_append_string_format(std::basic_string_view<T> _format, TREST&&... _rest)
-	{
-#if defined(_CGDBUFFER_FMT)
-		// 1) get formatted string
-		auto temp_buffer = _fmt_format_string(_format, std::forward<TREST>(_rest)...);
-		const auto length_string = temp_buffer.size() + 1;
-		const auto size_string = length_string * sizeof(T);
-
-		// 2) get [dest]
-		const auto buf_dest = this->data_ + this->size_;
-
-		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + sizeof(COUNT_T) + size_string) <= this->get_upper_bound());
-
-		// 4) store [string_length]
-		*reinterpret_cast<COUNT_T*>(buf_dest) = static_cast<COUNT_T>(length_string);
-
-		// 5) copy string to buffer
-		::memcpy(buf_dest + sizeof(COUNT_T), temp_buffer.data(), size_string);
-
-		// 6) get added length
-		const auto added_length = size_string + sizeof(COUNT_T);
-
-		// 7) update [size_]
-		this->size_ += added_length;
-
-		// return)
-		return base_t(buf_dest, added_length);
-#else
-		#if defined(__cpp_lib_format)
-			CGDK_ASSERT(false, "include <format> before including 'CGDK.buffer'");
-			throw std::exception("include <format> before including 'CGDK.buffer'");
-		#else
-			throw std::exception("'std::format' is not supported");
-		#endif
-#endif
-	}
-	template <class T, std::size_t N, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								_append_string_format(const T(&_format)[N], TREST&&... _rest)
-	{
-		return _append_string_format(std::basic_string_view<T>(_format), std::forward<TREST>(_rest)...);
-	}
 	template <class T>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
 								_append_text(std::basic_string_view<T> _string)
@@ -1314,106 +1128,6 @@ public:
 		// return) 
 		return base_t(buf_dest, size_string);
 	}
-	template <class T, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								_append_text_sprintf(const T* _format, TREST&&... _rest)
-	{
-#if defined(_CGDBUFFER_FMT)
-		//// 1) get max length
-		//const std::size_t max_length = _buffer_string_size_saturate((reinterpret_cast<const T*>(bound_upper) - reinterpret_cast<const T*>(buf_dest + sizeof(COUNT_T))));
-
-		// 1) get formatted string
-		auto temp_buffer = _fmt_format_string(std::basic_string_view<T>(_format), std::forward<TREST>(_rest)...);
-		const auto length_string = temp_buffer.size();
-		const auto size_string = length_string * sizeof(T);
-
-		// 2) get [dest]
-		const auto buf_dest = this->data_ + this->size_;
-
-		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + size_string) <= this->get_upper_bound());
-
-		// 5) copy string to buffer
-		::memcpy(buf_dest, temp_buffer.data(), size_string);
-
-		// 6) get added length
-		const auto added_length = size_string;
-
-		// 7) update [size_]
-		this->size_ += added_length;
-
-		// return)
-		return base_t(buf_dest, added_length);
-#else
-		#if defined(__cpp_lib_format)
-			CGDK_ASSERT(false, "include <format> before including 'CGDK.buffer'");
-			throw std::exception("include <format> before including 'CGDK.buffer'");
-		#else
-			throw std::exception("'std::format' is not supported");
-		#endif
-#endif
-	}
-
-#if defined(FMT_FORMAT_H_)
-	template <class T, class TFIRST, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-		_append_text_format(const T* _format, TFIRST&& _first, TREST&&... _rest)
-	{
-		// declare) 
-		fmt::basic_memory_buffer<T> temp_buffer;
-
-		// 1) Generate trace Message
-		fmt::format_to(temp_buffer, _format, std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...);
-
-		// check)
-		if (temp_buffer.size() <= 0)
-			return base_t();
-
-		// return) 
-		return this->_append_text(std::basic_string_view<T>(temp_buffer.data(), temp_buffer.size()));
-	}
-
-#elif defined(__cpp_lib_format)
-	template <class TFIRST, class... TREST>
-	base_t _append_text_format(const char* _format, TFIRST&& _first, TREST&&... _rest)
-	{
-		// 1) Generate trace Message
-		auto temp_buffer = std::vformat(_format, std::make_format_args(std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...));;
-
-		// check)
-		if (temp_buffer.size() <= 0)
-			return base_t();
-
-		// return) 
-		return this->_append_text(std::string_view(temp_buffer.data(), temp_buffer.size()));
-	}
-	template <class TFIRST, class... TREST>
-	base_t _append_text_format(const wchar_t* _format, TFIRST&& _first, TREST&&... _rest)
-	{
-		// 1) Generate trace Message
-		auto temp_buffer = std::vformat(_format, std::make_wformat_args(std::forward<TFIRST>(_first), std::forward<TREST>(_rest)...));;
-
-		// check)
-		if (temp_buffer.size() <= 0)
-			return base_t();
-
-		// return) 
-		return this->_append_text(std::wstring_view(temp_buffer.data(), temp_buffer.size()));
-	}
-
-#else
-	template <class T, class TFIRST, class... TREST>
-	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-		_append_text_format(const T* _format, TFIRST && _first, TREST&&... _rest)
-	{
-		#if defined(__cpp_lib_format)
-			CGDK_ASSERT(false, "include <format> before including 'CGDK.buffer'");
-			throw std::exception("include <format> before including 'CGDK.buffer'");
-		#else
-			throw std::exception("'std::format' is not supported");
-		#endif
-	}
-#endif
 	constexpr base_t			_append_bytes(std::size_t _size, const void* _buffer)
 	{
 		// check) _buffer이 nullptr이면 안된다.
@@ -1532,7 +1246,7 @@ public:
 	constexpr base_t			_append_text_integer(uint64_t _value)
 	{
 		// declare) 
-		T temp_buf[32];
+		T temp_buf[32]{};
 		auto pos_now = temp_buf;
 
 		// 1) ...
@@ -1574,7 +1288,7 @@ public:
 	constexpr base_t			_append_text_integer(int64_t _value)
 	{
 		// declare) 
-		T temp_buf[32];
+		T temp_buf[32]{};
 		auto pos_now = temp_buf;
 
 		// 1-1) positive value
