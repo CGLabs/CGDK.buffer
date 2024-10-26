@@ -28,10 +28,11 @@
   <ItemGroup>
     <Analyzer Include="..\..\..\dll\CGDK.buffer.Generator.dll" />
   </ItemGroup>
+
   <ItemGroup>
-  <Reference Include="CGDK.buffer.NET">
-    <HintPath>..\..\..\dll\CGDK.buffer.NET.dll</HintPath>
-  </Reference>
+    <Reference Include="CGDK.buffer">
+      <HintPath>..\..\..\dll\CGDK.buffer.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Import Project="..\CGDK.buffer.unit_test.performance.CGDK.projitems" Label="Shared" />

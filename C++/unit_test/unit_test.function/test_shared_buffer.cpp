@@ -230,18 +230,18 @@ namespace CGDK
 		auto buf_test = (buf_temp ^ OFFSET) + offset(OFFSET);
 
 		// - 값 써넣기
-		buf_test.prepend(strTest1);
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
-		buf_test.prepend_string(std::string_view{ "Test {} {}" }, 10, 20);
+		buf_test.prepend(strTest3);
+	#if defined(__cpp_lib_format)
+		buf_test.prepend(std::format("Test {} {}", 10, 20));
 	#endif
-		buf_test.prepend_string(strTest3);
+		buf_test.prepend(strTest1);
 
 		// - 값 읽기
-		[[maybe_unused]] auto str_read_3 = buf_test.extract<std::string_view>();
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+		[[maybe_unused]] auto str_read_1 = buf_test.extract<std::string_view>();
+	#if defined(__cpp_lib_format)
 		[[maybe_unused]] auto str_read_2 = buf_test.extract<std::string_view>();
 	#endif
-		[[maybe_unused]] auto str_read_1 = buf_test.extract<std::string_view>();
+		[[maybe_unused]] auto str_read_3 = buf_test.extract<std::string_view>();
 
 		// check) 
 		EXPECT_TRUE(buf_test.size() == 0);
@@ -299,13 +299,13 @@ namespace CGDK
 		auto buf_temp = alloc_shared_buffer(2048);
 
 		// - 값 써넣기
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
-		buf_temp.append(std::string_view{ "Test {} {}" }, 10, 20);
+	#if defined(__cpp_lib_format)
+		buf_temp.append(std::format( "Test {} {}", 10, 20) );
 	#endif
 		buf_temp.append(std::string_view{ "Test" });
 
 		// - 값 읽기
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+	#if defined(__cpp_lib_format)
 		[[maybe_unused]] auto str_read_1 = buf_temp.extract<std::string_view>();
 	#endif
 		[[maybe_unused]] auto str_read_2 = buf_temp.extract<std::string_view>();

@@ -253,18 +253,18 @@ namespace CGDK
 		CGDK::buffer buf_test = CGDK::buffer{ buf_array } + size(OFFSET) + offset(OFFSET);
 
 		// - 값 써넣기
-		buf_test.prepend(strTest1);
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
-		buf_test.prepend_string(std::string_view{ "Test {} {}" }, 10, 20);
+		buf_test.prepend(strTest3);
+	#if defined(__cpp_lib_format)
+		buf_test.prepend(std::format("Test {} {}", 10, 20));
 	#endif
-		buf_test.prepend_string(strTest3);
+		buf_test.prepend(strTest1);
 
 		// - 값 읽기
-		[[maybe_unused]] auto str_read_3 = buf_test.extract<std::string_view>();
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+		[[maybe_unused]] auto str_read_1 = buf_test.extract<std::string_view>();
+	#if defined(__cpp_lib_format)
 		[[maybe_unused]] auto str_read_2 = buf_test.extract<std::string_view>();
 	#endif
-		[[maybe_unused]] auto str_read_1 = buf_test.extract<std::string_view>();
+		[[maybe_unused]] auto str_read_3 = buf_test.extract<std::string_view>();
 
 		// check) 
 		EXPECT_TRUE(buf_test.size() == 0);
@@ -272,7 +272,7 @@ namespace CGDK
 		EXPECT_TRUE(strTest3 == str_read_3);
 	}
 
-	TEST(CGDK_buffer_view, buffer_append_string)
+	TEST(CGDK_buffer_view, buffer_append_string_view)
 	{
 		// Defintions)
 		std::string_view str_test{ "Test String" };
@@ -289,15 +289,30 @@ namespace CGDK
 		// check) 
 		EXPECT_TRUE(buf_test.size() == get_size_of(str_test));
 
+		// - 값 써넣기
+		buf_test.append(std::string_view(str_test));
+
+		// check) 
+		EXPECT_TRUE(buf_test.size() == (get_size_of(str_test) + get_size_of(std::string_view(str_test))));
+
 		// - 값 읽기
-		auto str_read = buf_test.extract<std::string_view>();
+		auto str_read1 = buf_test.extract<std::string_view>();
+
+		// check) 
+		EXPECT_TRUE(buf_test.size() == get_size_of(std::string_view(str_test)));
+
+		// - 값 읽기
+		auto str_read2 = buf_test.extract<std::string_view>();
 
 		// check) 
 		EXPECT_TRUE(buf_test.size() == 0);
-		EXPECT_TRUE(str_test == str_read);
+
+		// check) 
+		EXPECT_TRUE(str_test == str_read1);
+		EXPECT_TRUE(str_test == str_read2);
 	}
 
-	TEST(CGDK_buffer_view, buffer_append_string_view)
+	TEST(CGDK_buffer_view, buffer_append_string)
 	{
 		// Defintions)
 		std::string	str_test{ "Test String" };
@@ -314,12 +329,27 @@ namespace CGDK
 		// check) 
 		EXPECT_TRUE(buf_temp.size() == get_size_of(str_test));
 
+		// - 값 써넣기
+		buf_temp.append(std::string(str_test));
+
+		// check) 
+		EXPECT_TRUE(buf_temp.size() == (get_size_of(str_test) + get_size_of(std::string(str_test))));
+
 		// - 값 읽기
-		auto str_read = buf_temp.extract<std::string_view>();
+		auto str_read1 = buf_temp.extract<std::string>();
+
+		// check) 
+		EXPECT_TRUE(buf_temp.size() == get_size_of(std::string(str_test)));
+
+		// check) 
+		auto str_read2 = buf_temp.extract<std::string>();
 
 		// check) 
 		EXPECT_TRUE(buf_temp.size() == 0);
-		EXPECT_TRUE(std::char_traits<char>::compare(str_test.data(), str_read.data(), 0)==0);
+
+		// check) 
+		EXPECT_TRUE(std::char_traits<char>::compare(str_test.data(), str_read1.data(), 0) == 0);
+		EXPECT_TRUE(std::char_traits<char>::compare(str_test.data(), str_read2.data(), 0) == 0);
 	}
 
 	TEST(CGDK_buffer_view, buffer_append_string_format)
@@ -331,13 +361,13 @@ namespace CGDK
 		CGDK::buffer buf_temp{ buf_array };
 
 		// - 값 써넣기
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
-		buf_temp.append(std::string_view{ "Test {} {}" }, 10, 20);
+	#if defined(__cpp_lib_format)
+		buf_temp.append(std::format("Test {} {}", 10, 20));
 	#endif
 		buf_temp.append(std::string_view{ "Test" });
 
 		// - 값 읽기
-	#if defined(FMT_FORMAT_H_) || (defined(__cpp_lib_format) && defined(_FORMAT_))
+	#if defined(__cpp_lib_format)
 		[[maybe_unused]] auto str_read_1 = buf_temp.extract<std::string_view>();
 	#endif
 		[[maybe_unused]] auto str_read_2 = buf_temp.extract<std::string_view>();
@@ -4593,7 +4623,7 @@ namespace CGDK
 		{
 			CGDK::buffer buf_test = buf_alloc;
 
-			const auto str_test = "test string";
+			const std::string_view str_test = "test string";
 
 			// - append text
 			buf_test.append_text<char>(str_test);
@@ -4608,7 +4638,7 @@ namespace CGDK
 		{
 			CGDK::buffer buf_test = buf_alloc;
 
-			const auto str_test = L"test string";
+			const std::wstring_view str_test = L"test string";
 
 			// - append text
 			buf_test.append_text<wchar_t>(str_test);

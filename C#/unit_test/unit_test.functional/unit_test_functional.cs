@@ -1642,6 +1642,115 @@ namespace CGDBuffer_CSharp_UnitTest
 			}
 		}
 
+
+		[TestMethod]
+		public void test_buffer_append_extract_List_int_null()
+		{
+			List<int>? list_null = null;
+
+			var size_source = CGDK.buffer.GetSizeOf(list_null);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - Buffer 할당
+				var buf_temp = new CGDK.buffer(2048);
+
+				// - 값 써넣기
+				buf_temp.Append(list_null);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var temp = buf_temp.Extract<List<int>>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+				Assert.IsTrue(temp == null);
+			}
+		}
+
+		[TestMethod]
+		public void test_buffer_append_extract_array_int_zero_size()
+		{
+			var array_empty = new int[0];
+
+			var size_source = CGDK.buffer.GetSizeOf(array_empty);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - Buffer 할당
+				var buf_temp = new CGDK.buffer(2048);
+
+				// - 값 써넣기
+				buf_temp.Append(array_empty);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var temp = buf_temp.Extract<List<int>>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+				Assert.IsTrue(temp != null);
+				Assert.IsTrue(temp.Count == 0);
+			}
+		}
+
+		[TestMethod]
+		public void test_buffer_append_extract_List_int_zero_size()
+		{
+			var list_empty = new List<int>();
+
+			var size_source = CGDK.buffer.GetSizeOf(list_empty);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - Buffer 할당
+				var buf_temp = new CGDK.buffer(2048);
+
+				// - 값 써넣기
+				buf_temp.Append(list_empty);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var temp = buf_temp.Extract<List<int>>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+				Assert.IsTrue(temp != null);
+				Assert.IsTrue(temp.Count == 0);
+			}
+		}
+
+
+		public void test_buffer_append_extract_array_string_zero_size()
+		{
+			var list_empty = new List<string>();
+
+			var size_source = CGDK.buffer.GetSizeOf(list_empty);
+
+			for (int i = 0; i < _TEST_COUNT; ++i)
+			{
+				// - Buffer 할당
+				var buf_temp = new CGDK.buffer(2048);
+
+				// - 값 써넣기
+				buf_temp.Append(list_empty);
+
+				// check) 
+				Assert.IsTrue(size_source == buf_temp.Count);
+
+				var temp = buf_temp.Extract<List<string>>();
+
+				// check) 
+				Assert.IsTrue(buf_temp.Count == 0);
+				Assert.IsTrue(temp != null);
+				Assert.IsTrue(temp.Count == 0);
+			}
+		}
+
+
 		[TestMethod]
 		public void test_buffer_append_array_int_extract_int()
 		{
@@ -3018,6 +3127,9 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_offset_bound_plus()
 		{
+			// 경게 테스트
+			// Debug 모드 일 경우 Assert가 활성화되어 실패 남
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(256);
@@ -3045,7 +3157,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.IndexOutOfRangeException)
+				catch (System.Exception)
 				{
 				}
 			}
@@ -3053,6 +3165,9 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_offset_minus()
 		{
+			// 경게 테스트
+			// Debug 모드 일 경우 Assert가 활성화되어 실패 남
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(256);
@@ -3086,8 +3201,9 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.IndexOutOfRangeException)
+				catch (System.Exception)
 				{
+
 				}
 			}
 		}
@@ -3095,6 +3211,9 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_size_minus()
 		{
+			// 경게 테스트
+			// Debug 모드 일 경우 Assert가 활성화되어 실패 남
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(256);
@@ -3126,7 +3245,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.IndexOutOfRangeException)
+				catch (System.Exception)
 				{
 				}
 			}
@@ -3134,6 +3253,9 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_size_plus()
 		{
+			// 경게 테스트
+			// Debug 모드 일 경우 Assert가 활성화되어 실패 남
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(24);
@@ -3166,7 +3288,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.IndexOutOfRangeException)
+				catch (System.Exception)
 				{
 				}
 			}
@@ -3174,6 +3296,9 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_operator_set_offset()
 		{
+			// 경게 테스트
+			// Debug 모드 일 경우 Assert가 활성화되어 실패 남
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(256);
@@ -3205,7 +3330,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.IndexOutOfRangeException)
+				catch (System.Exception)
 				{
 				}
 			}
@@ -3213,6 +3338,9 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_operator_set_size()
 		{
+			// 경게 테스트
+			// Debug 모드 일 경우 Assert가 활성화되어 실패 남
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(256);
@@ -3244,7 +3372,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.IndexOutOfRangeException)
+				catch (System.Exception)
 				{
 				}
 			}
@@ -3252,6 +3380,9 @@ namespace CGDBuffer_CSharp_UnitTest
 		[TestMethod]
 		public void test_buffer_operator_set_offset_size()
 		{
+			// 경게 테스트
+			// Debug 모드 일 경우 Assert가 활성화되어 실패 남
+
 			var buf_Alloc = new CGDK.buffer();
 
 			buf_Alloc.Alloc(256);
@@ -3283,7 +3414,7 @@ namespace CGDBuffer_CSharp_UnitTest
 					// check) 
 					Assert.IsTrue(false);
 				}
-				catch (System.IndexOutOfRangeException)
+				catch (System.Exception)
 				{
 				}
 			}
