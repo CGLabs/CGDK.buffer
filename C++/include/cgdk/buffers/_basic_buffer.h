@@ -145,16 +145,16 @@ public:
 								append(I _first, I _last) { return _append_iterator(_first, _last);}
 	constexpr auto				append(std::size_t _size, const void* _buffer) { return this->_append_bytes(_size, _buffer); }
 
-			template <class T>
+			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(const std::basic_string_view<T> _text) { return this->_append_text(_text);}
-			template <class T>
+								append_text(const std::basic_string_view<T> _text) { return this->_append_text<T>(_text);}
+			template <class T = char>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(const std::basic_string<T>& _text) { return this->_append_text(std::basic_string_view<T>(_text));}
+								append_text(const std::basic_string<T>& _text) { return this->_append_text<T>(std::basic_string_view<T>(_text));}
 
-			template <class T, std::size_t N>
+			template <class T = char, std::size_t N>
 	constexpr std::enable_if_t<is_string_type<T>::value, base_t>
-								append_text(const T(&_text)[N]) { return this->_append_text(_text);}
+								append_text(const T(&_text)[N]) { return this->_append_text<T>(_text);}
 			template <class T = char, class TNUM>
 	constexpr std::enable_if_t<std::is_integral_v<TNUM>, base_t>
 				 				append_text(TNUM _value) { return this->_append_text_integer<T>(_value);}

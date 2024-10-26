@@ -143,11 +143,15 @@ public:
 	constexpr self_t&			operator += (self_t&& _rhs) { this->_append_bytes(_rhs.size(), _rhs.data()); _rhs = base_t{}; return *this;}
 	constexpr self_t&			operator -= (std::size_t _rhs) { this->data_ -= _rhs; this->size_ += _rhs; return *this;}
 			// [operator] =
-			template <class T>			    
+			template <class T>
+	constexpr self_t&			operator =  (const _basic_buffer<T>& _rhs) noexcept { base_t::operator=(_rhs); return *this;}
+			template <class T>
+	constexpr self_t&			operator =  (_basic_buffer<T>&& _rhs) noexcept { base_t::operator=(std::move(_rhs)); return *this;}
+			template <class T>
 	constexpr self_t&			operator =  (const _buffer_view<T>& _rhs) noexcept { base_t::operator=(_rhs); return *this;}
-			template <class T>			    
+			template <class T>
 	constexpr self_t&			operator =  (_buffer_view<T>&& _rhs) noexcept { base_t::operator=(std::move(_rhs)); return *this;}
-			template<class T>			    
+			template<class T>
 	constexpr self_t&			operator =  (const buffer_base<T>& _rhs) { base_t::operator=(_rhs); return *this;}
 			template<class T>			    
 	constexpr self_t&			operator =  (buffer_base<T>&& _rhs) { base_t::operator=(std::move(_rhs)); return *this;}
@@ -238,7 +242,7 @@ constexpr _shared_buffer<BUFFER_T> _shared_buffer<BASE_T>::_extract_shared_buffe
 }
 
 template <class T>
-constexpr CGDK::_shared_buffer<T> operator ^ (const CGDK::_shared_buffer<T>& _lhs, size_t _size)
+constexpr CGDK::_shared_buffer<T> operator ^ (const CGDK::_shared_buffer<T>& _lhs, std::size_t _size)
 {
 	CGDK::_shared_buffer<T> x = _lhs;
 	x.set_size(_size);
