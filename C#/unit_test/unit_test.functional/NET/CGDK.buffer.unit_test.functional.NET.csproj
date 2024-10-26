@@ -22,8 +22,8 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <Reference Include="CGDK.buffer.NET">
-      <HintPath>..\..\..\dll\CGDK.buffer.NET.dll</HintPath>
+    <Reference Include="CGDK.buffer">
+      <HintPath>..\..\..\dll\CGDK.buffer.dll</HintPath>
     </Reference>
   </ItemGroup>
 
