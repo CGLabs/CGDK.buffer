@@ -230,7 +230,7 @@ public:
 	constexpr self_t			operator+=(CGDK::size _rhs)
 			{
 				// check) upper bound
-				_CGD_BUFFER_BOUND_CHECK( _rhs.amount <= this->_get_upper_distance_from_end());
+				_CGD_BUFFER_BOUND_CHECK( _rhs.amount <= static_cast<int64_t>(this->_get_upper_distance_from_end()));
 
 				// - add
 				this->size_ += _rhs.amount;
