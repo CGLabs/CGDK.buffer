@@ -54,11 +54,11 @@ public:
 
 public:
 	// 1) capacity/clear/copy/clone
-	constexpr void				set_size(size_type _new_size) { _CGD_BUFFER_BOUND_CHECK((this->data_ + _new_size) >= this->get_lower_bound() && (this->data_ + _new_size) <= this->get_upper_bound()); this->size_ = _new_size; }
-	constexpr void				add_size(size_type _size) { _CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + _size) <= this->get_upper_bound()); this->size_ += _size; }
-	constexpr void				sub_size(size_type _size) { _CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ - _size) >= this->get_lower_bound()); this->size_ -= _size; }
-	constexpr void				inc_size() { _CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + 1) <= this->get_upper_bound()); ++this->size_; }
-	constexpr void				dec_size() { _CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ - 1) >= this->get_lower_bound()); --this->size_; }
+	constexpr void				set_size(size_type _new_size) { _CGD_BUFFER_BOUND_CHECK(_new_size <= this->_get_upper_distance_from_front()); this->size_ = _new_size; }
+	constexpr void				add_size(size_type _size) { _CGD_BUFFER_BOUND_CHECK(_size <= this->_get_upper_distance_from_end()); this->size_ += _size; }
+	constexpr void				sub_size(size_type _size) { _CGD_BUFFER_BOUND_CHECK(_size <= this->_get_lower_distance_from_end()); this->size_ -= _size; }
+	constexpr void				inc_size() { _CGD_BUFFER_BOUND_CHECK(1 <= this->_get_upper_distance_from_end()); ++this->size_; }
+	constexpr void				dec_size() { _CGD_BUFFER_BOUND_CHECK(1 <= this->size_); --this->size_; }
 
 	// 2) data/
 	constexpr element_t*		data() const noexcept { return this->data_; }
@@ -66,10 +66,10 @@ public:
 	template <class T = element_t>
 	constexpr auto				data() const noexcept { return reinterpret_cast<_buffer_return_t<traits, T>*>(this->data_); }
 	template <class T = element_t>
-	constexpr auto				data(int64_t _offset) const { _CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + _offset) <= this->get_upper_bound()); return reinterpret_cast<_buffer_return_t<traits, T>*>(this->data_ + _offset); } // unsafe
+	constexpr auto				data(int64_t _offset) const { _CGD_BUFFER_BOUND_CHECK(_offset <= static_cast<int64_t>(this->_get_upper_distance_from_end())); return reinterpret_cast<_buffer_return_t<traits, T>*>(this->data_ + _offset); } // unsafe
 	constexpr void				set_data(element_t* _data) { _CGD_BUFFER_BOUND_CHECK(_data >= this->get_lower_bound() && (_data + this->size_) <= this->get_upper_bound()); this->data_ = _data; } // unsafe
-	constexpr void				add_data(size_type _size) { _CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + _size) <= this->get_upper_bound()); this->data_ += _size; } // unsafe
-	constexpr void				sub_data(size_type _size) { _CGD_BUFFER_BOUND_CHECK((this->data_ - _size) >= this->get_lower_bound()); this->data_ -= _size; } // unsafe
+	constexpr void				add_data(size_type _size) { _CGD_BUFFER_BOUND_CHECK(_size <= this->_get_upper_distance_from_end()); this->data_ += _size; } // unsafe
+	constexpr void				sub_data(size_type _size) { _CGD_BUFFER_BOUND_CHECK(_size <= this->_get_lower_distance_from_front()); this->data_ -= _size; } // unsafe
 
 	constexpr std::size_t		capacity() const noexcept { return (this->bound.upper != nullptr) ? (reinterpret_cast<const element_t*>(this->bound.upper) - this->data_) : 0;}
 	constexpr std::size_t		remained_size() const noexcept { return this->get_remained_size();}
@@ -187,7 +187,12 @@ public:
 			template <class T = char>
 	constexpr void				set_back_ptr(T* _pos) { _CGD_BUFFER_BOUND_CHECK(_pos >= this->get_front_ptr<T>() && _pos <= this->get_upper_bound()); this->size_ = reinterpret_cast<element_t*>(_pos) - this->data_; }
 	constexpr const buffer_bound& get_bound() const noexcept { return this->bound;}
-	constexpr std::size_t		get_remained_size() const noexcept { return static_cast<const char*>(this->bound.upper) - this->data_ - this->size_;}
+	constexpr std::size_t		get_remained_size() const noexcept { return this->_get_upper_distance_from_end();}
+
+	constexpr std::size_t		_get_upper_distance_from_front() const noexcept { return static_cast<const char*>(this->bound.upper) - this->data_; }
+	constexpr std::size_t		_get_lower_distance_from_front() const noexcept { return this->data_ - static_cast<const char*>(this->bound.lower); }
+	constexpr std::size_t		_get_upper_distance_from_end() const noexcept { return static_cast<const char*>(this->bound.upper) - this->data_ - this->size_; }
+	constexpr std::size_t		_get_lower_distance_from_end() const noexcept { return this->data_ + this->size_ - static_cast<const char*>(this->bound.lower); }
 
 	// 7) operator overloading																					  
 			// [operator] +/-		
@@ -196,7 +201,7 @@ public:
 	constexpr self_t			operator - (offset _rhs) const
 			{
 				// check) upper bound
-				_CGD_BUFFER_BOUND_CHECK(this->data_ - _rhs.amount >= this->get_lower_bound());
+				_CGD_BUFFER_BOUND_CHECK(_rhs.amount <= this->_get_lower_distance_from_front());
 
 				// return) 
 				return self_t(base_t{ this->data_ - _rhs.amount, this->size_ + _rhs.amount }, bound);
@@ -204,7 +209,7 @@ public:
 	constexpr self_t			operator+(CGDK::size _rhs) const
 			{
 				// check) upper bound
-				_CGD_BUFFER_BOUND_CHECK(this->data_ + this->size_ + _rhs.amount <= this->get_upper_bound());
+				_CGD_BUFFER_BOUND_CHECK(_rhs.amount <= static_cast<int64_t>(this->_get_upper_distance_from_end()));
 
 				// return) 
 				return self_t(base_t{ this->data_, this->size_ + _rhs.amount }, bound);
@@ -215,7 +220,7 @@ public:
 	constexpr self_t&			operator-=(offset _rhs)
 			{
 				// check) upper bound
-				_CGD_BUFFER_BOUND_CHECK(this->data_ - _rhs.amount >= this->get_lower_bound());
+				_CGD_BUFFER_BOUND_CHECK(_rhs.amount <= this->_get_lower_distance_from_front());
 
 				this->data_ -= _rhs.amount;
 				this->size_ += _rhs.amount;
@@ -225,7 +230,7 @@ public:
 	constexpr self_t			operator+=(CGDK::size _rhs)
 			{
 				// check) upper bound
-				_CGD_BUFFER_BOUND_CHECK(this->data_ + this->size_ + _rhs.amount <= this->get_upper_bound());
+				_CGD_BUFFER_BOUND_CHECK( _rhs.amount <= static_cast<int64_t>(this->_get_upper_distance_from_end()));
 
 				// - add
 				this->size_ += _rhs.amount;
@@ -426,7 +431,7 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string <= this->_get_lower_distance_from_front());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
 		auto p = reinterpret_cast<T*>(this->data_ - size_string);
@@ -455,7 +460,7 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string <= this->_get_lower_distance_from_front());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
 		auto p = reinterpret_cast<T*>(this->data_ - size_string);
@@ -479,7 +484,7 @@ public:
 		CGDK_ASSERT(_buffer != nullptr, throw std::invalid_argument("_buffer is nullptr [1]"));
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ - _size) >= this->get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK(_size <= this->_get_lower_distance_from_front());
 
 		// 1) store data_
 		auto buf_old = this->data_;
@@ -573,7 +578,7 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string - sizeof(COUNT_T)) >= this->get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((size_string + sizeof(COUNT_T)) <= this->_get_lower_distance_from_front());
 
 		// 3) NULL으르 제일 먼저 넣는다.
 		_prepend_general<T>(0);
@@ -599,7 +604,7 @@ public:
 		const auto size_string = (length_string + 1) * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string - sizeof(COUNT_T)) >= this->get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK((size_string + sizeof(COUNT_T)) <= this->_get_lower_distance_from_front());
 
 		// 2) ...
 		auto p = reinterpret_cast<T*>(this->data_ - sizeof(T));
@@ -638,7 +643,7 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string <= this->_get_lower_distance_from_front());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
 		auto p = this->data_ - size_string;
@@ -668,7 +673,7 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) lower bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ - size_string) >= this->get_lower_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string >= this->_get_lower_distance_from_front());
 
 		// 2) [원본_버퍼_포인터]를 [문자열 길이] 만큼 뺀 [목표_포인터]를 구한다..
 		auto p = this->data_ - size_string;
@@ -786,7 +791,7 @@ public:
 	constexpr T&				_append_emplace()
 	{
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + sizeof(T)) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(sizeof(T) <= this->_get_upper_distance_from_end());
 
 		// 1) [원본_버퍼_끝_포인터]를 구한다.
 		auto p = reinterpret_cast<T*>(this->data_ + this->size_);
@@ -832,7 +837,7 @@ public:
 		CGDK_ASSERT(_data != nullptr && _count != 0, throw std::invalid_argument("_data is nullptr or _count is 0 [1]"));
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + sizeof(T) * _count) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(sizeof(T) * _count <= this->_get_upper_distance_from_end());
 
 		// 1) [원본_버퍼_포인터]를 저장해 놓는다.
 		auto len_old = this->size_;
@@ -932,7 +937,7 @@ public:
 		const auto added_length = sizeof(COUNT_T) + sizeof(T) + bytes_copy;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(added_length <= reinterpret_cast<const char*>(this->get_upper_bound()) - buf_dest);
 
 		// declare) 
 		auto buf_now = buf_dest;
@@ -970,7 +975,7 @@ public:
 		auto buf_dest = this->data_ + this->size_;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(added_length <= reinterpret_cast<const char*>(this->get_upper_bound()) - buf_dest);
 
 		// declare) 
 		auto buf_now = buf_dest;
@@ -1008,7 +1013,7 @@ public:
 		auto buf_dest = this->data_ + this->size_;
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + added_length) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(added_length <= reinterpret_cast<const char*>(this->get_upper_bound()) - buf_dest);
 
 		// declare) 
 		auto buf_now = buf_dest;
@@ -1041,7 +1046,7 @@ public:
 		auto size_string = _string.size() * sizeof(T);
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string <= this->_get_upper_distance_from_end());
 
 		// 2) 
 		auto buf_pos = this->data_ + this->size_;
@@ -1063,7 +1068,7 @@ public:
 		auto size_string = _string.size() * sizeof(T);
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string <= this->_get_upper_distance_from_end());
 
 		// 2) 
 		auto buf_pos = this->data_ + this->size_;
@@ -1089,7 +1094,7 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string <= this->_get_upper_distance_from_end());
 
 		// declare)
 		auto buf_dest = this->data_ + this->size_;
@@ -1111,7 +1116,7 @@ public:
 		const auto size_string = length_string * sizeof(T);
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + size_string) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_string <= this->_get_upper_distance_from_end());
 
 		// declare)
 		const auto buf_dest = this->data_ + this->size_;
@@ -1134,7 +1139,7 @@ public:
 		CGDK_ASSERT(_buffer != nullptr || (_buffer == nullptr && _size == 0), throw std::invalid_argument("_buffer is nullptr [1]"));
 
 		// check) upper bound 
-		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + _size) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(_size <= this->_get_upper_distance_from_end());
 
 		// 1) [원본_버퍼_끝_포인터]를 얻는다.
 		const auto buf_dest = this->data_ + this->size_;
@@ -1143,7 +1148,7 @@ public:
 		if(_size == 0) return base_t(buf_dest, 0);
 	
 		// 2) [원본_버퍼_끝_포인터]에 [데이터]를 [데이터_크기]만큼 복사한다.
-		if(_buffer!=nullptr && _buffer != buf_dest)
+		if(_buffer != nullptr && _buffer != buf_dest)
 		{
 			memcpy(buf_dest, _buffer, _size);
 		}
@@ -1156,8 +1161,8 @@ public:
 	}
 	constexpr self_t			_append_buffer(const base_t& _buffer)
 	{
-		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((this->data_ + this->size_ + sizeof(base_t::size_type) + _buffer.size()) <= this->get_upper_bound());
+		// check) upper bound 
+		_CGD_BUFFER_BOUND_CHECK((sizeof(base_t::size_type) + _buffer.size()) <= this->_get_upper_distance_from_end());
 
 		// check) _data이 nullptr이면 안된다.
 		CGDK_ASSERT(_buffer.data() != nullptr || _buffer.size() == 0, throw std::invalid_argument("_data is nullptr [1]"));
@@ -1270,7 +1275,7 @@ public:
 		base_t result(buf_dest, (pos_now - temp_buf) * sizeof(T));
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + result.size()) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(result.size<int64_t>() <= reinterpret_cast<const char*>(this->get_upper_bound()) - buf_dest);
 
 		// 3) reverse copy
 		for (--pos_now; pos_now >= temp_buf; ++buf_dest, --pos_now)
@@ -1329,7 +1334,7 @@ public:
 		base_t result(buf_dest, (pos_now - temp_buf) * sizeof(T));
 
 		// check) upper bound
-		_CGD_BUFFER_BOUND_CHECK((buf_dest + result.size()) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(result.size<int64_t>() <= reinterpret_cast<const char*>(this->get_upper_bound()) - buf_dest);
 
 		// 3) reverse copy
 		for (--pos_now; pos_now >= temp_buf; ++buf_dest, --pos_now)
@@ -1360,7 +1365,7 @@ public:
 		auto size_added = _length * sizeof(T) * 2;
 
 		// check) upper bound 
-		_CGD_BUFFER_BOUND_CHECK((data_ + size_ + size_added) <= this->get_upper_bound());
+		_CGD_BUFFER_BOUND_CHECK(size_added <= this->_get_upper_distance_from_end());
 
 		// 1) [원본_버퍼_끝_포인터]를 얻는다.
 		auto buf_dest = reinterpret_cast<T*>(this->data_ + this->size_);

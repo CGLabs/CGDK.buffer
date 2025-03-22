@@ -1224,7 +1224,7 @@ template<class T>			class serializer_size_of<T*, std::enable_if_t<std::is_base_o
 							};
 
 
-#if defined(_CGDK)
+#if defined(_CGDK) && !defined(_UNREAL)
 // 2) object_ptr<T>- Ibuffer_serializable
 template<class B, class T>	class serializer_append<B, object_ptr<T>, std::enable_if_t<std::is_base_of_v<Ibuffer_serializable, T>>>
 							{	using TX = std::remove_const_t<T>;

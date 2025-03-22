@@ -17,7 +17,7 @@
 namespace CGDK
 {
 
-#if !defined(_CGDK)
+#if !defined(_CGDK) || defined(_UNREAL)
 class Imemory : protected _buffer_view<char>
 {
 public:

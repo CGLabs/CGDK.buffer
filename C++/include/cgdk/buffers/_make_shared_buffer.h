@@ -14,13 +14,13 @@
 
 #pragma once
 
-#if !defined(_CGDK)
+#if !defined(_CGDK) || defined(_UNREAL)
 	#include <malloc.h>
 #endif
 
 namespace CGDK
 {
-#if !defined(_CGDK)
+#if !defined(_CGDK) || defined(_UNREAL)
 
 // definitions
 #define	alloc_shared_buffer(size)		CGDK::_alloc_shared_buffer(size)
