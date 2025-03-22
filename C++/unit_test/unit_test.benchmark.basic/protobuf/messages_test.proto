@@ -82,8 +82,13 @@ message protobuf_message_primitive_double
 	double				value = 1;
 }
 
-
 // [Message] benchmark 02
+message protobuf_message_list_int
+{
+	repeated int32		value_1 = 1;
+}
+
+// [Message] benchmark 03
 message protobuf_message_string
 {
 	bytes				value_1 = 1;
@@ -94,12 +99,6 @@ message protobuf_message_string
 	bytes				value_6 = 6;
 	bytes				value_7 = 7;
 	bytes				value_8 = 8;
-}
-
-// [Message] benchmark 03
-message protobuf_message_list_int
-{
-	repeated int32		value_1 = 1;
 }
 
 // [Message] benchmark 04

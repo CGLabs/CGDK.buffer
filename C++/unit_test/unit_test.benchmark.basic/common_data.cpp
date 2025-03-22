@@ -18,6 +18,19 @@ int	array_int[8] =
 };
 
 // Declare) Test String
+const char* array_string_char_en[8] =
+{
+	"Please Let test this",
+	"C is a general-purpose programming language that is used to write operating systems, compilers, and text editors. It is also used in database systems, engineering programs, and numerical analysis.",
+	"C++ is a cross-platform language that can be used to create high-performance applications.",
+	"C# is used to develop web apps, desktop apps, mobile apps, games and much more.",
+	"Java is a popular programming language, created in 1995.",
+	"Python is a general-purpose programming language that's used for web development, data science, and machine learning. It's known for being beginner-friendly and efficient.",
+	"Go is a high-level general purpose programming language that is statically typed and compiled. It is known for the simplicity of its syntax and the efficiency of development that it enables by the inclusion of a large standard library supplying many needs for common projects.",
+	"Rust’s rich type system and ownership model guarantee memory-safety and thread-safety — enabling you to eliminate many classes of bugs at compile-time."
+};
+
+// Declare) Test String
 const char* array_string_char[8] = 
 {
 	"Please Let test this",

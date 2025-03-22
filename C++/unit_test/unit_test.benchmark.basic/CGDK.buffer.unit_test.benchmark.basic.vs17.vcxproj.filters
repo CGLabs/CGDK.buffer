@@ -7,8 +7,8 @@
     </ClCompile>
     <ClCompile Include="common_data.cpp" />
     <ClCompile Include="test_cgdk.cpp" />
-    <ClCompile Include="test_protobuf.cpp" />
     <ClCompile Include="test_flatbuffers.cpp" />
+    <ClCompile Include="test_protobuf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

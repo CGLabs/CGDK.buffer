@@ -3,6 +3,7 @@
 // Common Data)
 extern int															array_int[8];
 extern const char*													array_string_char[8];
+extern const char*													array_string_char_en[8];
 extern const char8_t*												array_string_char8_t[8];
 extern const wchar_t*												array_string_wchar_t[8];
 extern std::string													array_std_string[8];
