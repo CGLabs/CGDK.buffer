@@ -353,7 +353,7 @@ temp_pos = 100;
 <br>
 
 ## 지원 가능
-* C+17이상이면 가능<br>
+* C+20이상<br>
 * C# 모든 버전 지원<br>
 * unreal3D(c++) 지원<br>
 * unity 3D(c#) 지원<br>
